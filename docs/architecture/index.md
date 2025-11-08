@@ -15,6 +15,7 @@ ADR (Architecture Decision Record) 是记录软件架构决策的文档格式。
 | 编号 | 标题 | 状态 | 最后更新 | 相关 Issue |
 |------|------|------|----------|-----------|
 | [ADR-001](./ADR-001-cli-agent-architecture.md) | CLI Agent 技术方案 | Active | 2025-11-08 | #1, #2, #3, #4 |
+| [ADR-002](./ADR-002-Orion-Integration.md) | Orion架构集成方案 | Active | 2025-11-09 | #12, #13, #14 |
 
 ## ADR 状态说明
 
@@ -104,5 +105,6 @@ cp ADR-template.md ADR-00X-title.md
 
 ## 变更历史
 
+- 2025-11-09: 添加 ADR-002 (Orion架构集成)
 - 2025-11-08: 创建 ADR 索引
 - 2025-11-08: 添加 ADR-001 (CLI Agent 架构)
