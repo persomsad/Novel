@@ -48,20 +48,20 @@ repos:
         name: "🎨 Ruff (format imports)"
         stages: [pre-commit]
 
-  # 4. 类型检查（仅检查，不修复）
-  - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.14.0
-    hooks:
-      - id: mypy
-        name: "🔍 Mypy (type check)"
-        stages: [pre-commit]
-        additional_dependencies:
-          - types-requests
-
   # ========== Push 阶段：确保质量 ==========
 
   - repo: local
     hooks:
+      # 类型检查（使用local以使用项目依赖）
+      - id: mypy-local
+        name: "🔍 Mypy (type check with project deps)"
+        entry: poetry run mypy .
+        language: system
+        types: [python]
+        pass_filenames: false
+        stages: [pre-push]
+        verbose: true
+
       # 运行完整测试套件
       - id: pytest
         name: "🧪 Pytest (run all tests)"
