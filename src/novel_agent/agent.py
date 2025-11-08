@@ -91,7 +91,7 @@ def create_novel_agent(
         gemini_key = api_key or os.getenv("GOOGLE_API_KEY")
         if not gemini_key:
             raise ValueError(
-                "未找到 Gemini API Key。请设置环境变量 GOOGLE_API_KEY " "或通过 api_key 参数传入。"
+                "未找到 Gemini API Key。请设置环境变量 GOOGLE_API_KEY 或通过 api_key 参数传入。"
             )
 
         model = ChatGoogleGenerativeAI(
