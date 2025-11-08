@@ -91,14 +91,14 @@ class TestConsistencyTools:
 
     def test_search_time_markers(self) -> None:
         """测试搜索时间标记"""
-        results = search_content(r"\[TIME:", "chapters")
+        results = search_content("[TIME:", "chapters")
 
         # 应该找到时间标记
         assert len(results) > 0
 
     def test_search_reference_markers(self) -> None:
         """测试搜索引用标记"""
-        results = search_content(r"\[REF:", "chapters")
+        results = search_content("[REF:", "chapters")
 
         # 应该找到引用标记
         assert len(results) > 0
