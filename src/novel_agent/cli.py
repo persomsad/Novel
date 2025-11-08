@@ -15,6 +15,9 @@ from rich.panel import Panel
 from rich.prompt import Prompt
 
 from .agent import create_novel_agent
+from .logging_config import get_logger
+
+logger = get_logger(__name__)
 
 app = typer.Typer(
     name="novel-agent",
