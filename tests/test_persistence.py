@@ -3,6 +3,7 @@
 import tempfile
 from pathlib import Path
 
+from langchain_core.runnables import RunnableConfig
 from langgraph.checkpoint.sqlite import SqliteSaver
 
 
@@ -19,7 +20,9 @@ class TestSessionPersistence:
                 assert checkpointer is not None
 
                 # 创建一个简单的checkpoint配置
-                config = {"configurable": {"thread_id": "test-1", "checkpoint_ns": ""}}
+                config: RunnableConfig = {
+                    "configurable": {"thread_id": "test-1", "checkpoint_ns": ""}
+                }
 
                 # 验证checkpointer可以使用
                 # Note: get()在没有数据时返回None，这是正常行为
@@ -54,7 +57,9 @@ class TestSessionPersistence:
             # with语句应该正确管理资源
             with SqliteSaver.from_conn_string(str(db_path)) as checkpointer:
                 # 在with块内，checkpointer可用
-                config = {"configurable": {"thread_id": "test", "checkpoint_ns": ""}}
+                config: RunnableConfig = {
+                    "configurable": {"thread_id": "test", "checkpoint_ns": ""}
+                }
                 assert checkpointer.get(config) is None
 
             # with块结束后，数据库文件存在

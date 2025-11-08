@@ -77,7 +77,7 @@ SYSTEM_PROMPT = """你是一个小说写作助手，具有强大的推理和分�
 def create_novel_agent(
     model: BaseChatModel | None = None,
     api_key: str | None = None,
-    checkpointer: BaseCheckpointSaver | None = None,
+    checkpointer: BaseCheckpointSaver[Any] | None = None,
 ) -> Any:
     """创建小说写作 Agent
 
@@ -113,11 +113,11 @@ def create_novel_agent(
     ]
 
     # 配置system message（通过model）
-    model = model.bind(system=SYSTEM_PROMPT)
+    bound_model = model.bind(system=SYSTEM_PROMPT)
 
     # 创建 ReAct Agent
     agent = create_react_agent(
-        model=model,
+        model=bound_model,
         tools=tools,
         checkpointer=checkpointer,
     )
