@@ -20,8 +20,10 @@ from .tools import (
     write_chapter,
 )
 
-# System Prompt（参考 ADR-001）
-SYSTEM_PROMPT = """你是一个小说写作助手，具有强大的推理和分析能力。
+# Agent配置注册表
+AGENT_CONFIGS = {
+    "default": {
+        "system_prompt": """你是一个小说写作助手，具有强大的推理和分析能力。
 
 ## 核心能力
 
@@ -48,22 +50,6 @@ SYSTEM_PROMPT = """你是一个小说写作助手，具有强大的推理和分�
 - verify_strict_timeline()：时间线精确验证（数字、日期）
 - verify_strict_references()：引用完整性验证（伏笔ID）
 
-## 工作流示例
-
-用户："检查第3章角色是否一致"
-
-你的推理过程：
-1. Thought: 我需要先了解角色设定
-   Action: read_file("spec/knowledge/character-profiles.md")
-   Observation: 主角性格：善良但缺乏自信
-
-2. Thought: 现在读取第3章内容
-   Action: read_file("chapters/ch003.md")
-   Observation: 第3章主角突然变得非常勇敢...
-
-3. Thought: 发现矛盾！设定说"缺乏自信"，但第3章"非常勇敢"
-   Final Answer: ⚠️ 角色一致性问题 + 详细修复建议
-
 ## 约束
 
 - 创建章节时使用 write_chapter 工具
@@ -71,25 +57,45 @@ SYSTEM_PROMPT = """你是一个小说写作助手，具有强大的推理和分�
 - 读取文件时使用 read_file 工具
 - 始终提供具体、可操作的建议
 - 用中文回复
-"""
+""",
+        "tools": [
+            "read_file",
+            "write_chapter",
+            "search_content",
+            "verify_timeline",
+            "verify_references",
+        ],
+    }
+}
+
+# 向后兼容
+SYSTEM_PROMPT = AGENT_CONFIGS["default"]["system_prompt"]
 
 
-def create_novel_agent(
+def create_specialized_agent(
+    agent_type: str = "default",
     model: BaseChatModel | None = None,
     api_key: str | None = None,
     checkpointer: BaseCheckpointSaver[Any] | None = None,
 ) -> Any:
-    """创建小说写作 Agent
+    """创建专业化Agent
 
     Args:
-        model: LLM 模型（可选，默认使用 Gemini 2.0 Flash）
+        agent_type: Agent类型（default, outline-architect等）
+        model: LLM模型（可选，默认使用Gemini 2.0 Flash）
         api_key: Gemini API Key（可选，从环境变量读取）
-        checkpointer: 会话持久化存储（可选，不传则无持久化）
+        checkpointer: 会话持久化存储（可选）
 
     Returns:
-        ReAct Agent 实例
+        ReAct Agent实例
     """
-    # 配置 LLM
+    # 获取Agent配置
+    if agent_type not in AGENT_CONFIGS:
+        raise ValueError(f"未知的Agent类型: {agent_type}。可用类型: {list(AGENT_CONFIGS.keys())}")
+
+    config = AGENT_CONFIGS[agent_type]
+
+    # 配置LLM
     if model is None:
         gemini_key = api_key or os.getenv("GOOGLE_API_KEY")
         if not gemini_key:
@@ -103,19 +109,21 @@ def create_novel_agent(
             temperature=0.7,
         )
 
-    # 定义工具
-    tools: list[BaseTool] = [
-        read_file_tool,
-        write_chapter_tool,
-        search_content_tool,
-        verify_timeline_tool,
-        verify_references_tool,
-    ]
+    # 根据配置选择工具
+    tool_map = {
+        "read_file": read_file_tool,
+        "write_chapter": write_chapter_tool,
+        "search_content": search_content_tool,
+        "verify_timeline": verify_timeline_tool,
+        "verify_references": verify_references_tool,
+    }
 
-    # 配置system message（通过model）
-    bound_model = model.bind(system=SYSTEM_PROMPT)
+    tools: list[BaseTool] = [tool_map[t] for t in config["tools"]]
 
-    # 创建 ReAct Agent
+    # 配置system message
+    bound_model = model.bind(system=config["system_prompt"])
+
+    # 创建ReAct Agent
     agent = create_react_agent(
         model=bound_model,
         tools=tools,
@@ -123,6 +131,24 @@ def create_novel_agent(
     )
 
     return agent
+
+
+def create_novel_agent(
+    model: BaseChatModel | None = None,
+    api_key: str | None = None,
+    checkpointer: BaseCheckpointSaver[Any] | None = None,
+) -> Any:
+    """创建小说写作Agent（向后兼容）
+
+    Args:
+        model: LLM模型（可选，默认使用Gemini 2.0 Flash）
+        api_key: Gemini API Key（可选，从环境变量读取）
+        checkpointer: 会话持久化存储（可选）
+
+    Returns:
+        ReAct Agent实例
+    """
+    return create_specialized_agent("default", model, api_key, checkpointer)
 
 
 # ========== Tool Wrappers ==========

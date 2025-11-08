@@ -4,7 +4,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from novel_agent.agent import create_novel_agent
+from novel_agent.agent import create_novel_agent, create_specialized_agent
 
 
 class TestCreateNovelAgent:
@@ -66,3 +66,39 @@ class TestCreateNovelAgent:
                     # 验证使用了环境变量中的 API key
                     call_kwargs = mock_gemini.call_args.kwargs
                     assert call_kwargs["google_api_key"] == "env-api-key"
+
+
+class TestCreateSpecializedAgent:
+    """测试 create_specialized_agent 函数"""
+
+    def test_create_default_agent(self) -> None:
+        """测试创建默认Agent"""
+        with patch("novel_agent.agent.ChatGoogleGenerativeAI") as mock_gemini:
+            with patch("novel_agent.agent.create_react_agent") as mock_create:
+                mock_model = Mock()
+                mock_gemini.return_value = mock_model
+                mock_create.return_value = Mock()
+
+                agent = create_specialized_agent("default", api_key="test-key")
+
+                # 验证Agent被创建
+                mock_create.assert_called_once()
+                assert agent is not None
+
+    def test_create_unknown_agent_type_raises(self) -> None:
+        """测试创建未知类型Agent时抛出异常"""
+        with pytest.raises(ValueError, match="未知的Agent类型"):
+            create_specialized_agent("unknown-type", api_key="test-key")
+
+    def test_backward_compatibility(self) -> None:
+        """测试向后兼容：create_novel_agent调用create_specialized_agent"""
+        with patch("novel_agent.agent.create_specialized_agent") as mock_specialized:
+            mock_specialized.return_value = Mock()
+
+            agent = create_novel_agent(api_key="test-key")
+
+            # 验证调用了create_specialized_agent with "default"
+            mock_specialized.assert_called_once()
+            call_args = mock_specialized.call_args
+            assert call_args[0][0] == "default"  # 第一个位置参数是agent_type
+            assert agent is not None
