@@ -11,6 +11,10 @@
 import subprocess
 from pathlib import Path
 
+from .logging_config import get_logger
+
+logger = get_logger(__name__)
+
 
 def read_file(path: str) -> str:
     """读取文件内容
@@ -26,10 +30,22 @@ def read_file(path: str) -> str:
         PermissionError: 无读取权限
     """
     file_path = Path(path)
+    logger.debug(f"正在读取文件: {path}")
+
     if not file_path.exists():
+        logger.error(f"文件不存在: {path}")
         raise FileNotFoundError(f"文件不存在: {path}")
 
-    return file_path.read_text(encoding="utf-8")
+    try:
+        content = file_path.read_text(encoding="utf-8")
+        logger.info(f"成功读取文件: {path} ({len(content)} 字符)")
+        return content
+    except PermissionError:
+        logger.error(f"无权限读取文件: {path}")
+        raise
+    except Exception as e:
+        logger.error(f"读取文件失败: {path}, 错误: {e}")
+        raise
 
 
 def write_chapter(number: int, content: str, base_dir: str = "chapters") -> str:
@@ -47,21 +63,29 @@ def write_chapter(number: int, content: str, base_dir: str = "chapters") -> str:
         ValueError: 章节编号无效
         OSError: 文件系统错误
     """
+    logger.debug(f"正在创建章节: 编号={number}, 目录={base_dir}")
+
     if not 1 <= number <= 999:
+        logger.error(f"无效的章节编号: {number}")
         raise ValueError(f"章节编号必须在 1-999 之间，当前: {number}")
 
-    # 创建目录
-    chapters_dir = Path(base_dir)
-    chapters_dir.mkdir(parents=True, exist_ok=True)
+    try:
+        # 创建目录
+        chapters_dir = Path(base_dir)
+        chapters_dir.mkdir(parents=True, exist_ok=True)
 
-    # 格式化文件名：ch001.md, ch002.md, ...
-    filename = f"ch{number:03d}.md"
-    file_path = chapters_dir / filename
+        # 格式化文件名：ch001.md, ch002.md, ...
+        filename = f"ch{number:03d}.md"
+        file_path = chapters_dir / filename
 
-    # 写入内容
-    file_path.write_text(content, encoding="utf-8")
+        # 写入内容
+        file_path.write_text(content, encoding="utf-8")
 
-    return str(file_path)
+        logger.info(f"成功创建章节: {file_path} ({len(content)} 字符)")
+        return str(file_path)
+    except OSError as e:
+        logger.error(f"创建章节失败: {e}")
+        raise
 
 
 def search_content(keyword: str, search_dir: str = ".") -> list[dict[str, str]]:
@@ -79,6 +103,8 @@ def search_content(keyword: str, search_dir: str = ".") -> list[dict[str, str]]:
         - line: 行号
         - content: 匹配内容
     """
+    logger.debug(f"搜索关键词: '{keyword}' 在目录: {search_dir}")
+
     try:
         # 使用 rg 搜索
         result = subprocess.run(
@@ -90,6 +116,7 @@ def search_content(keyword: str, search_dir: str = ".") -> list[dict[str, str]]:
 
         if result.returncode not in (0, 1):
             # 其他错误（2=搜索错误）
+            logger.error(f"ripgrep搜索失败: {result.stderr}")
             raise RuntimeError(f"搜索失败: {result.stderr}")
 
         # 解析 JSON 输出
@@ -110,10 +137,12 @@ def search_content(keyword: str, search_dir: str = ".") -> list[dict[str, str]]:
                     }
                 )
 
+        logger.info(f"搜索完成: 找到 {len(matches)} 个匹配")
         return matches
 
     except FileNotFoundError:
         # ripgrep 未安装，回退到 Python 实现
+        logger.warning("ripgrep未安装，使用Python fallback实现")
         return _search_content_fallback(keyword, search_dir)
 
 
