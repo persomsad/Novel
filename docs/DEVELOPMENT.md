@@ -1,48 +1,39 @@
 # 开发指南
 
-## 🔴 推送前必读
+## 🚀 自动化工作流
 
-**铁律**：推送前必须运行完整检查，确保本地和CI检查一致。
+**好消息**：大部分检查已经自动化了！
 
-```bash
-just check
-```
+- `git commit` → 自动格式化 + lint + 类型检查（pre-commit hooks）
+- `git push` → 自动运行所有测试（pre-push hooks）
 
-如果通过，才能安全推送：
+**你只需正常开发，git hooks会自动保证代码质量！**
 
-```bash
-git push
-```
+## Just命令（开发调试）
 
-## 本地检查命令
-
-### 完整检查（推送前必须运行）
+### 完整CI检查（验证PR前）
 
 ```bash
-just check
+just ci
 ```
 
-这会运行**与CI完全相同**的检查：
-1. Black - 格式检查
-2. Ruff - Lint检查
-3. Mypy - 类型检查
-4. Pytest - 测试 + 覆盖率
+手动运行完整CI检查（与GitHub Actions相同）。**通常不需要运行，因为git hooks已自动检查。**
 
-### 快速检查（提交前）
+### 运行测试
 
 ```bash
-just check-quick
+just test              # 运行所有测试
+just test tests/test_cli.py  # 运行特定测试
+just test-cov          # 生成HTML覆盖率报告
 ```
 
-只运行格式和lint检查（约5秒）。
-
-### 自动修复
+### 一键setup（克隆项目后）
 
 ```bash
-just fix
+just setup
 ```
 
-自动修复格式和lint问题。
+安装依赖 + 配置git hooks，一步到位。
 
 ## Git Workflow
 
@@ -59,34 +50,31 @@ git checkout -b feat/4-issue-description
 # 开始开发...
 ```
 
-### 2. 提交代码
+### 2. 提交代码（自动检查）
 
 ```bash
-# 快速检查
-just check-quick
-
-# 提交
 git add .
 git commit -m "feat: 实现XX功能"
 ```
 
-**Pre-commit hook会自动运行**：
-- Black格式化
-- Ruff lint + 自动修复
-- Mypy类型检查
+**自动发生**：
+1. 🎨 Black自动格式化代码
+2. 🔧 Ruff自动修复lint问题
+3. 🔍 Mypy类型检查
 
-### 3. 推送前完整检查
+如果检查失败，修复问题后重新commit即可。
+
+### 3. 推送代码（自动测试）
 
 ```bash
-# 🔴 关键步骤：运行完整检查
-just check
-
-# 通过后才推送
 git push -u origin feat/4-issue-description
 ```
 
-**Pre-push hook会自动运行**：
-- Pytest测试（所有测试必须通过）
+**自动发生**：
+1. 🧪 运行所有测试
+2. 📊 检查覆盖率（>50%）
+
+如果测试失败，修复后重新push即可。
 
 ### 4. 创建PR
 
