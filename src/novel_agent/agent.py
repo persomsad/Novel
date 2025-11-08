@@ -9,6 +9,7 @@ from typing import Any
 from langchain_core.language_models import BaseChatModel
 from langchain_core.tools import BaseTool, tool
 from langchain_google_genai import ChatGoogleGenerativeAI
+from langgraph.checkpoint.base import BaseCheckpointSaver
 from langgraph.prebuilt import create_react_agent
 
 from .tools import (
@@ -76,12 +77,14 @@ SYSTEM_PROMPT = """你是一个小说写作助手，具有强大的推理和分�
 def create_novel_agent(
     model: BaseChatModel | None = None,
     api_key: str | None = None,
+    checkpointer: BaseCheckpointSaver[Any] | None = None,
 ) -> Any:
     """创建小说写作 Agent
 
     Args:
         model: LLM 模型（可选，默认使用 Gemini 2.0 Flash）
         api_key: Gemini API Key（可选，从环境变量读取）
+        checkpointer: 会话持久化存储（可选，不传则无持久化）
 
     Returns:
         ReAct Agent 实例
@@ -109,11 +112,14 @@ def create_novel_agent(
         verify_references_tool,
     ]
 
+    # 配置system message（通过model）
+    bound_model = model.bind(system=SYSTEM_PROMPT)
+
     # 创建 ReAct Agent
     agent = create_react_agent(
-        model=model,
+        model=bound_model,
         tools=tools,
-        state_modifier=SYSTEM_PROMPT,
+        checkpointer=checkpointer,
     )
 
     return agent
