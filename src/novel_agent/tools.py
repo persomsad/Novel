@@ -82,7 +82,7 @@ def search_content(keyword: str, search_dir: str = ".") -> list[dict[str, str]]:
     try:
         # 使用 rg 搜索
         result = subprocess.run(
-            ["rg", "--json", keyword, search_dir],
+            ["rg", "--json", "--fixed-strings", keyword, search_dir],
             capture_output=True,
             text=True,
             check=False,  # 不抛出异常（没有匹配时 rg 返回 1）
