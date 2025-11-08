@@ -10,7 +10,6 @@
 
 import subprocess
 from pathlib import Path
-from typing import Optional
 
 
 def read_file(path: str) -> str:

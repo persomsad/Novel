@@ -1,15 +1,15 @@
 """Tests for novel_agent.tools"""
 
-import pytest
 from pathlib import Path
-import tempfile
-import shutil
+
+import pytest
+
 from novel_agent.tools import (
     read_file,
-    write_chapter,
     search_content,
-    verify_strict_timeline,
     verify_strict_references,
+    verify_strict_timeline,
+    write_chapter,
 )
 
 

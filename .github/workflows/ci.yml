@@ -28,7 +28,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          poetry install --no-root
+          poetry install --no-root --extras dev
 
       - name: Run Black (format check)
         run: |
