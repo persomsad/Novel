@@ -17,23 +17,23 @@ repos:
     rev: 24.1.1
     hooks:
       - id: black
-        args: ['--line-length=100']
         stages: [pre-commit]
 
   # Python linting with Ruff
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.1.14
+    rev: v0.8.4
     hooks:
       - id: ruff
-        args: ['--line-length=100']
+        args: ['--fix']
+        stages: [pre-commit]
+      - id: ruff-format
         stages: [pre-commit]
 
   # Type checking with mypy
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.8.0
+    rev: v1.14.0
     hooks:
       - id: mypy
-        args: ['--strict']
         stages: [pre-commit]
 
   # Run tests before push

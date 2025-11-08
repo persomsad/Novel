@@ -5,14 +5,23 @@
 default:
     @just --list
 
-# Run full checks (same as CI)
+# Run full checks (EXACTLY same as CI - run before push!)
 check:
-    @echo "🔍 Running all checks..."
+    @echo "🔍 Running CI checks locally..."
+    @echo ""
+    @echo "1️⃣  Black (format check)..."
     poetry run black --check .
+    @echo ""
+    @echo "2️⃣  Ruff (lint)..."
     poetry run ruff check .
+    @echo ""
+    @echo "3️⃣  Mypy (type check)..."
     poetry run mypy .
+    @echo ""
+    @echo "4️⃣  Pytest (tests + coverage)..."
     poetry run pytest --cov=src --cov-report=term
-    @echo "✅ All checks passed!"
+    @echo ""
+    @echo "✅ All CI checks passed! Safe to push."
 
 # Auto-fix formatting issues
 fix:
@@ -21,11 +30,12 @@ fix:
     poetry run ruff check --fix .
     @echo "✅ Fixed!"
 
-# Quick check (before commit)
+# Quick check (before commit - fast!)
 check-quick:
-    @echo "🚀 Quick checks..."
+    @echo "🚀 Quick checks (format + lint)..."
     poetry run black --check .
     poetry run ruff check .
+    @echo "✅ Quick checks passed!"
 
 # Run tests only
 test:
