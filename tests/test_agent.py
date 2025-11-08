@@ -102,3 +102,22 @@ class TestCreateSpecializedAgent:
             call_args = mock_specialized.call_args
             assert call_args[0][0] == "default"  # 第一个位置参数是agent_type
             assert agent is not None
+
+    def test_create_outline_architect_agent(self) -> None:
+        """测试创建outline-architect Agent"""
+        with patch("novel_agent.agent.ChatGoogleGenerativeAI") as mock_gemini:
+            with patch("novel_agent.agent.create_react_agent") as mock_create:
+                mock_model = Mock()
+                mock_gemini.return_value = mock_model
+                mock_create.return_value = Mock()
+
+                agent = create_specialized_agent("outline-architect", api_key="test-key")
+
+                # 验证Agent被创建
+                mock_create.assert_called_once()
+
+                # 验证使用了正确的工具（只有read_file和search_content）
+                call_kwargs = mock_create.call_args.kwargs
+                tools = call_kwargs["tools"]
+                assert len(tools) == 2  # outline-architect只有2个工具
+                assert agent is not None
