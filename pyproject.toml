@@ -1,0 +1,58 @@
+[project]
+name = "novel-agent"
+version = "0.1.0"
+description = "基于 LangChain + LangGraph 的智能小说写作助手"
+authors = [
+    {name = "L_hui", email = "2747397952@qq.com"}
+]
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "langchain>=0.3.12",
+    "langgraph>=0.2.60",
+    "google-generativeai>=0.8.4",
+    "typer>=0.15.1",
+    "rich>=13.9.4",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.3.4",
+    "pytest-cov>=6.0.0",
+    "black>=24.1.1",
+    "ruff>=0.8.4",
+    "mypy>=1.14.0",
+    "pre-commit>=4.0.1",
+]
+
+[project.scripts]
+novel-agent = "novel_agent.cli:app"
+
+[tool.poetry]
+packages = [{include = "novel_agent", from = "src"}]
+
+[tool.black]
+line-length = 100
+target-version = ["py312"]
+
+[tool.ruff]
+line-length = 100
+select = ["E", "F", "I", "N", "W"]
+target-version = "py312"
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+warn_return_any = true
+warn_unused_configs = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "--cov=src/novel_agent --cov-report=html --cov-report=term"
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
