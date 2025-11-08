@@ -58,7 +58,7 @@ module = [
 ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
-module = "novel_agent.agent"
+module = ["novel_agent.agent", "novel_agent.cli"]
 disallow_untyped_decorators = false
 
 [tool.pytest.ini_options]
