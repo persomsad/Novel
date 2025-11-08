@@ -16,7 +16,7 @@ class TestChatCommand:
     def test_chat_missing_api_key(self) -> None:
         """测试缺少API key时的错误处理"""
         with patch.dict("os.environ", {}, clear=True):
-            with patch("novel_agent.cli.create_novel_agent") as mock_create:
+            with patch("novel_agent.cli.create_specialized_agent") as mock_create:
                 mock_create.side_effect = ValueError("未找到 Gemini API Key")
 
                 result = runner.invoke(app, ["chat"], input="exit\n")
@@ -26,7 +26,7 @@ class TestChatCommand:
 
     def test_chat_with_api_key(self) -> None:
         """测试使用API key启动chat"""
-        with patch("novel_agent.cli.create_novel_agent") as mock_create:
+        with patch("novel_agent.cli.create_specialized_agent") as mock_create:
             mock_agent = Mock()
             mock_agent.invoke.return_value = {"messages": [Mock(content="你好！我是Agent。")]}
             mock_create.return_value = mock_agent
@@ -34,11 +34,27 @@ class TestChatCommand:
             result = runner.invoke(app, ["chat", "--api-key", "test-key"], input="hello\nexit\n")
 
             assert result.exit_code == 0
-            mock_create.assert_called_once_with(api_key="test-key")
+            mock_create.assert_called_once_with("default", api_key="test-key")
+
+    def test_chat_with_custom_agent(self) -> None:
+        """测试使用自定义Agent类型"""
+        with patch("novel_agent.cli.create_specialized_agent") as mock_create:
+            mock_agent = Mock()
+            mock_agent.invoke.return_value = {"messages": [Mock(content="大纲已生成")]}
+            mock_create.return_value = mock_agent
+
+            result = runner.invoke(
+                app,
+                ["chat", "--agent", "outline-architect", "--api-key", "test-key"],
+                input="exit\n",
+            )
+
+            assert result.exit_code == 0
+            mock_create.assert_called_once_with("outline-architect", api_key="test-key")
 
     def test_chat_exit_command(self) -> None:
         """测试exit命令"""
-        with patch("novel_agent.cli.create_novel_agent") as mock_create:
+        with patch("novel_agent.cli.create_specialized_agent") as mock_create:
             mock_agent = Mock()
             mock_create.return_value = mock_agent
 
