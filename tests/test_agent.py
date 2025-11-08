@@ -35,14 +35,15 @@ class TestCreateNovelAgent:
         """测试使用自定义模型创建 Agent"""
         with patch("novel_agent.agent.create_react_agent") as mock_create:
             mock_model = Mock()
+            mock_model.bind.return_value = mock_model  # Mock bind() method
             mock_create.return_value = Mock()
 
             agent = create_novel_agent(model=mock_model)
 
-            # 验证使用了自定义模型
+            # 验证使用了自定义模型（已被bind包装）
             mock_create.assert_called_once()
-            call_args = mock_create.call_args
-            assert call_args.kwargs["model"] == mock_model
+            # 模型会被bind包装，所以检查bind是否被调用
+            mock_model.bind.assert_called_once()
             assert agent is not None
 
     def test_create_agent_no_api_key_raises(self) -> None:

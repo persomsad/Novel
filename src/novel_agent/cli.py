@@ -4,6 +4,7 @@
 """
 
 import sys
+import uuid
 from pathlib import Path
 from typing import Optional
 
@@ -66,9 +67,13 @@ def chat(
                 if not user_input.strip():
                     continue
 
-                # 调用Agent
+                # 调用Agent（使用会话ID保存状态）
                 with console.status("[yellow]正在思考...[/yellow]"):
-                    result = agent.invoke({"messages": [("user", user_input)]})
+                    session_id = str(uuid.uuid4())
+                    result = agent.invoke(
+                        {"messages": [("user", user_input)]},
+                        config={"configurable": {"thread_id": session_id}},
+                    )
 
                 # 显示Agent响应
                 if "messages" in result and result["messages"]:
@@ -143,9 +148,12 @@ def check(
 
 请详细指出发现的问题，并给出修复建议。"""
 
-        # 调用Agent
+        # 调用Agent（不需要持久化，使用临时会话）
         with console.status("[yellow]正在分析...[/yellow]"):
-            result = agent.invoke({"messages": [("user", prompt)]})
+            result = agent.invoke(
+                {"messages": [("user", prompt)]},
+                config={"configurable": {"thread_id": "temp-check"}},
+            )
 
         # 显示结果
         if "messages" in result and result["messages"]:
