@@ -97,7 +97,40 @@ fi
 **输出格式**：
 - `text`（默认）：纯文本，适合人类阅读
 - `json`：结构化输出，包含 `response`、`confidence`、`messages` 字段
-- `stream-json`：流式 JSON（将在 v0.3.0 后续版本实现）
+- `stream-json`：流式 JSON，每个 chunk 一行
+```
+
+#### 流式输出 ⭐ v0.3.0 新增
+
+```bash
+# 流式文本输出（实时显示生成过程）
+novel-agent chat --print --stream '写一段关于张三的描写'
+
+# 流式 JSON 输出
+novel-agent chat --print --stream --output-format stream-json '检查一致性'
+
+# 在脚本中处理流式 JSON
+novel-agent chat --print --stream --output-format stream-json '问题' | while read line; do
+  DONE=$(echo "$line" | jq -r '.done')
+  if [ "$DONE" = "true" ]; then
+    CONFIDENCE=$(echo "$line" | jq -r '.confidence')
+    echo "最终置信度: $CONFIDENCE"
+  else
+    CHUNK=$(echo "$line" | jq -r '.chunk')
+    echo -n "$CHUNK"
+  fi
+done
+```
+
+**流式 JSON 格式**：
+\`\`\`json
+// 每个 chunk 一行
+{"chunk": "这是", "done": false}
+{"chunk": "流式", "done": false}
+{"chunk": "响应", "done": false}
+// 最后一行包含完整信息
+{"chunk": "", "done": true, "confidence": 85, "response": "这是流式响应"}
+\`\`\`
 ```
 
 ### 3. 示例对话（带自动上下文和置信度）⭐ 新特性
