@@ -647,15 +647,15 @@ def network(
 def _handle_streaming_output(
     agent_instance: Any,
     user_input: str,
-    config: dict,
+    config: dict[str, Any],
     output_format: str,
 ) -> None:
     """处理流式输出"""
     import json as json_module
     import sys
 
-    collected_chunks = []
-    all_messages = []
+    collected_chunks: list[str] = []
+    all_messages: list[Any] = []
 
     try:
         # 流式调用 Agent

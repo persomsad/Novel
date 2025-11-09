@@ -1,6 +1,7 @@
 """测试流式输出功能"""
 
 import json
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 from typer.testing import CliRunner
@@ -23,7 +24,7 @@ class TestStreaming:
         mock_agent = MagicMock()
 
         # 模拟流式输出：分3个 chunk
-        def mock_stream(*args, **kwargs):
+        def mock_stream(*args: Any, **kwargs: Any) -> Any:
             # Chunk 1
             msg1 = MagicMock()
             msg1.content = "这是"
@@ -58,7 +59,7 @@ class TestStreaming:
         # Mock Agent 流式响应
         mock_agent = MagicMock()
 
-        def mock_stream(*args, **kwargs):
+        def mock_stream(*args: Any, **kwargs: Any) -> Any:
             msg1 = MagicMock()
             msg1.content = "测试"
             yield {"messages": [msg1]}
@@ -111,7 +112,7 @@ class TestStreaming:
         """测试流式输出 + 管道输入"""
         mock_agent = MagicMock()
 
-        def mock_stream(*args, **kwargs):
+        def mock_stream(*args: Any, **kwargs: Any) -> Any:
             msg = MagicMock()
             msg.content = "管道流式响应"
             yield {"messages": [msg]}
@@ -133,7 +134,7 @@ class TestStreaming:
         """测试流式输出处理空 chunk"""
         mock_agent = MagicMock()
 
-        def mock_stream(*args, **kwargs):
+        def mock_stream(*args: Any, **kwargs: Any) -> Any:
             # 空 messages
             yield {"messages": []}
 
