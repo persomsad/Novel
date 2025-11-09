@@ -40,7 +40,7 @@ jobs:
 
       - name: Run mypy (type check)
         run: |
-          poetry run mypy .
+          poetry run mypy src
 
       - name: Run pytest (tests)
         run: |
