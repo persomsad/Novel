@@ -25,12 +25,12 @@ class ChapterState(TypedDict, total=False):
 
 
 def build_chapter_workflow(
-    model: Runnable,
+    model: Runnable[Any, Any],
     *,
     continuity_index: dict[str, Any] | None = None,
     index_path: Path | None = None,
     nervus_db: str | None = None,
-) -> StateGraph:
+) -> Any:  # 返回 StateGraph 的编译版本
     """Create a simple chapter-writing workflow."""
 
     data = continuity_index or build_continuity_index(Path.cwd(), output_path=index_path)
@@ -79,7 +79,7 @@ def build_chapter_workflow(
             }
         )
         content = response.content if isinstance(response, AIMessage) else str(response)
-        return {"outline": content, "context": context_text}
+        return {"outline": str(content), "context": context_text}
 
     builder.add_node("gather", gather_node)
 
@@ -99,7 +99,7 @@ def build_chapter_workflow(
     def draft_node(state: ChapterState) -> ChapterState:
         response = draft_chain.invoke({"outline": state.get("outline", "")})
         content = response.content if isinstance(response, AIMessage) else str(response)
-        return {"draft": content}
+        return {"draft": str(content)}
 
     builder.add_node("draft", draft_node)
 

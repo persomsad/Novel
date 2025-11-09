@@ -173,7 +173,11 @@ class GraphBuilder:
         """摄取单个章节到图数据库"""
         entities, relations = self.parser.parse_chapter(chapter_path)
 
-        stats = {"entities_created": 0, "relations_created": 0, "errors": []}
+        stats: dict[str, Any] = {
+            "entities_created": 0,
+            "relations_created": 0,
+            "errors": [],
+        }
 
         # 创建实体（节点）
         for entity in entities:
@@ -196,7 +200,7 @@ class GraphBuilder:
     def ingest_directory(self, chapters_dir: str) -> dict[str, Any]:
         """批量摄取目录下所有章节"""
         chapters = sorted(Path(chapters_dir).glob("ch*.md"))
-        total_stats = {
+        total_stats: dict[str, Any] = {
             "chapters_processed": 0,
             "entities_created": 0,
             "relations_created": 0,

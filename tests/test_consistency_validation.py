@@ -109,7 +109,7 @@ class TestConsistencyTools:
 
     @mock.patch("novel_agent.tools.nervus_cli.cypher_query")
     def test_verify_timeline_nervus_diff(
-        self, mock_cypher, monkeypatch: pytest.MonkeyPatch
+        self, mock_cypher: mock.Mock, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         monkeypatch.setenv("NERVUSDB_DB_PATH", "demo.nervusdb")
         mock_cypher.return_value = {"rows": []}
@@ -125,7 +125,7 @@ class TestConsistencyTools:
 
     @mock.patch("novel_agent.tools.nervus_cli.cypher_query")
     def test_verify_references_nervus_diff(
-        self, mock_cypher, monkeypatch: pytest.MonkeyPatch
+        self, mock_cypher: mock.Mock, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         monkeypatch.setenv("NERVUSDB_DB_PATH", "demo.nervusdb")
         mock_cypher.return_value = {"rows": []}

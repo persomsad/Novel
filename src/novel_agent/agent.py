@@ -338,7 +338,9 @@ def create_specialized_agent(
 
     original_invoke = agent.invoke
 
-    def invoke_with_context_and_confidence(input_data: dict[str, Any], *args, **kwargs) -> Any:
+    def invoke_with_context_and_confidence(
+        input_data: dict[str, Any], *args: Any, **kwargs: Any
+    ) -> Any:
         """包装 invoke：自动注入上下文 + 置信度评估"""
 
         # 1. 自动注入上下文

@@ -7,6 +7,7 @@
 
 import json
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -369,7 +370,7 @@ class TestVerifyStrictReferencesEnhanced:
 
     def test_empty_index_no_errors(self, tmp_path: Path) -> None:
         """测试空索引无错误"""
-        index_data = {"chapters": [], "references": []}
+        index_data: dict[str, Any] = {"chapters": [], "references": []}
 
         index_path = tmp_path / "index.json"
         index_path.write_text(json.dumps(index_data), encoding="utf-8")
@@ -408,7 +409,7 @@ class TestEnhancedValidationEdgeCases:
         # NervusDB 相关错误无法定位到具体行
         # 应该使用 line: 0 表示
 
-        index_data = {"chapters": [], "references": []}
+        index_data: dict[str, Any] = {"chapters": [], "references": []}
 
         index_path = tmp_path / "index.json"
         index_path.write_text(json.dumps(index_data), encoding="utf-8")

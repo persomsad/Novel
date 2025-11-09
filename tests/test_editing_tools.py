@@ -7,6 +7,7 @@
 """
 
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -227,7 +228,7 @@ class TestMultiEdit:
         ch1.write_text("# 第一章\n主角登场\n", encoding="utf-8")
         ch2.write_text("# 第二章\n战斗场景\n", encoding="utf-8")
 
-        operations = [
+        operations: list[dict[str, Any]] = [
             {"type": "replace", "file": str(ch1), "search": "主角", "replace": "林逸"},
             {
                 "type": "edit_lines",

@@ -381,7 +381,7 @@ class GraphQuerier:
         if not results:
             return f"未找到与 '{query}' 相关的内容"
 
-        type_counts = {}
+        type_counts: dict[str, int] = {}
         for r in results:
             type_counts[r.type] = type_counts.get(r.type, 0) + 1
 

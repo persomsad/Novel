@@ -182,7 +182,8 @@ def _load_continuity_index(path: Path | None = None) -> dict[str, Any]:
         raise FileNotFoundError(
             f"连续性索引 {target} 不存在。请先运行 `poetry run novel-agent refresh-memory`。"
         )
-    return json.loads(target.read_text(encoding="utf-8"))
+    result: dict[str, Any] = json.loads(target.read_text(encoding="utf-8"))
+    return result
 
 
 def _get_nervus_db_path(explicit: str | None = None) -> str | None:
