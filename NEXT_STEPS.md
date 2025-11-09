@@ -1,318 +1,298 @@
 # 下一步优化建议
 
 **生成时间**: 2025-11-09
-**当前版本**: v0.2.0-dev
-**目标**: 成为"小说创作界的 Claude Code"
+**当前版本**: v0.4.0
+**目标**: 专注小说创作的 AI 助手
 
 ---
 
-## ✅ 已完成 (v0.2.0)
+## ✅ 已完成功能总览
 
-### P0 功能（核心体验）
-- ✅ **精准编辑工具** (commit: 1d724c8)
-  - `edit_chapter_lines()`: 修改章节指定行
-  - `replace_in_file()`: 查找替换文本
-  - `multi_edit()`: 批量编辑多个文件（原子性）
+### v0.4.0（2025-11-09）- 简化体验，专注创作
+- ✅ 简化权限系统（2级：default vs read-only）
+- ✅ 提示词文件支持（-f 参数 + 变量替换）
+- ✅ 终端输入位置优化（65% 屏幕位置）
+- ✅ 会话压缩功能（/compress 命令）
+- ✅ 会话管理功能（/sessions + /export）
 
-- ✅ **自动修复建议** (commit: 1d724c8)
-  - `verify_strict_timeline()`: 返回结构化错误 + 修复建议
-  - `verify_strict_references()`: 返回结构化错误 + 修复建议
+### v0.3.0（2025-11-09）- 终端体验优化
+- ✅ 非交互模式（--print, JSON 输出）
+- ✅ 流式输出（--stream）
+- ✅ 智能缓存（3层缓存系统）
+- ✅ 批量操作（glob 模式 + 并行处理）
+- ✅ 工具权限控制
+- ✅ 增强内存系统（长期记忆 + SQLite）
+- ✅ 性能优化（性能追踪）
+- ✅ 友好错误消息
+- ✅ **文件监控**（`file_watcher.py`）
+- ✅ **智能上下文检索**（`context_retriever.py`）
 
-- ✅ **智能图查询** (commit: 70eb865)
-  - `smart_context_search()`: 多跳图遍历 + 置信度评分
-  - `build_character_network()`: 角色关系网络 + 社区检测
-  - `trace_foreshadow()`: 伏笔链条追溯
+### v0.2.0（基础能力）
+- ✅ 精准编辑工具（edit_chapter_lines, replace_in_file, multi_edit）
+- ✅ 自动修复建议（verify_strict_timeline/references）
+- ✅ 智能图查询（smart_context_search, build_character_network, trace_foreshadow）
+- ✅ 会话持久化（SqliteSaver）
+- ✅ NervusDB 集成
 
 ### 测试覆盖率
-- 从 14% → **68%**
-- 125 个测试全部通过
+- **270 个测试**（269 passed, 1 skipped）
+- **覆盖率 66.80%**
 
 ---
 
-## 🎯 接下来应该做什么？
+## 🎯 v0.5.0 计划 - 内容层工具
 
-根据 `docs/analysis-gap-to-claude-code.md` 分析，**还剩 1 个 P0 功能**：
+**核心理念**: 技术层（v0.1-v0.4）已完善，现在补充**内容层**数据结构
 
-### P0-4: 实时上下文理解 ⭐⭐⭐⭐⭐
+> **"Bad programmers worry about the code. Good programmers worry about data structures."** - Linus Torvalds
 
-**现状问题：**
-- ❌ Agent 需要自己搜索相关信息（"帮我读取角色设定"）
-- ❌ 上下文索引需要手动刷新（`refresh-memory`）
-- ❌ 无法自动感知文件变更
+### 为什么是"内容层"？
 
-**目标：**
-Agent 自动选择相关上下文，像 Claude Code 一样智能：
+当前状态：
+- ✅ **技术层**：编辑工具、图查询、一致性验证、文件监控、上下文检索 → 已完善
+- ❌ **内容层**：如何开始写？怎么保持风格？怎么快速描写场景？ → 缺失
+
+就像 Linux：
+- ✅ 内核（技术层）→ 已经很强
+- ❌ 用户空间（内容层）→ 需要补充
+
+---
+
+## 📋 v0.5.0 功能清单
+
+### 1. 写作模板系统 ⭐⭐⭐⭐⭐（P1，最实用）
+
+**问题**：
+- 重复描写同类场景效率低（战斗、对话、场景转换）
+- 不同章节风格不统一
+
+**解决方案**：
+
+#### 数据结构：`spec/templates/`
+
 ```
-用户："检查第3章的角色一致性"
-Agent: [自动加载]
-  - spec/knowledge/character-profiles.md (角色设定)
-  - chapters/ch003.md (当前章节)
-  - chapters/ch001-002.md (前置章节，用于对比)
-[开始推理...]
+spec/templates/
+├── scene-description.md      # 场景描写模板
+├── dialogue.md               # 对话模板
+├── action.md                 # 动作描写模板
+├── psychology.md             # 心理描写模板
+└── transition.md             # 场景过渡模板
 ```
 
-**核心技术：图数据库 + ripgrep（学习 Claude Code）**
-- ✅ 精确匹配，不会有语义偏差
-- ✅ 零延迟，不需要 Embedding 模型
-- ✅ 零成本，不需要额外依赖
-- ✅ 可解释性强，用户能理解为什么匹配
-
-**实现方案：**
-
-#### 1. 文件监控 + 自动刷新索引 (2-3天)
+#### 新增工具
 
 ```python
-# 新增模块: src/novel_agent/file_watcher.py
-from watchdog.observers import Observer
-from watchdog.events import FileSystemEventHandler
+# src/novel_agent/tools.py
 
-class NovelFileHandler(FileSystemEventHandler):
-    """监控章节和设定文件变更"""
+@tool
+def apply_template(
+    template_name: str,  # "scene-description", "dialogue"
+    variables: dict      # {"character_a": "张三", "action_a": "挥剑"}
+) -> str:
+    """应用写作模板"""
+    pass
 
-    def on_modified(self, event):
-        if event.src_path.endswith('.md'):
-            # 自动增量更新索引
-            update_continuity_index(event.src_path)
-
-# 启动监控（daemon模式）
-observer = Observer()
-observer.schedule(handler, path='chapters/', recursive=True)
-observer.schedule(handler, path='spec/', recursive=True)
-observer.start()
+@tool
+def list_templates(category: str | None = None) -> str:
+    """列出所有可用模板"""
+    pass
 ```
 
-**依赖：** `watchdog>=4.0.0`
+**工作量**：2-3 天
 
-#### 2. 智能上下文检索器 (2-3天)
+---
+
+### 2. 风格指南系统 ⭐⭐⭐⭐⭐（P1，保证一致性）
+
+**问题**：
+- 禁用词过度使用（"突然"、"竟然"）
+- 角色语气不一致
+- 标点符号不规范
+
+**解决方案**：
+
+#### 数据结构：`spec/style-guide.yaml`
+
+```yaml
+writing_style:
+  tone: "轻松幽默"        # 或"严肃深沉"、"热血激昂"
+  pacing: "快节奏"        # 或"慢节奏"、"中等节奏"
+  sentence_length: "短句为主"
+
+forbidden_words:
+  - "突然"    # 原因：过度使用
+  - "竟然"
+  - "居然"
+
+character_voice:
+  张三:
+    tone: "粗犷、直接"
+    vocabulary: ["老子", "他娘的"]
+    forbidden: ["呵呵", "嘻嘻"]
+  李四:
+    tone: "文雅、委婉"
+    vocabulary: ["在下", "阁下"]
+    forbidden: ["老子"]
+
+punctuation_rules:
+  dialogue_end: "。"
+  exclamation_limit: 3    # 每章最多3个感叹号
+  ellipsis_format: "……"
+```
+
+#### 新增工具
 
 ```python
-# 新增模块: src/novel_agent/context_retriever.py
-class ContextRetriever:
-    """基于图数据库 + grep 文本搜索的混合检索
+@tool
+def check_style_compliance(chapter_number: int) -> str:
+    """检查章节是否符合风格指南
 
-    灵感来源：Claude Code 使用 ripgrep 而非向量检索
-    优势：精确、快速、零成本、可解释
+    Returns:
+        - 禁用词汇使用情况
+        - 角色语气一致性
+        - 标点符号规范性
+        - 修复建议
     """
+    pass
 
-    def retrieve_context(
-        self,
-        query: str,
-        max_tokens: int = 10000
-    ) -> list[Document]:
-        """智能选择相关文档
-
-        策略（按优先级）：
-        1. 图查询：从 NervusDB 找出直接关联的实体
-        2. 文本搜索：用 ripgrep 找包含关键词的文档
-        3. 时间线过滤：只返回相关时间段的章节
-        4. 优先级排序：章节 > 设定 > 大纲
-        """
-
-        # 1. 从 NervusDB 图查询相关实体
-        entities = self.graph_query(query)
-
-        # 2. 获取实体关联的文档（通过图关系）
-        docs_by_graph = self.get_documents_by_entities(entities)
-
-        # 3. 文本搜索补充（ripgrep 精确匹配）
-        docs_by_grep = self.grep_search(query)
-
-        # 4. 合并去重 + 优先级排序
-        return self.merge_and_rank(docs_by_graph, docs_by_grep)
+@tool
+def apply_style_fix(chapter_number: int, auto_fix: bool = False) -> str:
+    """应用风格修复建议"""
+    pass
 ```
 
-**依赖：**
-- 无新增依赖！已有 ripgrep 和 NervusDB
+**工作量**：2-3 天
 
-#### 3. Agent 自动上下文注入 (1-2天)
+---
+
+### 3. 大纲生成器 ⭐⭐⭐⭐（P1，创作起点）
+
+**问题**：
+- 不知道如何开始写小说
+- 不知道如何分配章节和情节
+
+**解决方案**：
 
 ```python
-# 修改: src/novel_agent/agent.py
-def create_novel_agent(...):
-    # 添加上下文检索器
-    retriever = ContextRetriever(
-        graph_db="data/novel-graph.nervusdb",
-        index_path="data/continuity/index.json"
-    )
+# src/novel_agent/tools_creative.py
 
-    # 在每次对话前自动注入上下文
-    def inject_context(state: AgentState) -> AgentState:
-        query = state["messages"][-1].content
-        context_docs = retriever.retrieve_context(query)
+@tool
+def generate_outline(
+    genre: str,          # 玄幻、都市、科幻、武侠等
+    target_words: int,   # 目标字数（如 100000）
+    themes: list[str],   # 主题列表（如 ["复仇", "成长"]）
+    style: str = "爽文"  # 风格：爽文、虐文、轻松、严肃
+) -> str:
+    """根据题材自动生成三幕结构大纲
 
-        # 将上下文添加到 system message
-        context_text = "\n\n".join([
-            f"## {doc.metadata['source']}\n{doc.page_content}"
-            for doc in context_docs
-        ])
-
-        state["context"] = context_text
-        return state
-
-    # 添加到 LangGraph workflow
-    workflow.add_node("inject_context", inject_context)
-    workflow.add_edge(START, "inject_context")
-    workflow.add_edge("inject_context", "agent")
+    Returns:
+        格式化的大纲文本，包含：
+        - 三幕结构（起承转合）
+        - 章节分配（每幕多少章）
+        - 关键情节点
+        - 角色成长弧线
+    """
+    pass
 ```
 
----
-
-## 📊 优先级总结
-
-### 立即实施（本周）⭐⭐⭐⭐⭐
-1. **实时上下文理解** (P0-4)
-   - 工作量：5-6 天（去掉向量后更快）
-   - 价值：Agent 智能度提升 10 倍
-   - 依赖：watchdog（仅此一个！）
-
-### 下一版本（v0.3.0）
-2. **VSCode 插件** (P1)
-   - 工作量：2-3 周
-   - 价值：编辑器集成，用户体验质变
-   - 参考：Gemini CLI 的 vscode-ide-companion
-
-3. **Agent 记忆系统增强** (P1)
-   - 工作量：1 周
-   - 价值：长期对话上下文保持
-   - 技术：LangGraph Checkpointer + 向量检索
-
-### 长期规划（v0.4.0+）
-4. **多模态支持** (P2)
-   - 图片理解（角色设计图）
-   - 语音输入输出
-
-5. **协作功能** (P2)
-   - 多人实时编辑
-   - 评论和建议系统
+**工作量**：3-5 天
 
 ---
 
-## 🚀 实施路线图
+### 4. 增强创作工具 ⭐⭐⭐（P2，润色）
 
-### Week 1: 实时上下文理解（5-6天）
-```bash
-# Day 1-2: 文件监控
-- 安装 watchdog
-- 实现 file_watcher.py
-- 集成到 CLI (daemon 模式)
+**功能**：
 
-# Day 3-5: 智能检索（图 + grep）
-- 实现 ContextRetriever
-- 集成 NervusDB 图查询
-- 集成 ripgrep 文本搜索
-- 优先级排序算法
+```python
+@tool
+def dialogue_enhancer(
+    dialogue: str,
+    character_hint: str | None = None,
+    emotion: str | None = None
+) -> str:
+    """对话润色，添加动作、表情、心理描写"""
+    pass
 
-# Day 6: Agent 集成 + 测试
-- 修改 agent.py 注入上下文
-- 测试和优化
-- 文档更新
+@tool
+def plot_twist_generator(
+    current_plot: str,
+    intensity: str = "medium"
+) -> list[str]:
+    """生成情节转折建议"""
+    pass
+
+@tool
+def scene_transition(
+    from_scene: str,
+    to_scene: str,
+    transition_type: str = "time"
+) -> str:
+    """生成场景过渡文本"""
+    pass
 ```
 
-### Week 3-5: VSCode 插件
-```bash
-# Week 3: 基础架构
-- VSCode Extension 项目搭建
-- WebSocket 服务器（连接 Agent）
-- 右键菜单集成
-
-# Week 4: 核心功能
-- 侧边栏：角色列表、时间线
-- Inline Diff 预览
-- 实时一致性检查
-
-# Week 5: 发布
-- 测试和文档
-- VSCode Marketplace 发布
-```
+**工作量**：3-4 天
 
 ---
 
-## 💡 技术决策
+## 📊 v0.5.0 优先级总结
 
-### 为什么优先实时上下文理解？
+**时间轴**（2-3 周）：
+1. **Week 1**: 写作模板 + 风格指南（4-6 天）
+2. **Week 2**: 大纲生成器（3-5 天）
+3. **Week 3**: 增强创作工具（可选，3-4 天）
 
-| 功能 | 价值 | 复杂度 | ROI |
-|------|------|--------|-----|
-| 实时上下文 | ⭐⭐⭐⭐⭐ | 🔧🔧🔧 | **最高** |
-| VSCode 插件 | ⭐⭐⭐⭐ | 🔧🔧🔧🔧 | 高 |
-| 多模态 | ⭐⭐⭐ | 🔧🔧🔧🔧🔧 | 低 |
-
-**原因：**
-1. **痛点最大**: 用户最常抱怨"Agent 记不住设定"
-2. **技术成熟**: 图数据库 + 向量检索已有成熟方案
-3. **快速见效**: 10 天内可完成，立即提升体验
-
-### 为什么不先做 VSCode 插件？
-
-**风险：**
-- 编辑器集成需要 2-3 周，时间长
-- 如果 Agent 核心能力不够强，插件也没用
-- VSCode API 学习成本高
-
-**策略：**
-- 先让 Agent 变聪明（实时上下文）
-- 再包装到编辑器里
+**最小可发布**（MVP）：
+- 写作模板系统
+- 风格指南系统
 
 ---
 
-## 📝 执行检查清单
+## 🚀 立即行动清单
 
-### 开始实时上下文理解前的准备
+### 本周（文档清理）✅
+- [x] 更新 NEXT_STEPS.md - 标记已实现功能
+- [ ] 归档/更新 analysis-gap-to-claude-code.md
+- [ ] 创建 v0.5.0 Milestone
+- [ ] 创建 4 个功能 Issues
 
-- [ ] 阅读 `docs/analysis-gap-to-claude-code.md` 完整分析
-- [ ] 安装依赖：`poetry add watchdog sentence-transformers`
-- [ ] 创建新分支：`git checkout -b feat/realtime-context`
-- [ ] 创建设计文档：`docs/architecture/ADR-004-realtime-context.md`
-- [ ] 创建测试计划：`tests/test_context_retriever.py`
+### Week 1（写作模板 + 风格指南）
+- [ ] 创建 `feat/writing-templates` 分支
+- [ ] 设计模板数据结构（spec/templates/）
+- [ ] 实现 `apply_template()` 和 `list_templates()`
+- [ ] 创建 `feat/style-guide` 分支
+- [ ] 设计风格指南数据结构（spec/style-guide.yaml）
+- [ ] 实现 `check_style_compliance()` 和 `apply_style_fix()`
 
-### 完成标准
-
-- [ ] 文件修改自动触发索引更新（延迟 < 1秒）
-- [ ] Agent 自动选择相关上下文（准确率 > 80%）
-- [ ] 上下文注入不影响性能（延迟 < 500ms）
-- [ ] 测试覆盖率保持 > 60%
-- [ ] 文档更新完成
+### Week 2（大纲生成器）
+- [ ] 创建 `feat/outline-generator` 分支
+- [ ] 设计大纲生成逻辑
+- [ ] 实现 `generate_outline()` 工具
+- [ ] 添加 CLI 命令：`novel-agent outline generate`
 
 ---
 
-## 🤔 需要决策的问题
+## 💡 核心洞察
 
-### 1. 为什么不用向量检索？✅ 已决策
+**Talk is cheap. Show me the code.** - Linus Torvalds
 
-**方案：图 + grep（学习 Claude Code）**
+不要追求"看起来很酷"的功能（Web UI、多模态、协作），专注于解决真实问题：
 
-Claude Code 的实践证明：
-- ✅ **ripgrep 足够精确**：全文搜索比语义相似度更可靠
-- ✅ **零延迟**：不需要 Embedding 模型（200MB+）
-- ✅ **零成本**：不需要向量数据库和维护
-- ✅ **可解释**：用户能理解为什么匹配
+✅ **真实问题**：
+- 怎么开始写？→ 大纲生成器
+- 怎么写得更快？→ 写作模板
+- 怎么保持风格一致？→ 风格指南
 
-**我们的方案比 Claude Code 更强**：
-- Claude Code: 仅 grep
-- 我们: **图数据库 + grep** = 精确关系 + 文本搜索
-
-### 2. 实时监控 vs 手动刷新？
-
-**方案 A: 自动监控（watchdog）**
-- ✅ 用户无感知，体验好
-- ❌ 后台进程，占用资源
-
-**方案 B: 保持手动刷新**
-- ✅ 简单可控
-- ❌ 用户需要记得刷新
-
-**建议**: 实现方案 A，但提供开关（默认开启）
+❌ **假想问题**（暂不做）：
+- VSCode 插件（技术炫技）
+- 多模态支持（过度设计）
+- 协作功能（不是核心场景）
 
 ---
 
 ## 📚 参考资料
 
-- [watchdog 文档](https://python-watchdog.readthedocs.io/)
-- [sentence-transformers 文档](https://www.sbert.net/)
-- [LangChain Context Retrieval](https://python.langchain.com/docs/modules/data_connection/)
-- [Gemini CLI vscode-ide-companion](https://github.com/google-gemini/gemini-cli/tree/main/vscode-ide-companion)
-- [Claude Code 架构分析](https://docs.anthropic.com/claude/docs/about-claude-for-vscode)
-
----
-
-**下一步行动**: 创建 `feat/realtime-context` 分支，开始实现文件监控模块。
+- [功能缺口分析 - 实用主义版](./docs/feature-gap-analysis-pragmatic.md)
+- [CHANGELOG v0.4.0](../CHANGELOG.md#040---2025-11-09)
+- [已实现的文件监控](../src/novel_agent/file_watcher.py)
+- [已实现的上下文检索](../src/novel_agent/context_retriever.py)
