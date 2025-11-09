@@ -1189,6 +1189,239 @@ def apply_template(template_name: str, variables: dict[str, str]) -> str:
         return f"❌ 应用模板失败：{str(e)}"
 
 
+# ==================== 风格指南系统 ====================
+
+
+def check_style_compliance(chapter_number: int) -> str:
+    """检查章节是否符合风格指南要求
+
+    Args:
+        chapter_number: 章节编号
+
+    Returns:
+        格式化的检查报告（Markdown）
+    """
+    from pathlib import Path
+
+    import yaml
+
+    try:
+        # 读取风格指南
+        style_guide_path = Path("spec/style-guide.yaml")
+        if not style_guide_path.exists():
+            return "❌ 错误：找不到 spec/style-guide.yaml 风格指南文件"
+
+        with open(style_guide_path, encoding="utf-8") as f:
+            style_guide = yaml.safe_load(f)
+
+        # 读取章节内容
+        chapter_file = Path(f"chapters/chapter_{chapter_number}.md")
+        if not chapter_file.exists():
+            return f"❌ 错误：找不到第 {chapter_number} 章文件"
+
+        with open(chapter_file, encoding="utf-8") as f:
+            content = f.read()
+
+        lines = content.split("\n")
+
+        # 检查报告
+        report = [f"# 第{chapter_number}章风格检查报告\n"]
+
+        # 1. 检查禁用词汇
+        forbidden_issues = []
+        forbidden_words = style_guide.get("forbidden_words", [])
+        for line_num, line in enumerate(lines, 1):
+            for rule in forbidden_words:
+                word = rule["word"]
+                if word in line:
+                    suggestions = ", ".join(
+                        f'"{s}"' if s else "(删除)" for s in rule["suggestions"][:3]
+                    )
+                    forbidden_issues.append(
+                        f'- 第{line_num}行："{line.strip()}" → 含有 "{word}" '
+                        f"({rule['reason']})\\n  建议: {suggestions}"
+                    )
+
+        if forbidden_issues:
+            report.append(f"## ❌ 禁用词汇（{len(forbidden_issues)}处）\n")
+            report.extend(forbidden_issues)
+            report.append("")
+        else:
+            report.append("## ✅ 禁用词汇：通过\n")
+
+        # 2. 检查角色语气
+        voice_issues = []
+        character_voice = style_guide.get("character_voice", {})
+        for line_num, line in enumerate(lines, 1):
+            # 检测对话（简单实现：包含冒号或引号）
+            if "：" in line or '"' in line or "「" in line:
+                for char_name, char_rules in character_voice.items():
+                    if char_name in line:
+                        # 检查是否使用了禁用词汇
+                        for forbidden in char_rules.get("forbidden", []):
+                            if forbidden in line:
+                                voice_issues.append(
+                                    f'- 第{line_num}行：{char_name}说 "{line.strip()}" '
+                                    f'→ 含有不符合角色设定的词汇 "{forbidden}"\\n'
+                                    f"  {char_name}的语气应为：{char_rules['tone']}"
+                                )
+
+        if voice_issues:
+            report.append(f"## ⚠️  角色语气不一致（{len(voice_issues)}处）\n")
+            report.extend(voice_issues)
+            report.append("")
+        else:
+            report.append("## ✅ 角色语气：通过\n")
+
+        # 3. 检查标点符号
+        punct_issues = []
+        punct_rules = style_guide.get("punctuation_rules", {})
+
+        # 检查感叹号数量
+        exclaim_count = content.count("！")
+        exclaim_limit = punct_rules.get("exclamation_limit", 5)
+        if exclaim_count > exclaim_limit:
+            punct_issues.append(f"- 感叹号过多：{exclaim_count}处（限制：{exclaim_limit}处）")
+
+        # 检查省略号格式
+        if "..." in content:
+            punct_issues.append(
+                f"- 省略号格式错误：应使用 \"{punct_rules.get('ellipsis_format', '……')}\""
+                ' 而非 "..."'
+            )
+
+        if punct_issues:
+            report.append(f"## ⚠️  标点符号规范（{len(punct_issues)}处）\n")
+            report.extend(punct_issues)
+            report.append("")
+        else:
+            report.append("## ✅ 标点符号规范：通过\n")
+
+        # 4. 检查句式风格
+        style_issues = []
+        sentence_style = style_guide.get("sentence_style", {})
+        max_length = sentence_style.get("max_length", 50)
+
+        for line_num, line in enumerate(lines, 1):
+            # 检查句子长度（简单实现：按句号分割）
+            sentences = [s for s in line.split("。") if s.strip()]
+            for sent in sentences:
+                if len(sent) > max_length:
+                    style_issues.append(
+                        f"- 第{line_num}行：句子过长（{len(sent)}字，限制{max_length}字）"
+                    )
+
+        if style_issues:
+            report.append(f"## ⚠️  句式风格（{len(style_issues)}处）\n")
+            report.extend(style_issues)
+            report.append("")
+        else:
+            report.append("## ✅ 句式风格：通过\n")
+
+        # 总结
+        total_issues = (
+            len(forbidden_issues) + len(voice_issues) + len(punct_issues) + len(style_issues)
+        )
+        if total_issues == 0:
+            report.append("\n## 🎉 总结\n\n所有检查项均通过！")
+        else:
+            report.append(f"\n## 📊 总结\n\n发现 {total_issues} 处需要改进的地方。")
+
+        return "\n".join(report)
+
+    except Exception as e:
+        logger.error(f"风格检查失败: {e}")
+        return f"❌ 风格检查失败：{str(e)}"
+
+
+def apply_style_fix(chapter_number: int, auto_fix: bool = False) -> str:
+    """应用风格修复建议
+
+    Args:
+        chapter_number: 章节编号
+        auto_fix: 是否自动修复（True=自动修复，False=仅显示建议）
+
+    Returns:
+        修复报告或建议列表
+    """
+    from pathlib import Path
+
+    import yaml
+
+    try:
+        # 读取风格指南
+        style_guide_path = Path("spec/style-guide.yaml")
+        if not style_guide_path.exists():
+            return "❌ 错误：找不到 spec/style-guide.yaml 风格指南文件"
+
+        with open(style_guide_path, encoding="utf-8") as f:
+            style_guide = yaml.safe_load(f)
+
+        # 读取章节内容
+        chapter_file = Path(f"chapters/chapter_{chapter_number}.md")
+        if not chapter_file.exists():
+            return f"❌ 错误：找不到第 {chapter_number} 章文件"
+
+        with open(chapter_file, encoding="utf-8") as f:
+            content = f.read()
+
+        if not auto_fix:
+            # 仅显示建议
+            report = check_style_compliance(chapter_number)
+            return f"{report}\n\n💡 提示：使用 auto_fix=True 参数可自动应用修复建议"
+
+        # 自动修复
+        modified = content
+        fixes_applied = []
+
+        # 1. 修复禁用词汇（使用第一个建议）
+        forbidden_words = style_guide.get("forbidden_words", [])
+        for rule in forbidden_words:
+            word = rule["word"]
+            suggestions = rule.get("suggestions", [])
+            if suggestions and suggestions[0]:  # 使用第一个非空建议
+                replacement = suggestions[0]
+                count = modified.count(word)
+                if count > 0:
+                    modified = modified.replace(word, replacement)
+                    fixes_applied.append(f'- 替换 "{word}" → "{replacement}" ({count}处)')
+            elif word in modified:  # 如果第一个建议是空（删除）
+                count = modified.count(word)
+                modified = modified.replace(word, "")
+                fixes_applied.append(f'- 删除 "{word}" ({count}处)')
+
+        # 2. 修复省略号格式
+        punct_rules = style_guide.get("punctuation_rules", {})
+        ellipsis_format = punct_rules.get("ellipsis_format", "……")
+        if "..." in modified:
+            count = modified.count("...")
+            modified = modified.replace("...", ellipsis_format)
+            fixes_applied.append(f"- 修复省略号格式 ({count}处)")
+
+        # 保存修改
+        if fixes_applied:
+            with open(chapter_file, "w", encoding="utf-8") as f:
+                f.write(modified)
+
+            report = [
+                f"# 第{chapter_number}章风格修复报告\n",
+                f"## ✅ 已应用修复（{len(fixes_applied)}项）\n",
+            ]
+            report.extend(fixes_applied)
+            report.append("\n## 📝 提示\n")
+            report.append("- 文件已保存")
+            report.append("- 建议重新运行检查确认效果")
+            return "\n".join(report)
+        else:
+            return f"第{chapter_number}章没有可自动修复的问题。"
+
+    except Exception as e:
+        logger.error(f"风格修复失败: {e}")
+        return f"❌ 风格修复失败：{str(e)}"
+
+
 # 工具装饰器包装（用于 LangChain）
 list_templates_tool = lc_tool(list_templates)
 apply_template_tool = lc_tool(apply_template)
+check_style_compliance_tool = lc_tool(check_style_compliance)
+apply_style_fix_tool = lc_tool(apply_style_fix)
