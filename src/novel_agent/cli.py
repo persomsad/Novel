@@ -3,6 +3,7 @@
 使用 Typer + Rich 创建命令行界面
 """
 
+import json
 import os
 import sys
 import uuid
@@ -1150,6 +1151,102 @@ def _check_file_task(file: Path, agent: Any, auto_fix: bool) -> dict[str, Any]:
 
     except Exception as e:
         return {"file": str(file), "status": "error", "issues": [f"检查失败: {str(e)}"]}
+
+
+@app.command()
+def memory(
+    action: str = typer.Argument(..., help="操作：list/clear/search/get/save"),
+    category: Optional[str] = typer.Option(None, "--category", "-c", help="记忆分类"),
+    key: Optional[str] = typer.Option(None, "--key", "-k", help="记忆键"),
+    value: Optional[str] = typer.Option(None, "--value", "-v", help="记忆值（JSON格式）"),
+    query: Optional[str] = typer.Option(None, "--query", "-q", help="搜索关键词"),
+) -> None:
+    """管理长期记忆
+
+    支持的操作：
+    - list: 列出指定分类的记忆
+    - clear: 清空指定分类的记忆
+    - search: 搜索记忆
+    - get: 获取指定记忆
+    - save: 保存记忆
+
+    示例:
+        novel-agent memory list --category user_preference
+        novel-agent memory save --category project_info --key protagonist --value '"李明"'
+        novel-agent memory search --query 角色
+        novel-agent memory clear --category user_preference
+    """
+    from .long_term_memory import get_memory
+
+    memory_store = get_memory()
+
+    if action == "list":
+        if not category:
+            console.print("[red]错误：list 操作需要指定 --category[/red]")
+            raise typer.Exit(1)
+
+        memories = memory_store.list_by_category(category)
+        if not memories:
+            console.print(f"[yellow]分类 '{category}' 中没有记忆[/yellow]")
+            return
+
+        console.print(f"[bold cyan]📚 记忆列表（{category}）：[/bold cyan]\n")
+        for mem in memories:
+            console.print(f"  [yellow]{mem['key']}[/yellow]: {mem['value']}")
+            console.print(f"    [dim]更新时间: {mem['updated_at']}[/dim]")
+
+    elif action == "clear":
+        if not category:
+            console.print("[red]错误：clear 操作需要指定 --category[/red]")
+            raise typer.Exit(1)
+
+        count = memory_store.clear_category(category)
+        console.print(f"[green]✓ 已清空 {count} 条记忆（分类: {category}）[/green]")
+
+    elif action == "search":
+        if not query:
+            console.print("[red]错误：search 操作需要指定 --query[/red]")
+            raise typer.Exit(1)
+
+        results = memory_store.search(query, category=category)
+        if not results:
+            console.print(f"[yellow]未找到匹配的记忆：{query}[/yellow]")
+            return
+
+        console.print(f"[bold cyan]🔍 搜索结果（{len(results)} 条）：[/bold cyan]\n")
+        for mem in results:
+            console.print(f"  [{mem['category']}] [yellow]{mem['key']}[/yellow]: {mem['value']}")
+
+    elif action == "get":
+        if not category or not key:
+            console.print("[red]错误：get 操作需要指定 --category 和 --key[/red]")
+            raise typer.Exit(1)
+
+        value = memory_store.get(category, key)
+        if value is None:
+            console.print(f"[yellow]未找到记忆：{category}.{key}[/yellow]")
+        else:
+            console.print(f"[yellow]{category}.{key}[/yellow]: {value}")
+
+    elif action == "save":
+        if not category or not key or not value:
+            console.print("[red]错误：save 操作需要指定 --category, --key 和 --value[/red]")
+            raise typer.Exit(1)
+
+        # 尝试解析 JSON 值
+        try:
+            parsed_value = json.loads(value)
+        except json.JSONDecodeError:
+            # 如果不是 JSON，当作字符串
+            parsed_value = value
+
+        memory_store.save(category, key, parsed_value)
+        console.print(f"[green]✓ 已保存记忆：{category}.{key}[/green]")
+
+    else:
+        console.print(f"[red]错误：未知操作 '{action}'[/red]")
+        console.print("支持的操作：list, clear, search, get, save")
+        raise typer.Exit(1)
 
 
 def main() -> None:
