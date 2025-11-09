@@ -15,7 +15,9 @@ class TestPrintMode:
 
     @patch("novel_agent.cli.create_specialized_agent")
     @patch("novel_agent.cli.open_checkpointer")
-    def test_print_mode_with_prompt_text_output(self, mock_checkpointer, mock_create_agent) -> None:
+    def test_print_mode_with_prompt_text_output(
+        self, mock_checkpointer: MagicMock, mock_create_agent: MagicMock
+    ) -> None:
         """测试 --print 模式 + 文本输出"""
         # Mock Agent 响应
         mock_agent = MagicMock()
@@ -33,7 +35,9 @@ class TestPrintMode:
 
     @patch("novel_agent.cli.create_specialized_agent")
     @patch("novel_agent.cli.open_checkpointer")
-    def test_print_mode_with_json_output(self, mock_checkpointer, mock_create_agent) -> None:
+    def test_print_mode_with_json_output(
+        self, mock_checkpointer: MagicMock, mock_create_agent: MagicMock
+    ) -> None:
         """测试 --print --output-format json"""
         # Mock Agent 响应
         mock_agent = MagicMock()
@@ -71,7 +75,9 @@ class TestPrintMode:
 
     @patch("novel_agent.cli.create_specialized_agent")
     @patch("novel_agent.cli.open_checkpointer")
-    def test_print_mode_with_pipe_input(self, mock_checkpointer, mock_create_agent) -> None:
+    def test_print_mode_with_pipe_input(
+        self, mock_checkpointer: MagicMock, mock_create_agent: MagicMock
+    ) -> None:
         """测试管道输入"""
         # Mock Agent 响应
         mock_agent = MagicMock()
@@ -90,7 +96,9 @@ class TestPrintMode:
 
     @patch("novel_agent.cli.create_specialized_agent")
     @patch("novel_agent.cli.open_checkpointer")
-    def test_print_mode_with_stream_json_format(self, mock_checkpointer, mock_create_agent) -> None:
+    def test_print_mode_with_stream_json_format(
+        self, mock_checkpointer: MagicMock, mock_create_agent: MagicMock
+    ) -> None:
         """测试 stream-json 格式（暂时等同于 json）"""
         # Mock Agent 响应
         mock_agent = MagicMock()
@@ -110,7 +118,9 @@ class TestPrintMode:
 
     @patch("novel_agent.cli.create_specialized_agent")
     @patch("novel_agent.cli.open_checkpointer")
-    def test_print_mode_with_error(self, mock_checkpointer, mock_create_agent) -> None:
+    def test_print_mode_with_error(
+        self, mock_checkpointer: MagicMock, mock_create_agent: MagicMock
+    ) -> None:
         """测试错误处理"""
         # Mock Agent 抛出异常
         mock_agent = MagicMock()
