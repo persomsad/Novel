@@ -61,6 +61,8 @@ export GOOGLE_API_KEY="your-gemini-api-key"
 
 ### 2. 启动对话
 
+#### 交互模式（默认）
+
 ```bash
 # 启动对话（默认启用自动上下文和文件监控）
 novel-agent chat
@@ -70,6 +72,32 @@ novel-agent chat --disable-watcher
 
 # 禁用自动上下文（手动模式）
 novel-agent chat --disable-context
+```
+
+#### 非交互模式 ⭐ v0.3.0 新增
+
+```bash
+# 文本输出（用于脚本和管道）
+novel-agent chat --print '检查第3章一致性'
+
+# JSON 输出（可接入其他工具）
+novel-agent chat --print --output-format json '检查一致性' | jq '.confidence'
+
+# 管道使用
+echo '主角的性格特点是什么？' | novel-agent chat --print
+
+# 在脚本中使用
+RESULT=$(novel-agent chat --print --output-format json '检查问题')
+CONFIDENCE=$(echo "$RESULT" | jq -r '.confidence')
+if [ "$CONFIDENCE" -gt 80 ]; then
+  echo "高质量响应"
+fi
+```
+
+**输出格式**：
+- `text`（默认）：纯文本，适合人类阅读
+- `json`：结构化输出，包含 `response`、`confidence`、`messages` 字段
+- `stream-json`：流式 JSON（将在 v0.3.0 后续版本实现）
 ```
 
 ### 3. 示例对话（带自动上下文和置信度）⭐ 新特性
