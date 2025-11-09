@@ -75,7 +75,9 @@ def dialogue_enhancer(dialogue_text: str, character_hint: str | None = None) -> 
     for line in lines:
         prefix = character_hint or "他"
         beat = "沉声" if "!" in line or "？" in line else "低声"
-        enhanced.append(prefix + beat + '道："' + line.strip('"') + '"')
+        # 同时删除中英文引号（U+201C/D 左右双引号，U+2018/9 左右单引号，以及英文引号）
+        cleaned_line = line.strip("\"\u201c\u201d'\u2018\u2019")
+        enhanced.append(prefix + beat + '道："' + cleaned_line + '"')
     return "\n".join(enhanced)
 
 
