@@ -2,6 +2,7 @@
 
 import tempfile
 from pathlib import Path
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 from typer.testing import CliRunner
@@ -33,7 +34,7 @@ class TestBatchCheck:
             # Mock agent响应
             mock_agent = MagicMock()
 
-            def mock_invoke(input_data: dict, config: dict) -> dict:
+            def mock_invoke(input_data: Any, config: Any) -> dict[str, Any]:
                 # 根据文件名返回不同结果
                 thread_id = config["configurable"]["thread_id"]
                 if "ch003" in thread_id:
@@ -238,7 +239,7 @@ class TestBatchCheck:
             # Mock agent响应
             mock_agent = MagicMock()
 
-            def mock_invoke(input_data: dict, config: dict) -> dict:
+            def mock_invoke(input_data: Any, config: Any) -> dict[str, Any]:
                 thread_id = config["configurable"]["thread_id"]
                 if "ch001" in thread_id:
                     return {"messages": [MagicMock(content="- Line 5: 严重错误：时间线崩溃")]}
