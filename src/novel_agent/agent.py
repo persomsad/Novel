@@ -19,6 +19,7 @@ from .tools import (
     build_character_network_tool,
     check_style_compliance_tool,
     edit_chapter_lines,
+    generate_outline_tool,
     list_templates_tool,
     multi_edit,
     read_file,
@@ -327,6 +328,7 @@ def create_specialized_agent(
         "apply_template": apply_template_tool,
         "check_style_compliance": check_style_compliance_tool,
         "apply_style_fix": apply_style_fix_tool,
+        "generate_outline": generate_outline_tool,
     }
 
     # 工具预设模式
