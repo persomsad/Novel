@@ -10,11 +10,13 @@
 
 import json
 import os
+import re
 import subprocess
 from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+import frontmatter  # type: ignore
 from langchain_core.tools import tool as lc_tool
 
 from . import nervus_cli
@@ -1049,3 +1051,144 @@ def read_multiple_files(paths: str) -> str:
 
 # 工具装饰器包装（用于 LangChain）
 read_multiple_files_tool = lc_tool(read_multiple_files)
+
+
+# ============================================================================
+# 写作模板工具
+# ============================================================================
+
+
+def list_templates(category: str | None = None) -> str:
+    """列出所有可用的写作模板
+
+    Args:
+        category: 可选的分类过滤（scene/dialogue/action/psychology/transition）
+
+    Returns:
+        格式化的模板列表
+
+    Example:
+        >>> list_templates()
+        >>> list_templates(category="action")
+    """
+    templates_dir = Path("spec/templates")
+    if not templates_dir.exists():
+        return "❌ 模板目录不存在：spec/templates/"
+
+    # 获取所有模板文件
+    template_files = sorted(templates_dir.glob("*.md"))
+    if not template_files:
+        return "❌ 未找到任何模板文件"
+
+    templates = []
+    for file_path in template_files:
+        try:
+            # 解析 frontmatter
+            with open(file_path, encoding="utf-8") as f:
+                post = frontmatter.load(f)
+
+            template_name = file_path.stem
+            template_category = post.get("category", "unknown")
+            template_description = post.get("description", "")
+
+            # 分类过滤
+            if category and template_category != category:
+                continue
+
+            templates.append(
+                {
+                    "name": template_name,
+                    "category": template_category,
+                    "description": template_description,
+                    "display_name": post.get("name", template_name),
+                }
+            )
+        except Exception as e:
+            logger.warning(f"解析模板失败 {file_path}: {e}")
+            continue
+
+    if not templates:
+        if category:
+            return f"❌ 未找到分类为 '{category}' 的模板"
+        return "❌ 未找到任何有效模板"
+
+    # 格式化输出
+    lines = ["可用的写作模板：\n"]
+    if category:
+        lines[0] = f"可用的写作模板（分类：{category}）：\n"
+
+    # 按分类分组
+    by_category: dict[str, list] = {}
+    for t in templates:
+        cat = t["category"]
+        if cat not in by_category:
+            by_category[cat] = []
+        by_category[cat].append(t)
+
+    for cat, temps in sorted(by_category.items()):
+        lines.append(f"## {cat.upper()}")
+        for t in temps:
+            lines.append(f"- **{t['name']}**: {t['display_name']}")
+            if t["description"]:
+                lines.append(f"  {t['description']}")
+        lines.append("")
+
+    return "\n".join(lines)
+
+
+def apply_template(template_name: str, variables: dict[str, str]) -> str:
+    """应用写作模板，使用提供的变量替换模板中的占位符
+
+    Args:
+        template_name: 模板名称（不含 .md 后缀）
+        variables: 变量字典，key 为变量名，value 为替换值
+
+    Returns:
+        替换后的文本内容
+
+    Example:
+        >>> apply_template("scene-description", {
+        ...     "time": "黄昏",
+        ...     "location": "荒凉的战场上",
+        ...     "weather": "乌云密布"
+        ... })
+    """
+    templates_dir = Path("spec/templates")
+    template_file = templates_dir / f"{template_name}.md"
+
+    if not template_file.exists():
+        available = list_templates()
+        return f"❌ 模板不存在：{template_name}\n\n{available}"
+
+    try:
+        # 解析模板
+        with open(template_file, encoding="utf-8") as f:
+            post = frontmatter.load(f)
+
+        content = post.content
+
+        # 提取模板内容（去掉使用示例部分）
+        if "---\n\n**使用示例**：" in content:
+            content = content.split("---\n\n**使用示例**：")[0].strip()
+
+        # 变量替换
+        for key, value in variables.items():
+            pattern = rf"\$\{{{key}\}}"
+            content = re.sub(pattern, value, content)
+
+        # 检查是否还有未替换的变量
+        remaining_vars = re.findall(r"\$\{([^}]+)\}", content)
+        if remaining_vars:
+            logger.warning(f"模板中有未替换的变量: {remaining_vars}")
+            content += f"\n\n⚠️  以下变量未提供值：{', '.join(remaining_vars)}"
+
+        return content.strip()
+
+    except Exception as e:
+        logger.error(f"应用模板失败: {e}")
+        return f"❌ 应用模板失败：{e}"
+
+
+# 工具装饰器包装（用于 LangChain）
+list_templates_tool = lc_tool(list_templates)
+apply_template_tool = lc_tool(apply_template)
