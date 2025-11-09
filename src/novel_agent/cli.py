@@ -66,6 +66,66 @@ def refresh_memory(
 
 
 @app.command()
+def build_graph(
+    chapters_dir: str = typer.Option(
+        "chapters",
+        "--chapters-dir",
+        "-c",
+        help="章节目录路径",
+    ),
+    db_path: str = typer.Option(
+        "data/novel-graph.nervusdb",
+        "--db-path",
+        "-d",
+        help="图数据库文件路径",
+    ),
+    clear: bool = typer.Option(
+        False,
+        "--clear",
+        help="清空旧图数据（危险操作！）",
+    ),
+) -> None:
+    """构建知识图谱（从章节内容提取实体和关系）。"""
+
+    from .graph_ingest import build_graph_from_chapters
+
+    console.print(
+        Panel.fit(
+            "[bold cyan]🔨 构建知识图谱[/bold cyan]\n"
+            f"章节目录: [yellow]{chapters_dir}[/yellow]\n"
+            f"数据库: [yellow]{db_path}[/yellow]",
+            border_style="cyan",
+        )
+    )
+
+    if clear:
+        console.print("[yellow]⚠️  清空旧图数据...[/yellow]")
+        from .graph_ingest import GraphBuilder
+
+        builder = GraphBuilder(db_path)
+        builder.clear_graph()
+        console.print("[green]✓ 已清空[/green]")
+
+    try:
+        with console.status("[yellow]正在解析章节和构建图...[/yellow]"):
+            stats = build_graph_from_chapters(chapters_dir, db_path)
+
+        console.print("\n[green]✓ 图构建完成！[/green]")
+        console.print(f"  - 处理章节: {stats['chapters_processed']}")
+        console.print(f"  - 创建实体: {stats['entities_created']}")
+        console.print(f"  - 创建关系: {stats['relations_created']}")
+
+        if stats["errors"]:
+            console.print(f"\n[yellow]⚠️  遇到 {len(stats['errors'])} 个错误：[/yellow]")
+            for err in stats["errors"][:5]:
+                console.print(f"  - {err}")
+
+    except Exception as exc:
+        console.print(f"[red]✗ 构建失败: {exc}[/red]")
+        raise typer.Exit(code=1) from exc
+
+
+@app.command()
 def chat(
     api_key: Optional[str] = typer.Option(
         None,
@@ -367,6 +427,104 @@ def run(
     console.print("[green]Outline:[/green]\n" + (result.get("outline") or "(空)"))
     console.print("[green]Draft:[/green]\n" + (result.get("draft") or "(空)"))
     console.print("[yellow]Issues:[/yellow]\n" + (result.get("issues") or "(空)"))
+
+
+@app.command()
+def graph_query(
+    query: str = typer.Argument(..., help="查询内容（如'张三和李四的关系'）"),
+    search_type: str = typer.Option(
+        "all",
+        "--type",
+        "-t",
+        help="搜索类型: character|location|event|foreshadow|all",
+    ),
+    max_hops: int = typer.Option(2, "--max-hops", "-m", help="最大关系跳数（1-3）"),
+    limit: int = typer.Option(10, "--limit", "-l", help="最多返回结果数"),
+    db_path: str = typer.Option(
+        "data/novel-graph.nervusdb",
+        "--db-path",
+        "-d",
+        help="图数据库文件路径",
+    ),
+) -> None:
+    """智能图查询（基于 NervusDB 知识图谱）。"""
+
+    from .tools import smart_context_search_tool
+
+    console.print(
+        Panel.fit(
+            "[bold cyan]🔍 智能图查询[/bold cyan]\n"
+            f"查询: [yellow]{query}[/yellow]\n"
+            f"类型: [yellow]{search_type}[/yellow]",
+            border_style="cyan",
+        )
+    )
+
+    try:
+        # 设置环境变量
+        os.environ["NOVEL_GRAPH_DB"] = db_path
+
+        with console.status("[yellow]正在查询图数据库...[/yellow]"):
+            result = smart_context_search_tool(query, search_type, max_hops, limit)
+
+        console.print("\n" + result)
+
+    except Exception as exc:
+        console.print(f"[red]✗ 查询失败: {exc}[/red]")
+        console.print("\n[yellow]提示：请先运行 'novel-agent build-graph' 构建图数据库[/yellow]")
+        raise typer.Exit(code=1) from exc
+
+
+@app.command()
+def network(
+    characters: Optional[str] = typer.Option(
+        None,
+        "--characters",
+        "-c",
+        help="角色名列表（逗号分隔，留空=所有角色）",
+    ),
+    db_path: str = typer.Option(
+        "data/novel-graph.nervusdb",
+        "--db-path",
+        "-d",
+        help="图数据库文件路径",
+    ),
+    output: Optional[str] = typer.Option(
+        None,
+        "--output",
+        "-o",
+        help="输出 HTML 可视化文件",
+    ),
+) -> None:
+    """分析角色关系网络。"""
+
+    from .tools import build_character_network_tool
+
+    console.print(
+        Panel.fit(
+            "[bold cyan]🕸️  角色关系网络[/bold cyan]\n"
+            f"分析角色: [yellow]{characters or '所有角色'}[/yellow]",
+            border_style="cyan",
+        )
+    )
+
+    try:
+        os.environ["NOVEL_GRAPH_DB"] = db_path
+
+        with console.status("[yellow]正在分析关系网络...[/yellow]"):
+            result = build_character_network_tool(characters)
+
+        console.print("\n" + result)
+
+        # 如果指定输出文件，生成 HTML 可视化
+        if output:
+            console.print(f"\n[yellow]生成可视化: {output}[/yellow]")
+            # TODO: 实现 HTML 可视化
+            console.print("[yellow]⚠️  可视化功能正在开发中...[/yellow]")
+
+    except Exception as exc:
+        console.print(f"[red]✗ 分析失败: {exc}[/red]")
+        raise typer.Exit(code=1) from exc
 
 
 def main() -> None:

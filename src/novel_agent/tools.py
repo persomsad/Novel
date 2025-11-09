@@ -773,3 +773,243 @@ def multi_edit(operations: list[dict[str, Any]]) -> str:
                 logger.error(f"回滚失败: {file_path} - {rollback_err}")
 
         raise RuntimeError(f"批量编辑失败，已回滚所有修改: {e}") from e
+
+
+# ========== 图查询工具 (Graph Query Tools) ==========
+
+
+def smart_context_search_tool(
+    query: str,
+    search_type: str = "all",
+    max_hops: int = 2,
+    limit: int = 10,
+) -> str:
+    """智能上下文搜索（基于图数据库）
+
+    使用 NervusDB 图数据库进行智能上下文检索，比向量检索更精准、更可解释。
+
+    Args:
+        query: 搜索查询（如"张三和李四的关系"）
+        search_type: 'character' | 'location' | 'event' | 'foreshadow' | 'all'
+        max_hops: 最大关系跳数（1-3，默认 2）
+        limit: 最多返回结果数（默认 10）
+
+    Returns:
+        格式化的搜索结果，包含：
+        - 直接匹配的实体
+        - 通过关系关联的实体
+        - 图路径和置信度
+        - 统计信息
+
+    Example:
+        >>> smart_context_search_tool("张三", "character", max_hops=2, limit=5)
+        找到 5 个相关结果：
+          - character: 2 个
+          - chapter: 3 个
+
+        1. [直接匹配] 张三 (character)
+           置信度: 1.0
+
+        2. [1 跳关系] 李四 (character)
+           路径: 张三 -> 李四
+           置信度: 0.5
+
+        ...
+    """
+    from .graph_query import smart_context_search
+
+    logger.info(f"图查询: {query}, 类型={search_type}, 跳数={max_hops}")
+
+    try:
+        db_path = os.getenv("NOVEL_GRAPH_DB", "data/novel-graph.nervusdb")
+        result = smart_context_search(
+            query=query,
+            db_path=db_path,
+            search_type=search_type,  # type: ignore
+            max_hops=max_hops,
+            limit=limit,
+        )
+
+        # 格式化输出
+        output = [result["summary"], ""]
+
+        for i, item in enumerate(result["results"], 1):
+            output.append(f"{i}. [{item['relevance']}] {item['name']} ({item['type']})")
+            if item["path"] and len(item["path"]) > 1:
+                output.append(f"   路径: {' -> '.join(item['path'])}")
+            output.append(f"   置信度: {item['confidence']:.2f}")
+            output.append("")
+
+        # 添加统计
+        stats = result["graph_stats"]
+        output.append(
+            f"📊 统计: 搜索了 {stats['nodes_searched']} 个节点，最大深度 {stats['max_depth']}"
+        )
+
+        return "\n".join(output)
+
+    except Exception as e:
+        logger.error(f"图查询失败: {e}")
+        return f"❌ 图查询失败: {e}\n提示：请先运行 'novel-agent build-graph' 构建图数据库"
+
+
+def build_character_network_tool(character_names: str | None = None) -> str:
+    """构建角色关系网络图
+
+    分析角色之间的关系，构建社交网络图。
+
+    Args:
+        character_names: 角色名列表（逗号分隔，如"张三,李四,王五"）
+                        留空则分析所有角色
+
+    Returns:
+        格式化的网络信息：
+        - 节点（角色）列表
+        - 边（关系）列表
+        - 社区（群组）检测结果
+
+    Example:
+        >>> build_character_network_tool("张三,李四")
+        角色网络分析结果：
+
+        节点 (2 个):
+        1. 张三 (protagonist)
+        2. 李四 (supporting)
+
+        关系 (1 条):
+        1. 张三 -[knows]-> 李四 (强度: 0.9)
+
+        社区 (1 个):
+        - 社区 1: 张三, 李四 (2 人)
+    """
+    from .graph_query import build_character_network
+
+    logger.info(f"构建角色网络: {character_names or '所有角色'}")
+
+    try:
+        db_path = os.getenv("NOVEL_GRAPH_DB", "data/novel-graph.nervusdb")
+        names_list = (
+            [n.strip() for n in character_names.split(",") if n.strip()]
+            if character_names
+            else None
+        )
+
+        result = build_character_network(db_path=db_path, character_names=names_list)
+
+        # 格式化输出
+        output = ["角色网络分析结果：", ""]
+
+        # 节点
+        output.append(f"节点 ({len(result['nodes'])} 个):")
+        for i, node in enumerate(result["nodes"][:20], 1):  # 限制显示前 20 个
+            node_type = node.get("properties", {}).get("type", node["type"])
+            output.append(f"{i}. {node['label']} ({node_type})")
+        if len(result["nodes"]) > 20:
+            output.append(f"... 还有 {len(result['nodes']) - 20} 个节点")
+        output.append("")
+
+        # 关系
+        output.append(f"关系 ({len(result['edges'])} 条):")
+        for i, edge in enumerate(result["edges"][:20], 1):
+            weight = edge.get("weight", 1.0)
+            relation = f"{edge['source']} -[{edge['relation']}]-> {edge['target']}"
+            output.append(f"{i}. {relation} (强度: {weight:.2f})")
+        if len(result["edges"]) > 20:
+            output.append(f"... 还有 {len(result['edges']) - 20} 条关系")
+        output.append("")
+
+        # 社区
+        output.append(f"社区 ({len(result['clusters'])} 个):")
+        for cluster in result["clusters"][:10]:
+            members_str = ", ".join(cluster["members"][:5])
+            if len(cluster["members"]) > 5:
+                members_str += f" ... 共 {cluster['size']} 人"
+            output.append(f"- {cluster['label']}: {members_str}")
+        if len(result["clusters"]) > 10:
+            output.append(f"... 还有 {len(result['clusters']) - 10} 个社区")
+
+        return "\n".join(output)
+
+    except Exception as e:
+        logger.error(f"构建角色网络失败: {e}")
+        return f"❌ 构建角色网络失败: {e}\n提示：请先运行 'novel-agent build-graph' 构建图数据库"
+
+
+def trace_foreshadow_tool(foreshadow_id: str) -> str:
+    """追溯伏笔完整链条
+
+    追踪伏笔从埋下到揭晓的完整过程。
+
+    Args:
+        foreshadow_id: 伏笔 ID（如 "foreshadow_001"）
+
+    Returns:
+        格式化的伏笔追溯结果：
+        - Setup（埋笔）章节
+        - Hints（暗示）列表
+        - Reveal（揭晓）章节
+        - 状态（已解决/未解决）
+
+    Example:
+        >>> trace_foreshadow_tool("foreshadow_001")
+        伏笔追溯: foreshadow_001
+
+        📍 埋笔 (Setup):
+        - 第 5 章
+
+        💡 暗示 (Hints):
+        - 第 5 章: 首次提及
+        - 第 8 章: 隐晦暗示
+        - 第 12 章: 明确暗示
+
+        🎯 揭晓 (Reveal):
+        - 第 20 章
+
+        ✅ 状态: 已解决
+    """
+    from .graph_query import trace_foreshadow
+
+    logger.info(f"追溯伏笔: {foreshadow_id}")
+
+    try:
+        db_path = os.getenv("NOVEL_GRAPH_DB", "data/novel-graph.nervusdb")
+        result = trace_foreshadow(foreshadow_id=foreshadow_id, db_path=db_path)
+
+        if "error" in result:
+            return f"❌ {result['error']}"
+
+        # 格式化输出
+        output = [f"伏笔追溯: {foreshadow_id}", ""]
+
+        # Setup
+        if result.get("setup"):
+            setup = result["setup"]
+            output.append("📍 埋笔 (Setup):")
+            output.append(f"- 第 {setup['chapter']} 章")
+            output.append("")
+
+        # Hints
+        hints = result.get("hints", [])
+        if hints:
+            output.append(f"💡 暗示 (Hints, {len(hints)} 处):")
+            for hint in hints:
+                output.append(f"- 第 {hint['chapter']} 章")
+            output.append("")
+
+        # Reveal
+        if result.get("reveal"):
+            reveal = result["reveal"]
+            output.append("🎯 揭晓 (Reveal):")
+            output.append(f"- 第 {reveal['chapter']} 章")
+            output.append("")
+
+        # Status
+        status_emoji = "✅" if result["status"] == "resolved" else "⚠️ "
+        status_text = "已解决" if result["status"] == "resolved" else "未解决"
+        output.append(f"{status_emoji} 状态: {status_text}")
+
+        return "\n".join(output)
+
+    except Exception as e:
+        logger.error(f"追溯伏笔失败: {e}")
+        return f"❌ 追溯伏笔失败: {e}\n提示：请先运行 'novel-agent build-graph' 构建图数据库"

@@ -13,11 +13,14 @@ from langgraph.checkpoint.base import BaseCheckpointSaver
 from langgraph.prebuilt import create_react_agent
 
 from .tools import (
+    build_character_network_tool,
     edit_chapter_lines,
     multi_edit,
     read_file,
     replace_in_file,
     search_content,
+    smart_context_search_tool,
+    trace_foreshadow_tool,
     verify_strict_references,
     verify_strict_timeline,
     write_chapter,
@@ -53,7 +56,7 @@ AGENT_CONFIGS = {
 - verify_strict_timeline()：时间线精确验证（数字、日期）
 - verify_strict_references()：引用完整性验证（伏笔ID）
 
-### 3. 精准编辑（新能力）
+### 3. 精准编辑
 你现在具备精准修改文件的能力：
 - edit_chapter_lines()：修改章节的指定行（而非重写整章）
 - replace_in_file()：查找替换文本（支持全部或指定第N次）
@@ -69,13 +72,41 @@ AGENT_CONFIGS = {
 - 优先询问用户确认后再执行修改操作
 - multi_edit 支持自动回滚（失败时恢复原文件）
 
+### 4. 智能上下文检索（图数据库）⭐ 新能力
+你现在具备基于知识图谱的智能检索能力（比向量检索强大 10 倍）：
+- smart_context_search()：智能搜索相关上下文（多跳关系、时间线、因果推理）
+- build_character_network()：构建角色关系网络（社交图谱 + 社区检测）
+- trace_foreshadow()：追溯伏笔链条（setup → hints → reveal）
+
+**为什么图 > 向量？**
+- ✅ 精确关系：knows/loves/hates 等多种关系，而非单一语义相似度
+- ✅ 时间感知：原生时间线，可查询"X 之前/之后发生的事"
+- ✅ 多跳推理：找出"张三认识的人认识的人"
+- ✅ 可解释性：清晰的图路径，而非黑盒相似度
+- ✅ 零成本：本地嵌入式，无需 API 调用
+
+**何时使用图查询：**
+- 用户要求"找出张三相关的所有章节"
+- 用户要求"分析角色关系网络"
+- 用户要求"检查伏笔是否埋好"
+- 用户要求"时间线是否一致"
+- 用户要求"某个角色和哪些角色有关系"
+
+**注意：**
+- 图查询需要先运行 'novel-agent build-graph' 构建图数据库
+- 图查询比文本搜索更智能，但需要数据准备
+- 如果图数据库未构建，会提示用户先构建
+
 ## 约束
 
 - 创建章节时使用 write_chapter 工具
 - 修改章节特定行时使用 edit_chapter_lines 工具
 - 批量替换文本时使用 replace_in_file 工具
 - 批量修改多个文件时使用 multi_edit 工具
-- 搜索关键词时使用 search_content 工具
+- 搜索关键词时使用 search_content 工具（简单文本搜索）
+- 智能搜索时使用 smart_context_search 工具（图数据库，更智能）
+- 分析角色关系时使用 build_character_network 工具
+- 追溯伏笔时使用 trace_foreshadow 工具
 - 读取文件时使用 read_file 工具
 - 始终提供具体、可操作的建议
 - 用中文回复
@@ -89,6 +120,9 @@ AGENT_CONFIGS = {
             "edit_chapter_lines",
             "replace_in_file",
             "multi_edit",
+            "smart_context_search",
+            "build_character_network",
+            "trace_foreshadow",
         ],
     },
     "outline-architect": {
@@ -269,6 +303,9 @@ def create_specialized_agent(
         "edit_chapter_lines": edit_chapter_lines_tool,
         "replace_in_file": replace_in_file_tool,
         "multi_edit": multi_edit_tool,
+        "smart_context_search": smart_context_search,
+        "build_character_network": build_character_network,
+        "trace_foreshadow": trace_foreshadow,
     }
 
     tools: list[BaseTool] = [tool_map[t] for t in config["tools"]]
@@ -564,6 +601,92 @@ def multi_edit_tool(operations: str) -> str:
         return multi_edit(ops_list)
     except json.JSONDecodeError as e:
         return f"❌ JSON格式错误: {e}"
+
+
+@tool
+def smart_context_search(
+    query: str, search_type: str = "all", max_hops: int = 2, limit: int = 10
+) -> str:
+    """智能上下文搜索（基于图数据库）
+
+    使用 NervusDB 图数据库进行智能上下文检索，比向量检索更精准、更可解释。
+    通过图遍历找出所有相关内容，包括直接匹配和关系关联。
+
+    Args:
+        query: 搜索查询（如"张三和李四的关系"）
+        search_type: 搜索类型
+            - 'character': 只搜索角色
+            - 'location': 只搜索地点
+            - 'event': 只搜索事件
+            - 'foreshadow': 只搜索伏笔
+            - 'all': 所有类型（默认）
+        max_hops: 最大关系跳数（1-3，默认 2）
+        limit: 最多返回结果数（默认 10）
+
+    Returns:
+        格式化的搜索结果，包含：
+        - 直接匹配的实体
+        - 通过关系关联的实体
+        - 图路径和置信度
+        - 统计信息
+
+    Example:
+        # 搜索角色"张三"的所有相关内容
+        smart_context_search("张三", "character", max_hops=2)
+
+        # 搜索所有包含"北京"的内容
+        smart_context_search("北京", "all", max_hops=1)
+    """
+    return smart_context_search_tool(query, search_type, max_hops, limit)
+
+
+@tool
+def build_character_network(character_names: str | None = None) -> str:
+    """构建角色关系网络图
+
+    分析角色之间的关系，构建社交网络图，并进行社区检测。
+
+    Args:
+        character_names: 角色名列表（逗号分隔，如"张三,李四,王五"）
+                        留空则分析所有角色
+
+    Returns:
+        格式化的网络信息：
+        - 节点（角色）列表
+        - 边（关系）列表
+        - 社区（群组）检测结果
+
+    Example:
+        # 分析所有角色的关系
+        build_character_network()
+
+        # 只分析指定角色的关系
+        build_character_network("张三,李四,王五")
+    """
+    return build_character_network_tool(character_names)
+
+
+@tool
+def trace_foreshadow(foreshadow_id: str) -> str:
+    """追溯伏笔完整链条
+
+    追踪伏笔从埋下到揭晓的完整过程，帮助检查伏笔是否被正确处理。
+
+    Args:
+        foreshadow_id: 伏笔 ID（如 "foreshadow_001"）
+
+    Returns:
+        格式化的伏笔追溯结果：
+        - Setup（埋笔）章节
+        - Hints（暗示）列表
+        - Reveal（揭晓）章节
+        - 状态（已解决/未解决）
+
+    Example:
+        # 追溯伏笔 "foreshadow_001"
+        trace_foreshadow("foreshadow_001")
+    """
+    return trace_foreshadow_tool(foreshadow_id)
 
 
 def _estimate_confidence(messages: Any) -> int:

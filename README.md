@@ -6,15 +6,18 @@
 
 - ✅ **对话式创作**：通过自然语言与 Agent 交互，创建和修改章节
 - ✅ **智能一致性检查**：利用 ReAct Agent 的推理能力，自动检查角色、情节、时间线一致性
+- ✅ **知识图谱检索** ⭐ 新功能：基于 NervusDB 的图数据库，智能关联角色关系、时间线、伏笔链
 - ✅ **会话持久化**：保存创作历史，支持多轮对话
 - ✅ **文件管理**：自动组织章节、设定、大纲等文件
+- ✅ **精准编辑**：行级编辑、批量替换、原子性多文件修改
 
 ## 核心技术
 
 - **LLM**：Google Gemini 2.0 Flash Exp
 - **框架**：LangChain 1.0.4 + LangGraph
+- **图数据库**：NervusDB（本地嵌入式，零成本）
 - **架构**：ReAct (Reasoning + Acting) Agent
-- **工具**：5 个核心工具（读取、写入、搜索、验证）
+- **工具**：11 个核心工具（读取、写入、搜索、验证、图查询、精准编辑等）
 
 ## 安装
 
@@ -111,7 +114,7 @@ Novel/
 
 ## 核心工具
 
-Agent 可以调用 5 个工具：
+Agent 可以调用 11 个工具：
 
 ### 基础工具（3 个）
 1. **`read_file(path)`** - 读取任意文件
@@ -121,6 +124,95 @@ Agent 可以调用 5 个工具：
 ### 验证工具（2 个）
 4. **`verify_strict_timeline()`** - 时间线精确验证
 5. **`verify_strict_references()`** - 引用完整性验证
+
+### 精准编辑工具（3 个）
+6. **`edit_chapter_lines(chapter, start, end, content)`** - 修改章节指定行
+7. **`replace_in_file(path, search, replace, occurrence)`** - 查找替换文本
+8. **`multi_edit(operations)`** - 批量编辑多个文件（原子性）
+
+### 图查询工具（3 个）⭐ 新功能
+9. **`smart_context_search(query, type, max_hops)`** - 智能图搜索
+10. **`build_character_network(characters)`** - 构建角色关系网络
+11. **`trace_foreshadow(foreshadow_id)`** - 追溯伏笔链条
+
+## 智能图查询（基于 NervusDB）
+
+**为什么图 > 向量？**
+- ✅ 精确关系：knows/loves/hates 等多种关系，而非单一语义相似度
+- ✅ 时间感知：原生时间线，可查询"X 之前/之后发生的事"
+- ✅ 多跳推理：找出"张三认识的人认识的人"
+- ✅ 可解释性：清晰的图路径，而非黑盒相似度
+- ✅ 零成本：本地嵌入式，无需 API 调用
+
+### 1. 构建知识图谱
+
+```bash
+# 从章节内容构建图
+novel-agent build-graph --chapters-dir chapters
+
+# 输出示例：
+# ✓ 图构建完成！
+#   - 处理章节: 10
+#   - 创建实体: 156 (角色:12, 地点:8, 事件:89, 伏笔:47)
+#   - 创建关系: 423
+```
+
+### 2. 智能搜索
+
+```bash
+# 搜索角色"张三"的所有相关内容（2跳关系）
+novel-agent graph-query "张三" --type character --max-hops 2
+
+# 输出示例：
+# 🔍 直接匹配: 张三 (character)
+#   - 出现章节: ch001, ch003, ch005
+#   - 关系: knows(李四), loves(王五), hates(赵六)
+#
+# 🔗 关系关联（1跳）:
+#   - 李四 (character) ← knows ← 张三
+#   - 王五 (character) ← loves ← 张三
+#
+# 🔗 关系关联（2跳）:
+#   - 赵六 (character) ← knows ← 李四 ← knows ← 张三
+```
+
+### 3. 角色关系网络
+
+```bash
+# 分析所有角色的关系
+novel-agent network
+
+# 分析指定角色
+novel-agent network --characters "张三,李四,王五"
+
+# 输出示例：
+# 🕸️ 角色关系网络
+#
+# 节点 (5):
+#   - 张三 (protagonist)
+#   - 李四 (supporting)
+#   - 王五 (villain)
+#
+# 边 (8):
+#   - 张三 --knows--> 李四 (强度: 0.9)
+#   - 张三 --loves--> 王五 (强度: 0.8)
+#
+# 社区检测:
+#   - 群组1: [张三, 李四] (主角团队)
+#   - 群组2: [王五, 赵六] (反派阵营)
+```
+
+### 4. 在 Agent 中使用
+
+```
+用户：找出所有与张三有关的章节
+
+Agent: [调用 smart_context_search("张三", "character", max_hops=2)]
+找到 5 个相关章节：
+- ch001: 直接出现（置信度 1.0）
+- ch003: 通过 knows(李四) 关联（置信度 0.7）
+- ch005: 通过 loves(王五) 关联（置信度 0.8）
+```
 
 ## 一致性检查原理
 
