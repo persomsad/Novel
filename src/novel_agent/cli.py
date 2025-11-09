@@ -1721,6 +1721,61 @@ def style(
         raise typer.Exit(1)
 
 
+@app.command()
+def outline(
+    action: str = typer.Argument(..., help="操作：generate"),
+    genre: Optional[str] = typer.Option(None, "--genre", "-g", help="题材（玄幻、都市等）"),
+    target_words: Optional[int] = typer.Option(None, "--target-words", "-w", help="目标字数"),
+    themes: Optional[str] = typer.Option(None, "--themes", "-t", help="主题（逗号分隔）"),
+    style: str = typer.Option("爽文", "--style", "-s", help="风格（爽文、虐文等）"),
+    output: Optional[str] = typer.Option(
+        None, "--output", "-o", help="输出文件路径（默认输出到控制台）"
+    ),
+) -> None:
+    """大纲生成器
+
+    示例:
+        novel-agent outline generate --genre "玄幻" --target-words 100000 \\
+            --themes "复仇,成长"
+        novel-agent outline generate -g "都市" -w 50000 -t "爱情,职场" \\
+            -o "spec/outline.md"
+    """
+    from .tools import generate_outline
+
+    if action == "generate":
+        # 检查必需参数
+        if not genre:
+            typer.echo("❌ 错误：缺少 --genre 参数", err=True)
+            raise typer.Exit(1)
+        if not target_words:
+            typer.echo("❌ 错误：缺少 --target-words 参数", err=True)
+            raise typer.Exit(1)
+        if not themes:
+            typer.echo("❌ 错误：缺少 --themes 参数", err=True)
+            raise typer.Exit(1)
+
+        # 解析主题列表
+        themes_list = [t.strip() for t in themes.split(",")]
+
+        # 生成大纲
+        result = generate_outline(genre, target_words, themes_list, style)
+
+        # 输出或保存
+        if output:
+            from pathlib import Path
+
+            output_path = Path(output)
+            output_path.parent.mkdir(parents=True, exist_ok=True)
+            output_path.write_text(result, encoding="utf-8")
+            typer.echo(f"✅ 大纲已保存到：{output}")
+        else:
+            typer.echo(result)
+
+    else:
+        typer.echo(f"❌ 错误：未知操作 '{action}'，支持: generate", err=True)
+        raise typer.Exit(1)
+
+
 def main() -> None:
     """Entry point for CLI"""
     app()

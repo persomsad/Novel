@@ -1420,8 +1420,118 @@ def apply_style_fix(chapter_number: int, auto_fix: bool = False) -> str:
         return f"❌ 风格修复失败：{str(e)}"
 
 
+# ==================== 大纲生成器 ====================
+
+
+def generate_outline(
+    genre: str,
+    target_words: int,
+    themes: list[str],
+    style: str = "爽文",
+) -> str:
+    """根据题材自动生成三幕结构大纲
+
+    Args:
+        genre: 题材（玄幻、都市、科幻、武侠、历史、言情）
+        target_words: 目标字数
+        themes: 主题列表
+        style: 风格（爽文、虐文、轻松、严肃）
+
+    Returns:
+        格式化的大纲文本（Markdown）
+    """
+    try:
+        # 计算章节数（假设每章1000字）
+        words_per_chapter = 1000
+        total_chapters = max(target_words // words_per_chapter, 10)
+
+        # 三幕分配（起10%、承转70%、合20%）
+        act1_chapters = max(int(total_chapters * 0.1), 5)
+        act3_chapters = max(int(total_chapters * 0.2), 10)
+        act2_chapters = total_chapters - act1_chapters - act3_chapters
+
+        act1_words = act1_chapters * words_per_chapter
+        act2_words = act2_chapters * words_per_chapter
+        act3_words = act3_chapters * words_per_chapter
+
+        # 主题文本
+        themes_text = "、".join(themes)
+
+        # 生成大纲
+        outline = [
+            f"# {genre}小说大纲（{target_words}字，约{total_chapters}章）\n",
+            "## 基本信息\n",
+            f"- **题材**：{genre}",
+            f"- **风格**：{style}",
+            f"- **主题**：{themes_text}",
+            f"- **目标字数**：{target_words}字",
+            f"- **章节数**：{total_chapters}章（每章约{words_per_chapter}字）\n",
+            f"## 第一幕：建立世界观（1-{act1_chapters}章，{act1_words}字）\n",
+            "### 核心目标",
+            "- 引入主角和世界观",
+            "- 建立冲突和动机",
+            "- 展示主角初始能力\n",
+            "### 章节分配",
+            f"- **第1章**：开篇，主角登场（{words_per_chapter}字）",
+            "  - 情节点：介绍主角背景和现状",
+            "  - 冲突：引入初始矛盾",
+            "",
+            f"- **第{act1_chapters // 2}章**：事件触发，主角卷入（{words_per_chapter}字）",
+            "  - 情节点：关键事件发生",
+            "  - 转折：主角被迫改变",
+            "",
+            f"- **第{act1_chapters}章**：第一幕结束，进入新世界（{words_per_chapter}字）",
+            "  - 情节点：主角踏上旅程",
+            "  - 结果：离开舒适区\n",
+            (
+                f"## 第二幕：冲突升级（{act1_chapters + 1}-"
+                f"{act1_chapters + act2_chapters}章，{act2_words}字）\n"
+            ),
+            "### 核心目标",
+            "- 主角成长和历练",
+            "- 引入更大的冲突",
+            "- 情节不断升级\n",
+            "### 关键情节点",
+            f"- **第{act1_chapters + act2_chapters // 4}章**：第一次失败，遭遇强敌",
+            f"- **第{act1_chapters + act2_chapters // 2}章**：转折点，获得机缘或发现真相",
+            f"- **第{act1_chapters + act2_chapters * 3 // 4}章**：情节升级，面临重大选择",
+            f"- **第{act1_chapters + act2_chapters}章**：第二幕结束，准备最终决战\n",
+            (
+                f"## 第三幕：高潮与结局（{act1_chapters + act2_chapters + 1}-"
+                f"{total_chapters}章，{act3_words}字）\n"
+            ),
+            "### 核心目标",
+            "- 最终决战",
+            "- 解决所有冲突",
+            "- 角色成长完成\n",
+            "### 章节分配",
+            f"- **第{act1_chapters + act2_chapters + act3_chapters // 2}章**：最终决战开始",
+            f"- **第{total_chapters - 2}章**：高潮，决定性时刻",
+            f"- **第{total_chapters}章**：大结局，开启新篇章\n",
+            "## 角色成长弧线\n",
+            "1. **起点**：普通人/弱者",
+            "2. **觉醒**：发现天赋/使命",
+            "3. **成长**：历练和突破",
+            "4. **转折**：面临失败和挫折",
+            "5. **蜕变**：克服困难，达成目标",
+            "6. **终点**：成为强者，完成使命\n",
+            "## 创作建议\n",
+            f"- **节奏**：{style}风格，注意情节起伏",
+            f"- **主题**：围绕{themes_text}展开",
+            "- **冲突**：确保每个阶段都有明确的矛盾",
+            "- **成长**：主角能力和心理要有明显变化",
+        ]
+
+        return "\n".join(outline)
+
+    except Exception as e:
+        logger.error(f"大纲生成失败: {e}")
+        return f"❌ 大纲生成失败：{str(e)}"
+
+
 # 工具装饰器包装（用于 LangChain）
 list_templates_tool = lc_tool(list_templates)
 apply_template_tool = lc_tool(apply_template)
 check_style_compliance_tool = lc_tool(check_style_compliance)
 apply_style_fix_tool = lc_tool(apply_style_fix)
+generate_outline_tool = lc_tool(generate_outline)
