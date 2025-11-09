@@ -17,9 +17,13 @@ from novel_agent.tools import verify_strict_references, verify_strict_timeline
 class TestVerifyStrictTimelineEnhanced:
     """测试增强版 verify_strict_timeline 函数"""
 
-    def test_returns_structured_result(self) -> None:
+    def test_returns_structured_result(self, tmp_path: Path) -> None:
         """测试返回结构化结果"""
-        result = verify_strict_timeline()
+        # 创建临时索引文件
+        index_path = tmp_path / "index.json"
+        index_path.write_text(json.dumps({"chapters": [], "references": []}), encoding="utf-8")
+
+        result = verify_strict_timeline(index_path)
 
         # 验证结构
         assert isinstance(result, dict)
@@ -221,9 +225,13 @@ class TestVerifyStrictTimelineEnhanced:
 class TestVerifyStrictReferencesEnhanced:
     """测试增强版 verify_strict_references 函数"""
 
-    def test_returns_structured_result(self) -> None:
+    def test_returns_structured_result(self, tmp_path: Path) -> None:
         """测试返回结构化结果"""
-        result = verify_strict_references()
+        # 创建临时索引文件
+        index_path = tmp_path / "index.json"
+        index_path.write_text(json.dumps({"chapters": [], "references": []}), encoding="utf-8")
+
+        result = verify_strict_references(index_path)
 
         # 验证结构
         assert isinstance(result, dict)

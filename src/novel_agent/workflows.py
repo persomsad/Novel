@@ -34,6 +34,18 @@ def build_chapter_workflow(
     """Create a simple chapter-writing workflow."""
 
     data = continuity_index or build_continuity_index(Path.cwd(), output_path=index_path)
+
+    # 如果提供了内存中的 continuity_index，创建临时文件供 verify 函数使用
+    import tempfile
+
+    if continuity_index is not None and index_path is None:
+        temp_file = tempfile.NamedTemporaryFile(
+            mode="w", suffix=".json", delete=False, encoding="utf-8"
+        )
+        json.dump(continuity_index, temp_file)
+        temp_file.close()
+        index_path = Path(temp_file.name)
+
     builder = StateGraph(ChapterState)
 
     gather_chain = (
@@ -104,8 +116,8 @@ def build_chapter_workflow(
     builder.add_node("draft", draft_node)
 
     def verify_node(state: ChapterState) -> ChapterState:
-        timeline = verify_strict_timeline()
-        references = verify_strict_references()
+        timeline = verify_strict_timeline(index_path)
+        references = verify_strict_references(index_path)
         issues = []
 
         # 新格式：errors/warnings 是 dict 列表
