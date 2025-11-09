@@ -264,7 +264,18 @@ def _chat_loop(agent_instance: Any, session_id: str) -> None:
                     last_message.content if hasattr(last_message, "content") else str(last_message)
                 )
 
-                console.print("\n[bold green]Agent[/bold green]:")
+                # 显示置信度评分
+                confidence = result.get("confidence", 0)
+                confidence_color = (
+                    "green" if confidence >= 80 else "yellow" if confidence >= 60 else "red"
+                )
+                confidence_icon = "🟢" if confidence >= 80 else "🟡" if confidence >= 60 else "🔴"
+
+                console.print(
+                    f"\n[bold green]Agent[/bold green] "
+                    f"[{confidence_color}]{confidence_icon} "
+                    f"置信度: {confidence}/100[/{confidence_color}]"
+                )
                 console.print(Markdown(response))
             else:
                 console.print("[red]✗ Agent未返回响应[/red]")
