@@ -13,6 +13,7 @@ dependencies = [
     "langchain-google-genai>=2.0.9",
     "typer>=0.15.1",
     "rich>=13.9.4",
+    "prompt-toolkit>=3.0.43",
     "langgraph-checkpoint-sqlite (>=3.0.0,<4.0.0)",
 ]
 

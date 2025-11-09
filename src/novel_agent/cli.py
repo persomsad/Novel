@@ -11,6 +11,7 @@ from typing import Any, Optional
 
 import typer
 from langchain_google_genai import ChatGoogleGenerativeAI
+from prompt_toolkit import PromptSession
 from rich.console import Console
 from rich.markdown import Markdown
 from rich.panel import Panel
@@ -127,9 +128,18 @@ def chat(
 
 
 def _chat_loop(agent_instance: Any, session_id: str) -> None:
+    # 创建 PromptSession 用于更好的输入处理（支持中文、特殊键等）
+    prompt_session = PromptSession()
+
     while True:
         try:
-            user_input = console.input("\n你: ", markup=False, emoji=False)
+            # 使用 prompt_toolkit 替代 console.input()
+            # 这样可以正确处理：
+            # - 中文输入
+            # - Backspace/Delete 键
+            # - 方向键
+            # - 其他特殊键
+            user_input = prompt_session.prompt("\n你: ")
 
             if user_input.lower() in ("exit", "quit", "bye"):
                 console.print("[yellow]👋 再见！[/yellow]")
