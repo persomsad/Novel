@@ -762,11 +762,11 @@ def _chat_loop(agent_instance: Any, session_id: str, input_offset: int = 5) -> N
             from prompt_toolkit.input import create_input
             from prompt_toolkit.keys import Keys
 
-            result = None
+            result: Any | None = None
             interrupted = False
-            error = None
+            error: Exception | None = None
 
-            def run_agent():
+            def run_agent() -> None:
                 nonlocal result, error
                 try:
                     result = agent_instance.invoke(
@@ -808,7 +808,7 @@ def _chat_loop(agent_instance: Any, session_id: str, input_offset: int = 5) -> N
             if error:
                 raise error
 
-            if "messages" in result and result["messages"]:
+            if result and "messages" in result and result["messages"]:
                 last_message = result["messages"][-1]
                 content = last_message.content if hasattr(last_message, "content") else last_message
                 # 提取纯文本（处理字符串、列表等类型）
@@ -817,7 +817,7 @@ def _chat_loop(agent_instance: Any, session_id: str, input_offset: int = 5) -> N
                 response = _extract_text_from_content(content)
 
                 # 显示置信度评分
-                confidence = result.get("confidence", 0)
+                confidence = result.get("confidence", 0) if result else 0
                 confidence_color = (
                     "green" if confidence >= 80 else "yellow" if confidence >= 60 else "red"
                 )

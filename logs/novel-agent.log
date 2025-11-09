@@ -1,0 +1,7 @@
+2025-11-10 02:38:04 - novel_agent.novel_agent.file_watcher - INFO - 开始监控目录: /Volumes/WorkDrive/Develop/github/persomsad/Novel/chapters
+2025-11-10 02:38:04 - novel_agent.novel_agent.file_watcher - INFO - 开始监控目录: /Volumes/WorkDrive/Develop/github/persomsad/Novel/spec
+2025-11-10 02:38:04 - novel_agent.novel_agent.file_watcher - INFO - ✓ 文件监控已启动（后台模式）
+2025-11-10 02:38:05 - novel_agent.novel_agent.context_retriever - INFO - ✓ 索引已加载: 2 角色
+2025-11-10 02:38:05 - novel_agent.novel_agent.context_retriever - WARNING - 图数据库不存在: /Volumes/WorkDrive/Develop/github/persomsad/Novel/data/novel-graph.nervusdb
+2025-11-10 02:38:15 - novel_agent.novel_agent.context_retriever - INFO - 开始检索上下文，查询: ('user', '你来帮我在 /Volumes/WorkDrive/Develop/未命名文件夹 这个目录下规划小说，我想写的是都市仙王重生，你\n来一步一步引导我完成创作，而不是直接开始弄')
+2025-11-10 02:38:15 - novel_agent.novel_agent.context_retriever - INFO - ✓ 检索完成，返回 0 个文档
