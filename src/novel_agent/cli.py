@@ -1365,9 +1365,9 @@ def _run_print_mode(
                 raise typer.Exit(1)
 
             last_message = messages[-1]
-            response = (
-                last_message.content if hasattr(last_message, "content") else str(last_message)
-            )
+            content = last_message.content if hasattr(last_message, "content") else last_message
+            # 确保 response 是字符串（LangChain 的 content 可能是列表）
+            response = str(content) if not isinstance(content, str) else content
 
             # 计算置信度
             from .agent import _estimate_confidence
@@ -1516,7 +1516,9 @@ def _check_file_task(file: Path, agent: Any, auto_fix: bool) -> dict[str, Any]:
             return {"file": str(file), "status": "error", "issues": ["Agent 未返回响应"]}
 
         last_message = result["messages"][-1]
-        response = last_message.content if hasattr(last_message, "content") else str(last_message)
+        content = last_message.content if hasattr(last_message, "content") else last_message
+        # 确保 response 是字符串（LangChain 的 content 可能是列表）
+        response = str(content) if not isinstance(content, str) else content
 
         # 解析响应
         if "通过" in response or "no issues" in response.lower():

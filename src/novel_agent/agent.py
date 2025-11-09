@@ -799,6 +799,9 @@ def _estimate_confidence(messages: Any) -> int:
 
     last = messages[-1]
     content = getattr(last, "content", None) or str(last)
+    # 确保 content 是字符串（LangChain 的 content 可能是列表）
+    if not isinstance(content, str):
+        content = str(content)
 
     # 基础分：根据输出长度
     words = len(content.split())

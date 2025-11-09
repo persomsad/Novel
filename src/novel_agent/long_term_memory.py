@@ -269,6 +269,10 @@ class LongTermMemory:
         Returns:
             相关记忆列表
         """
+        # 确保 context 是字符串
+        if not isinstance(context, str):
+            context = str(context)
+
         # 简单实现：提取关键词并搜索
         keywords = context.split()[:10]  # 取前10个词
         all_results = []
