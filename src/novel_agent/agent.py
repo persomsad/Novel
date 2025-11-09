@@ -14,8 +14,10 @@ from langgraph.prebuilt import create_react_agent
 
 from .context_retriever import ContextRetriever
 from .tools import (
+    apply_style_fix_tool,
     apply_template_tool,
     build_character_network_tool,
+    check_style_compliance_tool,
     edit_chapter_lines,
     list_templates_tool,
     multi_edit,
@@ -323,6 +325,8 @@ def create_specialized_agent(
         "trace_foreshadow": trace_foreshadow,
         "list_templates": list_templates_tool,
         "apply_template": apply_template_tool,
+        "check_style_compliance": check_style_compliance_tool,
+        "apply_style_fix": apply_style_fix_tool,
     }
 
     # 工具预设模式

@@ -1687,6 +1687,40 @@ def template(
         raise typer.Exit(1)
 
 
+@app.command()
+def style(
+    action: str = typer.Argument(..., help="操作：check/fix"),
+    chapter: int = typer.Argument(..., help="章节编号"),
+    auto_fix: bool = typer.Option(False, "--auto", help="自动修复（仅限 fix 操作）"),
+) -> None:
+    """风格指南检查和修复
+
+    支持的操作：
+    - check: 检查章节风格
+    - fix: 修复章节风格
+
+    示例:
+        novel-agent style check 1
+        novel-agent style fix 1
+        novel-agent style fix 1 --auto
+    """
+    from .tools import apply_style_fix, check_style_compliance
+
+    if action == "check":
+        # 检查风格
+        result = check_style_compliance(chapter)
+        typer.echo(result)
+
+    elif action == "fix":
+        # 修复风格
+        result = apply_style_fix(chapter, auto_fix=auto_fix)
+        typer.echo(result)
+
+    else:
+        typer.echo(f"❌ 错误：未知操作 '{action}'，支持: check, fix", err=True)
+        raise typer.Exit(1)
+
+
 def main() -> None:
     """Entry point for CLI"""
     app()

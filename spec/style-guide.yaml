@@ -1,0 +1,62 @@
+# 风格指南配置
+# 用于检查章节是否符合写作风格要求
+
+writing_style:
+  tone: "轻松幽默"        # 或"严肃深沉"、"热血激昂"
+  pacing: "快节奏"        # 或"慢节奏"、"中等节奏"
+  sentence_length: "短句为主"  # 或"长短结合"、"长句为主"
+
+# 禁用词汇
+forbidden_words:
+  - word: "突然"
+    reason: "过度使用，显得生硬"
+    suggestions: ["", "刹那间", "瞬间"]
+
+  - word: "竟然"
+    reason: "过度使用，缺乏新意"
+    suggestions: ["", "居然", "没想到"]
+
+  - word: "居然"
+    reason: "与'竟然'重复，避免过度使用"
+    suggestions: ["", "没想到", "想不到"]
+
+  - word: "立刻"
+    reason: "过度使用，可用行动代替"
+    suggestions: ["", "立即", "马上"]
+
+  - word: "非常"
+    reason: "过度使用，建议用具体描述"
+    suggestions: ["", "极其", "十分"]
+
+# 角色语气设定
+character_voice:
+  张三:
+    tone: "粗犷、直接"
+    description: "江湖草莽，说话直来直去"
+    vocabulary: ["老子", "他娘的", "干"]
+    forbidden: ["呵呵", "嘻嘻", "在下", "阁下"]
+
+  李四:
+    tone: "文雅、委婉"
+    description: "书生气质，谈吐儒雅"
+    vocabulary: ["在下", "阁下", "敢问", "不知"]
+    forbidden: ["老子", "他娘的", "干"]
+
+  王五:
+    tone: "冷静、理智"
+    description: "沉着冷静，逻辑清晰"
+    vocabulary: ["显然", "因此", "推测", "合理"]
+    forbidden: ["哇塞", "天呐", "哎呀"]
+
+# 标点符号规范
+punctuation_rules:
+  dialogue_end: "。"      # 对话结束用句号
+  exclamation_limit: 5    # 每章最多5个感叹号
+  ellipsis_format: "……"   # 省略号格式（6个点）
+  dialogue_dash: "——"     # 对话中断用破折号（2个）
+
+# 句式风格
+sentence_style:
+  max_length: 50          # 最长句子字数
+  paragraph_sentence_limit: 5  # 每段最多句子数
+  consecutive_short_limit: 3   # 连续短句（<10字）限制
