@@ -7,6 +7,89 @@
 
 ---
 
+## [0.5.0] - 2025-11-10
+
+### 🎉 主要功能
+
+#### 写作模板系统 (#83)
+- **5个基础模板**: scene-description, dialogue, action, psychology, transition
+- **工具支持**:
+  - `list_templates()`: 列出所有模板（支持分类过滤）
+  - `apply_template()`: 应用模板并替换变量
+- **CLI命令**:
+  - `novel-agent template list [--category <类别>]`
+  - `novel-agent template apply <模板名> --var KEY=VALUE`
+- **Frontmatter**: 支持 YAML 元数据（标题、类别、描述、变量）
+- **变量替换**: `${VAR_NAME}` 占位符自动替换
+- **集成到Agent**: 可在交互模式中使用
+
+#### 风格指南系统 (#84)
+- **配置文件**: `spec/style-guide.yaml` 定义 4 类规则
+  - forbidden_words: 禁用词汇
+  - character_voice: 角色语气
+  - punctuation_rules: 标点符号规范
+  - sentence_style: 句式风格
+- **工具支持**:
+  - `check_style_compliance()`: 检查章节是否符合风格
+  - `apply_style_fix()`: 自动修复风格问题（支持 auto_fix 参数）
+- **CLI命令**:
+  - `novel-agent style check <chapter>`
+  - `novel-agent style fix <chapter> [--auto]`
+- **格式化输出**: Markdown 格式报告，清晰展示违规和建议
+
+#### 大纲生成器 (#85)
+- **三幕结构**: 起（10%）、承转（70%）、合（20%）
+- **自动章节分配**: 根据目标字数自动计算章节数（1000字/章）
+- **关键情节点**: 每幕标注重要情节点
+- **角色成长弧线**: 6 个阶段（起点→觉醒→成长→转折→蜕变→终点）
+- **多题材支持**: 玄幻、都市、科幻、武侠、历史、言情
+- **多风格支持**: 爽文、虐文、轻松、严肃
+- **CLI命令**:
+  - `novel-agent outline generate --genre <题材> --target-words <字数> --themes <主题> --style <风格> [--output <文件>]`
+- **工具集成**: 可在 Agent 中调用
+
+#### 增强创作工具 (#86)
+- **dialogue_enhancer() 增强**:
+  - 新增 `emotion` 参数（可选）
+  - 支持 7 种情绪：警惕、愤怒、悲伤、喜悦、平静、惊讶、恐惧
+  - 每种情绪有对应的动作和语气描写
+  - 向后兼容（无 emotion 时使用默认逻辑）
+- **plot_twist_generator() 改进**:
+  - 返回格式化 Markdown 文本（原为列表）
+  - 支持 low/medium/high 三种强度
+  - 生成 5 个情节转折建议
+  - 包含中文强度标注
+- **scene_transition() 新增**:
+  - 支持 time/space/perspective 三种过渡类型
+  - 自动生成场景过渡文本
+  - 每种类型有多个随机变体
+- **LangChain集成**: 所有创意工具可在 Agent 中使用
+
+### 📊 测试与质量
+
+- **测试覆盖**: 新增 73 个测试用例
+  - 写作模板: 17 个测试
+  - 风格指南: 18 个测试
+  - 大纲生成: 11 个测试
+  - 创意工具: 26 个测试（25 新增 + 1 修复）
+- **总测试数**: 341 个（340 passed, 1 skipped）
+- **覆盖率**: 69%（保持高覆盖）
+
+### 🔧 技术改进
+
+- 修复 mypy 类型错误（yaml 模块忽略）
+- 优化 pre-commit hook 配置（避免模块名冲突）
+- 改进文档字符串格式（行长度 <100）
+- 统一导入顺序（创意工具模块导入优化）
+
+### 📚 文档更新
+
+- 更新 README 使用说明
+- 新增 `spec/templates/` 示例模板
+- 新增 `spec/style-guide.yaml` 配置示例
+
+---
+
 ## [0.4.0] - 2025-11-09
 
 ### 🎉 主要功能
