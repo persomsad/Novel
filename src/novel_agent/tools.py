@@ -1032,7 +1032,11 @@ def list_templates(category: str | None = None) -> str:
         >>> list_templates()
         >>> list_templates(category="action")
     """
-    templates_dir = Path("spec/templates")
+    # 基于当前文件位置定位项目根目录
+    # tools.py 在 src/novel_agent/ 下，向上两级到项目根
+    project_root = Path(__file__).parent.parent.parent
+    templates_dir = project_root / "spec" / "templates"
+
     if not templates_dir.exists():
         return "❌ 模板目录不存在：spec/templates/"
 
@@ -1114,7 +1118,10 @@ def apply_template(template_name: str, variables: dict[str, str]) -> str:
         ...     "weather": "乌云密布"
         ... })
     """
-    templates_dir = Path("spec/templates")
+    # 基于当前文件位置定位项目根目录
+    # tools.py 在 src/novel_agent/ 下，向上两级到项目根
+    project_root = Path(__file__).parent.parent.parent
+    templates_dir = project_root / "spec" / "templates"
     template_file = templates_dir / f"{template_name}.md"
 
     if not template_file.exists():
