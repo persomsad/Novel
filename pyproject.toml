@@ -13,7 +13,9 @@ dependencies = [
     "langchain-google-genai>=2.0.9",
     "typer>=0.15.1",
     "rich>=13.9.4",
+    "prompt-toolkit>=3.0.43",
     "langgraph-checkpoint-sqlite (>=3.0.0,<4.0.0)",
+    "watchdog (>=4.0.0,<5.0.0)",
 ]
 
 [project.optional-dependencies]
@@ -42,6 +44,10 @@ target-version = "py312"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "N", "W"]
+ignore = []
+
+[tool.ruff.lint.per-file-ignores]
+"src/novel_agent/agent.py" = ["E501"]  # Allow long lines in multiline strings
 
 [tool.mypy]
 python_version = "3.12"
@@ -72,3 +78,8 @@ addopts = "--cov=src/novel_agent --cov-report=html --cov-report=term"
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+[dependency-groups]
+dev = [
+    "langgraph-checkpoint-sqlite (>=3.0.0,<4.0.0)"
+]

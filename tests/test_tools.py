@@ -1,5 +1,6 @@
 """Tests for novel_agent.tools"""
 
+import json
 from pathlib import Path
 
 import pytest
@@ -120,9 +121,13 @@ class TestSearchContent:
 class TestVerifyStrictTimeline:
     """测试 verify_strict_timeline 函数"""
 
-    def test_verify_timeline_empty(self) -> None:
+    def test_verify_timeline_empty(self, tmp_path: Path) -> None:
         """测试时间线验证（空结果）"""
-        result = verify_strict_timeline()
+        # 创建临时索引文件
+        index_path = tmp_path / "index.json"
+        index_path.write_text(json.dumps({"chapters": [], "references": []}), encoding="utf-8")
+
+        result = verify_strict_timeline(index_path)
 
         assert "errors" in result
         assert "warnings" in result
@@ -133,9 +138,13 @@ class TestVerifyStrictTimeline:
 class TestVerifyStrictReferences:
     """测试 verify_strict_references 函数"""
 
-    def test_verify_references_empty(self) -> None:
+    def test_verify_references_empty(self, tmp_path: Path) -> None:
         """测试引用验证（空结果）"""
-        result = verify_strict_references()
+        # 创建临时索引文件
+        index_path = tmp_path / "index.json"
+        index_path.write_text(json.dumps({"chapters": [], "references": []}), encoding="utf-8")
+
+        result = verify_strict_references(index_path)
 
         assert "errors" in result
         assert "warnings" in result

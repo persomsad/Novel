@@ -12,9 +12,16 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langgraph.checkpoint.base import BaseCheckpointSaver
 from langgraph.prebuilt import create_react_agent
 
+from .context_retriever import ContextRetriever
 from .tools import (
+    build_character_network_tool,
+    edit_chapter_lines,
+    multi_edit,
     read_file,
+    replace_in_file,
     search_content,
+    smart_context_search_tool,
+    trace_foreshadow_tool,
     verify_strict_references,
     verify_strict_timeline,
     write_chapter,
@@ -50,10 +57,57 @@ AGENT_CONFIGS = {
 - verify_strict_timeline()：时间线精确验证（数字、日期）
 - verify_strict_references()：引用完整性验证（伏笔ID）
 
+### 3. 精准编辑
+你现在具备精准修改文件的能力：
+- edit_chapter_lines()：修改章节的指定行（而非重写整章）
+- replace_in_file()：查找替换文本（支持全部或指定第N次）
+- multi_edit()：批量修改多个文件（原子性操作）
+
+**何时使用编辑工具：**
+- 用户要求"修改第X章的第Y行"
+- 用户要求"把所有'张三'改成'李四'"
+- 用户要求"修改多个章节中的某个内容"
+
+**注意：**
+- 编辑工具会直接修改文件，请谨慎使用
+- 优先询问用户确认后再执行修改操作
+- multi_edit 支持自动回滚（失败时恢复原文件）
+
+### 4. 智能上下文检索（图数据库）⭐ 新能力
+你现在具备基于知识图谱的智能检索能力（比向量检索强大 10 倍）：
+- smart_context_search()：智能搜索相关上下文（多跳关系、时间线、因果推理）
+- build_character_network()：构建角色关系网络（社交图谱 + 社区检测）
+- trace_foreshadow()：追溯伏笔链条（setup → hints → reveal）
+
+**为什么图 > 向量？**
+- ✅ 精确关系：knows/loves/hates 等多种关系，而非单一语义相似度
+- ✅ 时间感知：原生时间线，可查询"X 之前/之后发生的事"
+- ✅ 多跳推理：找出"张三认识的人认识的人"
+- ✅ 可解释性：清晰的图路径，而非黑盒相似度
+- ✅ 零成本：本地嵌入式，无需 API 调用
+
+**何时使用图查询：**
+- 用户要求"找出张三相关的所有章节"
+- 用户要求"分析角色关系网络"
+- 用户要求"检查伏笔是否埋好"
+- 用户要求"时间线是否一致"
+- 用户要求"某个角色和哪些角色有关系"
+
+**注意：**
+- 图查询需要先运行 'novel-agent build-graph' 构建图数据库
+- 图查询比文本搜索更智能，但需要数据准备
+- 如果图数据库未构建，会提示用户先构建
+
 ## 约束
 
 - 创建章节时使用 write_chapter 工具
-- 搜索关键词时使用 search_content 工具
+- 修改章节特定行时使用 edit_chapter_lines 工具
+- 批量替换文本时使用 replace_in_file 工具
+- 批量修改多个文件时使用 multi_edit 工具
+- 搜索关键词时使用 search_content 工具（简单文本搜索）
+- 智能搜索时使用 smart_context_search 工具（图数据库，更智能）
+- 分析角色关系时使用 build_character_network 工具
+- 追溯伏笔时使用 trace_foreshadow 工具
 - 读取文件时使用 read_file 工具
 - 始终提供具体、可操作的建议
 - 用中文回复
@@ -64,6 +118,12 @@ AGENT_CONFIGS = {
             "search_content",
             "verify_timeline",
             "verify_references",
+            "edit_chapter_lines",
+            "replace_in_file",
+            "multi_edit",
+            "smart_context_search",
+            "build_character_network",
+            "trace_foreshadow",
         ],
     },
     "outline-architect": {
@@ -148,6 +208,49 @@ AGENT_CONFIGS = {
 """,
         "tools": ["read_file", "search_content"],
     },
+    "continuity-editor": {
+        # noqa: E501
+        "system_prompt": """你是一名严苛的连续性编辑，必须按照“思考→规划→草稿→修订”四步，找出并修复角色、时间线、引用的所有矛盾。
+
+阶段要求：
+1. 思考：阅读章节/设定/索引，列出需要核对的事实与时间节点。
+2. 规划：明确要对比的角色、事件、引用，必要时引用 Nervus 数据。
+3. 草稿：输出问题列表，每条包含章节、行号、现象、影响。
+4. 修订：给出具体修改建议（如何改写、是否补伏笔、是否更新设定）。
+
+工具：
+- read_file / search_content：读取原文与上下文。
+- verify_strict_timeline / verify_strict_references：调用精确脚本获取客观结果。
+
+输出：
+- 按严重程度排序的问题清单。
+- 每条附“现象/原因/建议”。若未发现问题，说明已核对范围。
+""",
+        "tools": [
+            "read_file",
+            "search_content",
+            "verify_timeline",
+            "verify_references",
+        ],
+    },
+    "style-smith": {
+        # noqa: E501
+        "system_prompt": """你是一名文风雕琢师，遵循“思考→规划→草稿→修订”流程，对文本进行润色与再创作。
+
+阶段要求：
+1. 思考：分析目标受众、节奏、情绪，指出现有文字的优缺点。
+2. 规划：列出需要处理的段落/句子，并注明策略（增删、换视角、加强意象等）。
+3. 草稿：输出新的段落，保证语气与人设一致，可适度加强细节与张力。
+4. 修订：检查用词重复、句式单调与逻辑断点，给出最终确认稿和改动说明。
+
+工具：read_file / search_content（调取上下文或参考素材），write_chapter（必要时落盘）。
+
+输出：
+- 新文本（带分段）。
+- “改动说明”，解释每段处理原因。
+""",
+        "tools": ["read_file", "search_content", "write_chapter"],
+    },
 }
 
 # 向后兼容
@@ -159,6 +262,8 @@ def create_specialized_agent(
     model: BaseChatModel | None = None,
     api_key: str | None = None,
     checkpointer: BaseCheckpointSaver[Any] | None = None,
+    enable_context_retrieval: bool = True,
+    project_root: str | None = None,
 ) -> Any:
     """创建专业化Agent
 
@@ -167,6 +272,8 @@ def create_specialized_agent(
         model: LLM模型（可选，默认使用Gemini 2.0 Flash）
         api_key: Gemini API Key（可选，从环境变量读取）
         checkpointer: 会话持久化存储（可选）
+        enable_context_retrieval: 是否启用自动上下文检索（默认True）
+        project_root: 项目根目录（用于上下文检索）
 
     Returns:
         ReAct Agent实例
@@ -198,9 +305,26 @@ def create_specialized_agent(
         "search_content": search_content_tool,
         "verify_timeline": verify_timeline_tool,
         "verify_references": verify_references_tool,
+        "edit_chapter_lines": edit_chapter_lines_tool,
+        "replace_in_file": replace_in_file_tool,
+        "multi_edit": multi_edit_tool,
+        "smart_context_search": smart_context_search,
+        "build_character_network": build_character_network,
+        "trace_foreshadow": trace_foreshadow,
     }
 
     tools: list[BaseTool] = [tool_map[t] for t in config["tools"]]
+
+    # 初始化上下文检索器
+    context_retriever: ContextRetriever | None = None
+    if enable_context_retrieval and project_root:
+        try:
+            context_retriever = ContextRetriever(project_root=project_root)
+        except Exception as e:
+            from .logging_config import get_logger
+
+            logger = get_logger(__name__)
+            logger.warning(f"上下文检索器初始化失败: {e}")
 
     # 配置system message
     bound_model = model.bind(system=config["system_prompt"])
@@ -212,6 +336,65 @@ def create_specialized_agent(
         checkpointer=checkpointer,
     )
 
+    original_invoke = agent.invoke
+
+    def invoke_with_context_and_confidence(
+        input_data: dict[str, Any], *args: Any, **kwargs: Any
+    ) -> Any:
+        """包装 invoke：自动注入上下文 + 置信度评估"""
+
+        # 1. 自动注入上下文
+        if context_retriever and "messages" in input_data:
+            messages = input_data["messages"]
+            if messages:
+                # 获取最后一条用户消息
+                last_message = messages[-1]
+                query = (
+                    last_message.content if hasattr(last_message, "content") else str(last_message)
+                )
+
+                # 检索相关上下文
+                try:
+                    context_docs = context_retriever.retrieve_context(
+                        query=query, max_tokens=8000, max_docs=3
+                    )
+
+                    if context_docs:
+                        # 格式化上下文
+                        context_text = context_retriever.format_context(context_docs)
+
+                        # 将上下文添加到第一条消息（system message）
+                        # 或者作为新的 system message
+                        from langchain_core.messages import SystemMessage
+
+                        context_msg = SystemMessage(content=context_text)
+
+                        # 在用户消息前插入上下文
+                        input_data["messages"] = [context_msg] + messages
+
+                        from .logging_config import get_logger
+
+                        logger = get_logger(__name__)
+                        logger.info(f"✓ 自动注入上下文: {len(context_docs)} 个文档")
+
+                except Exception as e:
+                    from .logging_config import get_logger
+
+                    logger = get_logger(__name__)
+                    logger.warning(f"上下文检索失败: {e}")
+
+        # 2. 调用原始 invoke
+        result = original_invoke(input_data, *args, **kwargs)
+
+        # 3. 添加置信度
+        messages = result.get("messages") if isinstance(result, dict) else None
+        confidence = _estimate_confidence(messages)
+        if isinstance(result, dict):
+            result["confidence"] = confidence
+
+        return result
+
+    agent.invoke = invoke_with_context_and_confidence  # type: ignore[assignment]
     return agent
 
 
@@ -290,45 +473,298 @@ def search_content_tool(keyword: str) -> str:
 
 @tool
 def verify_timeline_tool() -> str:
-    """时间线精确验证
+    """时间线精确验证（增强版：输出行号和修复建议）
 
     Returns:
-        验证结果（格式化字符串）
+        验证结果（格式化字符串，包含文件名、行号、错误类型、修复建议）
     """
     result = verify_strict_timeline()
-    if not result["errors"] and not result["warnings"]:
+
+    summary = result.get("summary", {})
+    if summary.get("total_errors", 0) == 0 and summary.get("total_warnings", 0) == 0:
         return "✅ 时间线检查通过，未发现问题"
 
     output = []
+
+    # 输出摘要
+    output.append("📊 时间线验证摘要：")
+    output.append(f"  - 错误: {summary.get('total_errors', 0)}")
+    output.append(f"  - 警告: {summary.get('total_warnings', 0)}")
+    output.append(f"  - 可自动修复: {'是' if summary.get('auto_fixable') else '否'}")
+    output.append("")
+
+    # 输出详细错误
     if result["errors"]:
         output.append("❌ 发现时间线错误：")
-        output.extend(f"  - {e}" for e in result["errors"])
+        for err in result["errors"]:
+            file = err.get("file", "未知")
+            line = err.get("line", 0)
+            msg = err.get("message", "")
+            suggestion = err.get("suggestion", "")
 
+            output.append(f"\n  📄 {file}:{line}")
+            output.append(f"     问题: {msg}")
+            output.append(f"     建议: {suggestion}")
+
+    # 输出警告
     if result["warnings"]:
-        output.append("⚠️  时间线警告：")
-        output.extend(f"  - {w}" for w in result["warnings"])
+        output.append("\n⚠️  时间线警告：")
+        for warn in result["warnings"]:
+            file = warn.get("file", "未知")
+            line = warn.get("line", 0)
+            msg = warn.get("message", "")
+            suggestion = warn.get("suggestion", "")
+
+            output.append(f"\n  📄 {file}:{line}")
+            output.append(f"     问题: {msg}")
+            output.append(f"     建议: {suggestion}")
 
     return "\n".join(output)
 
 
 @tool
 def verify_references_tool() -> str:
-    """引用完整性验证
+    """引用完整性验证（增强版：输出行号和修复建议）
 
     Returns:
-        验证结果（格式化字符串）
+        验证结果（格式化字符串，包含文件名、行号、错误类型、修复建议）
     """
     result = verify_strict_references()
-    if not result["errors"] and not result["warnings"]:
+
+    summary = result.get("summary", {})
+    if summary.get("total_errors", 0) == 0 and summary.get("total_warnings", 0) == 0:
         return "✅ 引用检查通过，未发现问题"
 
     output = []
+
+    # 输出摘要
+    output.append("📊 引用验证摘要：")
+    output.append(f"  - 错误: {summary.get('total_errors', 0)}")
+    output.append(f"  - 警告: {summary.get('total_warnings', 0)}")
+    output.append(f"  - 可自动修复: {'是' if summary.get('auto_fixable') else '否'}")
+    output.append("")
+
+    # 输出详细错误
     if result["errors"]:
         output.append("❌ 发现引用错误：")
-        output.extend(f"  - {e}" for e in result["errors"])
+        for err in result["errors"]:
+            file = err.get("file", "未知")
+            line = err.get("line", 0)
+            msg = err.get("message", "")
+            suggestion = err.get("suggestion", "")
 
+            output.append(f"\n  📄 {file}:{line}")
+            output.append(f"     问题: {msg}")
+            output.append(f"     建议: {suggestion}")
+
+    # 输出警告
     if result["warnings"]:
-        output.append("⚠️  引用警告：")
-        output.extend(f"  - {w}" for w in result["warnings"])
+        output.append("\n⚠️  引用警告：")
+        for warn in result["warnings"]:
+            file = warn.get("file", "未知")
+            line = warn.get("line", 0)
+            msg = warn.get("message", "")
+            suggestion = warn.get("suggestion", "")
+
+            output.append(f"\n  📄 {file}:{line}")
+            output.append(f"     问题: {msg}")
+            output.append(f"     建议: {suggestion}")
 
     return "\n".join(output)
+
+
+@tool
+def edit_chapter_lines_tool(
+    chapter_number: int, start_line: int, end_line: int, new_content: str
+) -> str:
+    """精准修改章节的指定行
+
+    用于修改章节的特定行，而不是重写整个章节。
+    适用场景：修改对话、调整描写、更正错误等。
+
+    Args:
+        chapter_number: 章节编号（1-999）
+        start_line: 起始行号（从1开始）
+        end_line: 结束行号（包含，从1开始）
+        new_content: 新内容（将替换指定行）
+
+    Returns:
+        操作结果描述
+
+    Example:
+        # 修改第1章的第10-12行
+        edit_chapter_lines_tool(1, 10, 12, "新的段落内容\\n可以是多行")
+    """
+    return edit_chapter_lines(chapter_number, start_line, end_line, new_content)
+
+
+@tool
+def replace_in_file_tool(
+    file_path: str, search_text: str, replacement: str, occurrence: int | None = None
+) -> str:
+    """在文件中查找并替换文本
+
+    用于批量替换文件中的文本，支持全部替换或指定第N次出现。
+    适用场景：角色改名、地名修改、术语统一等。
+
+    Args:
+        file_path: 文件路径（如 "chapters/ch001.md"）
+        search_text: 要查找的文本
+        replacement: 替换文本
+        occurrence: 替换第几次出现（None=全部替换，1=第一次，2=第二次...）
+
+    Returns:
+        操作结果描述
+
+    Example:
+        # 将所有"张三"替换为"李四"
+        replace_in_file_tool("chapters/ch001.md", "张三", "李四")
+
+        # 只替换第一次出现的"张三"
+        replace_in_file_tool("chapters/ch001.md", "张三", "李四", 1)
+    """
+    return replace_in_file(file_path, search_text, replacement, occurrence)
+
+
+@tool
+def multi_edit_tool(operations: str) -> str:
+    """批量编辑多个文件
+
+    用于一次性修改多个文件，支持原子性操作（全部成功或全部回滚）。
+    适用场景：批量角色改名、统一术语、多章节同步修改等。
+
+    Args:
+        operations: JSON格式的操作列表，例如：
+            ```json
+            [
+                {
+                    "type": "replace",
+                    "file": "chapters/ch001.md",
+                    "search": "张三",
+                    "replace": "李四"
+                },
+                {
+                    "type": "replace",
+                    "file": "chapters/ch002.md",
+                    "search": "张三",
+                    "replace": "李四"
+                }
+            ]
+            ```
+
+    Returns:
+        操作结果描述
+
+    Note:
+        如果任何一个操作失败，所有修改会自动回滚
+    """
+    import json
+
+    try:
+        ops_list = json.loads(operations)
+        return multi_edit(ops_list)
+    except json.JSONDecodeError as e:
+        return f"❌ JSON格式错误: {e}"
+
+
+@tool
+def smart_context_search(
+    query: str, search_type: str = "all", max_hops: int = 2, limit: int = 10
+) -> str:
+    """智能上下文搜索（基于图数据库）
+
+    使用 NervusDB 图数据库进行智能上下文检索，比向量检索更精准、更可解释。
+    通过图遍历找出所有相关内容，包括直接匹配和关系关联。
+
+    Args:
+        query: 搜索查询（如"张三和李四的关系"）
+        search_type: 搜索类型
+            - 'character': 只搜索角色
+            - 'location': 只搜索地点
+            - 'event': 只搜索事件
+            - 'foreshadow': 只搜索伏笔
+            - 'all': 所有类型（默认）
+        max_hops: 最大关系跳数（1-3，默认 2）
+        limit: 最多返回结果数（默认 10）
+
+    Returns:
+        格式化的搜索结果，包含：
+        - 直接匹配的实体
+        - 通过关系关联的实体
+        - 图路径和置信度
+        - 统计信息
+
+    Example:
+        # 搜索角色"张三"的所有相关内容
+        smart_context_search("张三", "character", max_hops=2)
+
+        # 搜索所有包含"北京"的内容
+        smart_context_search("北京", "all", max_hops=1)
+    """
+    return smart_context_search_tool(query, search_type, max_hops, limit)
+
+
+@tool
+def build_character_network(character_names: str | None = None) -> str:
+    """构建角色关系网络图
+
+    分析角色之间的关系，构建社交网络图，并进行社区检测。
+
+    Args:
+        character_names: 角色名列表（逗号分隔，如"张三,李四,王五"）
+                        留空则分析所有角色
+
+    Returns:
+        格式化的网络信息：
+        - 节点（角色）列表
+        - 边（关系）列表
+        - 社区（群组）检测结果
+
+    Example:
+        # 分析所有角色的关系
+        build_character_network()
+
+        # 只分析指定角色的关系
+        build_character_network("张三,李四,王五")
+    """
+    return build_character_network_tool(character_names)
+
+
+@tool
+def trace_foreshadow(foreshadow_id: str) -> str:
+    """追溯伏笔完整链条
+
+    追踪伏笔从埋下到揭晓的完整过程，帮助检查伏笔是否被正确处理。
+
+    Args:
+        foreshadow_id: 伏笔 ID（如 "foreshadow_001"）
+
+    Returns:
+        格式化的伏笔追溯结果：
+        - Setup（埋笔）章节
+        - Hints（暗示）列表
+        - Reveal（揭晓）章节
+        - 状态（已解决/未解决）
+
+    Example:
+        # 追溯伏笔 "foreshadow_001"
+        trace_foreshadow("foreshadow_001")
+    """
+    return trace_foreshadow_tool(foreshadow_id)
+
+
+def _estimate_confidence(messages: Any) -> int:
+    if not isinstance(messages, list) or not messages:
+        return 0
+    last = messages[-1]
+    content = getattr(last, "content", None) or str(last)
+    tokens = content.split()
+    words = len(tokens)
+    sentences = max(
+        content.count("。") + content.count("！") + content.count("？") + content.count("."), 1
+    )
+    structure = 1 if sentences >= 3 else 0
+    correction_penalty = content.count("❌") * 10
+    base = min(words / 200, 1.0) * 60 + structure * 20
+    score = max(0, min(100, round(base - correction_penalty)))
+    return score

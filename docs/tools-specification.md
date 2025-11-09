@@ -157,6 +157,7 @@ result = verify_strict_timeline()
 - 这是**精确脚本验证**，不是 Agent 推理
 - 检查数字和日期格式，不检查语义
 - Agent 应该先用推理做语义检查
+- 若设置 `NERVUSDB_DB_PATH`，脚本会查询 NervusDB 并报告“章节存在但数据库缺失/数据库存在但章节缺失”的差异
 
 ---
 
@@ -192,8 +193,52 @@ result = verify_strict_references()
 - 这是**精确脚本验证**，检查 ID 匹配
 - 不检查引用的语义合理性
 - Agent 应该先用推理做语义检查
+- 若设置 `NERVUSDB_DB_PATH`，脚本会对比 NervusDB 的 `Chapter-Reference` 关系并报告差异
 
 ---
+
+## 附加辅助工具
+
+### calculate_word_count
+- **用途**：统计文本的字符/词/句数量与平均句长。
+- **签名**：`calculate_word_count(text: str) -> dict[str, Any]`
+- **返回**：`{"characters": int, "words": int, "sentences": int, "avg_sentence_length": float}`
+- **场景**：质量自检、控制篇幅。
+
+### random_name_generator
+- **用途**：根据题材与性别生成稳定的人名候选。
+- **签名**：`random_name_generator(genre: str, gender: str, seed: int | None = None) -> str`
+- **说明**：内部维护常见玄幻/都市男女名；缺省返回“苍玄”。
+
+### style_analyzer
+- **用途**：分析文本语气（句长、感叹/省略占比、形容词命中）。
+- **签名**：`style_analyzer(text: str) -> dict[str, Any]`
+- **返回**：包含 `tone`、`avg_sentence_length`、`exclamation_ratio` 等指标。
+
+### dialogue_enhancer
+- **用途**：给对白自动添加动作/语气描写。
+- **签名**：`dialogue_enhancer(dialogue_text: str, character_hint: str | None = None) -> str`
+- **策略**：根据标点选择“沉声/低声”等提示，适合快速润色。
+
+### plot_twist_generator
+- **用途**：基于当前剧情文本生成 3 条反转思路。
+- **签名**：`plot_twist_generator(current_plot: str, intensity: str = "medium", seed: int | None = None) -> list[str]`
+- **说明**：根据种子产生可复现结果，intensity 决定戏剧化程度。
+
+这些辅助函数位于 `src/novel_agent/tools_creative.py`，可在 workflow、Prompt/Eval 或脚本中直接调用。
+
+---
+
+## CLI 工具链（与 v0.2.0 验收对应）
+
+| 命令 | 作用 | 备注 |
+|------|------|------|
+| `novel-agent refresh-memory` | 解析章节/设定，写出 `data/continuity/index.json` | Issue #43 |
+| `novel-agent memory ingest --db <path>` | 调用 Nervus CLI 批量写入事实/时间线/引用 | Issue #45 |
+| `novel-agent sessions --list/--delete` | 管理 `.novel-agent/state.sqlite` 中的会话 | Issue #45 |
+| `novel-agent run chapter` | 执行 LangGraph workflow（gather → draft → verify） | Issue #46 |
+
+每个命令的输出在 README 对应章节有示例；脚本验证（`verify_*`）与 workflow 共用同一索引/记忆，保证一致。
 
 ## 工具设计原则
 

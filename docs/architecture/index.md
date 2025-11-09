@@ -15,6 +15,8 @@ ADR (Architecture Decision Record) 是记录软件架构决策的文档格式。
 | 编号 | 标题 | 状态 | 最后更新 | 相关 Issue |
 |------|------|------|----------|-----------|
 | [ADR-001](./ADR-001-cli-agent-architecture.md) | CLI Agent 技术方案 | Active | 2025-11-08 | #1, #2, #3, #4 |
+| [ADR-002](./ADR-002-nervusdb-memory.md) | NervusDB 记忆集成 | Draft | 2025-11-09 | #43, #45, #46 |
+| [ADR-003](./ADR-003-chapter-workflow.md) | LangGraph Chapter Workflow | Draft | 2025-11-09 | #46 |
 
 ## ADR 状态说明
 

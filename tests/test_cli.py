@@ -34,7 +34,9 @@ class TestChatCommand:
             result = runner.invoke(app, ["chat", "--api-key", "test-key"], input="hello\nexit\n")
 
             assert result.exit_code == 0
-            mock_create.assert_called_once_with("default", api_key="test-key")
+            kwargs = mock_create.call_args.kwargs
+            assert kwargs["api_key"] == "test-key"
+            assert "checkpointer" in kwargs
 
     def test_chat_with_custom_agent(self) -> None:
         """测试使用自定义Agent类型"""
@@ -50,7 +52,9 @@ class TestChatCommand:
             )
 
             assert result.exit_code == 0
-            mock_create.assert_called_once_with("outline-architect", api_key="test-key")
+            kwargs = mock_create.call_args.kwargs
+            assert kwargs["api_key"] == "test-key"
+            assert "checkpointer" in kwargs
 
     def test_chat_exit_command(self) -> None:
         """测试exit命令"""

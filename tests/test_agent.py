@@ -121,3 +121,25 @@ class TestCreateSpecializedAgent:
                 tools = call_kwargs["tools"]
                 assert len(tools) == 2  # outline-architect只有2个工具
                 assert agent is not None
+
+    def test_create_continuity_editor_agent(self) -> None:
+        with patch("novel_agent.agent.ChatGoogleGenerativeAI") as mock_gemini:
+            with patch("novel_agent.agent.create_react_agent") as mock_create:
+                mock_model = Mock()
+                mock_gemini.return_value = mock_model
+                mock_create.return_value = Mock()
+
+                _ = create_specialized_agent("continuity-editor", api_key="test-key")
+                tools = mock_create.call_args.kwargs["tools"]
+                assert len(tools) == 4
+
+    def test_create_style_smith_agent(self) -> None:
+        with patch("novel_agent.agent.ChatGoogleGenerativeAI") as mock_gemini:
+            with patch("novel_agent.agent.create_react_agent") as mock_create:
+                mock_model = Mock()
+                mock_gemini.return_value = mock_model
+                mock_create.return_value = Mock()
+
+                _ = create_specialized_agent("style-smith", api_key="test-key")
+                tools = mock_create.call_args.kwargs["tools"]
+                assert len(tools) == 3

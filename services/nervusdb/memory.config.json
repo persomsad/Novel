@@ -1,0 +1,10 @@
+{
+  "dbPath": "./data/novel.nervusdb",
+  "host": "127.0.0.1",
+  "port": 8787,
+  "openOptions": {
+    "temporal": true,
+    "enableLock": true
+  },
+  "nervusCli": "npx --yes nervusdb"
+}
