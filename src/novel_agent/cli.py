@@ -127,6 +127,7 @@ def build_graph(
 
 @app.command()
 def chat(
+    prompt: Optional[str] = typer.Argument(None, help="提示词（仅在 --print 模式下使用）"),
     api_key: Optional[str] = typer.Option(
         None,
         "--api-key",
@@ -155,6 +156,17 @@ def chat(
         "--enable-context/--disable-context",
         help="启用/禁用自动上下文检索（默认启用）",
     ),
+    print_mode: bool = typer.Option(
+        False,
+        "--print",
+        "-p",
+        help="非交互模式：打印结果后退出（用于脚本和管道）",
+    ),
+    output_format: str = typer.Option(
+        "text",
+        "--output-format",
+        help="输出格式：text（默认）、json、stream-json",
+    ),
 ) -> None:
     """启动对话模式
 
@@ -162,8 +174,52 @@ def chat(
         novel-agent chat
         novel-agent chat --agent outline-architect
         novel-agent chat --api-key YOUR_API_KEY --agent outline-architect
+        novel-agent chat --print '检查第3章一致性'
+        novel-agent chat --print --output-format json '检查一致性'
     """
-    # 显示Agent类型
+    import sys
+
+    # 处理非交互模式
+    if print_mode:
+        # 验证输出格式
+        valid_formats = ["text", "json", "stream-json"]
+        if output_format not in valid_formats:
+            console.print(
+                f"[red]错误：无效的输出格式 '{output_format}'[/red]\n"
+                f"有效选项: {', '.join(valid_formats)}"
+            )
+            raise typer.Exit(1)
+
+        # 获取输入
+        if prompt:
+            user_input = prompt
+        elif not sys.stdin.isatty():
+            # 从管道读取
+            user_input = sys.stdin.read().strip()
+        else:
+            console.print(
+                "[red]错误：--print 模式需要提供提示词或从管道输入[/red]\n"
+                "示例: novel-agent chat --print '你的问题'\n"
+                "或: echo '你的问题' | novel-agent chat --print"
+            )
+            raise typer.Exit(1)
+
+        if not user_input:
+            console.print("[red]错误：输入为空[/red]")
+            raise typer.Exit(1)
+
+        # 执行单次查询（非交互模式的逻辑稍后实现）
+        _run_print_mode(
+            user_input,
+            agent,
+            api_key,
+            output_format,
+            enable_watcher,
+            enable_context,
+        )
+        return
+
+    # 交互模式：显示Agent类型
     agent_name = agent if agent != "default" else "通用写作助手"
     console.print(
         Panel.fit(
@@ -580,6 +636,120 @@ def network(
     except Exception as exc:
         console.print(f"[red]✗ 分析失败: {exc}[/red]")
         raise typer.Exit(code=1) from exc
+
+
+def _run_print_mode(
+    user_input: str,
+    agent: str,
+    api_key: Optional[str],
+    output_format: str,
+    enable_watcher: bool,
+    enable_context: bool,
+) -> None:
+    """执行非交互模式的单次查询"""
+    import json as json_module
+    from pathlib import Path
+
+    project_root = Path.cwd()
+
+    # 启动文件监控（如果启用）- 但不显示消息
+    watcher_thread = None
+    if enable_watcher:
+        try:
+            from .file_watcher import start_background_watcher
+
+            index_path = project_root / "data" / "continuity" / "index.json"
+            watcher_thread = start_background_watcher(project_root, index_path)
+        except Exception:
+            pass  # 静默失败
+
+    try:
+        with open_checkpointer() as checkpointer:
+            # 创建 Agent（不显示进度）
+            agent_instance = create_specialized_agent(
+                agent,
+                api_key=api_key,
+                checkpointer=checkpointer,
+                enable_context_retrieval=enable_context,
+                project_root=str(project_root) if enable_context else None,
+            )
+
+            # 执行单次查询
+            import uuid
+
+            thread_id = str(uuid.uuid4())
+            config = {"configurable": {"thread_id": thread_id}}
+
+            # 调用 Agent
+            result = agent_instance.invoke({"messages": [("user", user_input)]}, config)
+
+            # 提取响应
+            messages = result.get("messages", [])
+            if not messages:
+                if output_format == "json":
+                    print(json_module.dumps({"error": "No response", "confidence": 0}, indent=2))
+                else:
+                    print("错误：未收到响应")
+                raise typer.Exit(1)
+
+            last_message = messages[-1]
+            response = (
+                last_message.content if hasattr(last_message, "content") else str(last_message)
+            )
+
+            # 计算置信度
+            from .agent import _estimate_confidence
+
+            confidence = _estimate_confidence(messages)
+
+            # 格式化输出
+            if output_format == "json":
+                output_data = {
+                    "response": response,
+                    "confidence": confidence,
+                    "messages": [
+                        {
+                            "role": (
+                                "user"
+                                if hasattr(msg, "type") and msg.type == "human"
+                                else "assistant"
+                            ),
+                            "content": (msg.content if hasattr(msg, "content") else str(msg)),
+                        }
+                        for msg in messages
+                    ],
+                }
+                print(json_module.dumps(output_data, ensure_ascii=False, indent=2))
+            elif output_format == "stream-json":
+                # stream-json 暂时等同于 json（流式输出在 #56 实现）
+                output_data = {
+                    "response": response,
+                    "confidence": confidence,
+                }
+                print(json_module.dumps(output_data, ensure_ascii=False))
+            else:
+                # text 格式
+                print(response)
+
+    except KeyboardInterrupt:
+        if output_format == "json":
+            print(json_module.dumps({"error": "Interrupted", "confidence": 0}))
+        raise typer.Exit(130)
+    except Exception as e:
+        if output_format == "json":
+            print(
+                json_module.dumps({"error": str(e), "confidence": 0}, ensure_ascii=False, indent=2)
+            )
+        else:
+            console.print(f"[red]错误：{e}[/red]")
+        raise typer.Exit(1)
+    finally:
+        # 停止文件监控
+        if watcher_thread and watcher_thread.is_alive():
+            try:
+                watcher_thread.join(timeout=0.5)
+            except Exception:
+                pass
 
 
 def main() -> None:
