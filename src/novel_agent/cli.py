@@ -627,11 +627,79 @@ def _handle_slash_command(user_input: str, session_id: str, agent_instance: Any)
             traceback.print_exc()
             return None
 
+    elif command == "/sessions":
+        from .session_export import get_session_metadata, list_session_ids
+
+        checkpointer = agent_instance.checkpointer
+        session_ids = list_session_ids(checkpointer)
+
+        if not session_ids:
+            console.print("[yellow]暂无历史会话[/yellow]")
+            return None
+
+        # 显示会话列表
+        console.print("\n[bold cyan]最近的会话：[/bold cyan]")
+        console.print("━" * 60)
+
+        # 只显示最近 10 个
+        for i, sid in enumerate(session_ids[:10], 1):
+            metadata = get_session_metadata(sid, checkpointer)
+            console.print(
+                f"{i}. [{metadata['created_at']}] {metadata['title']} ({sid})\n"
+                f"   {metadata['message_count']} 轮对话 | "
+                f"{metadata['total_tokens']} tokens"
+            )
+
+        console.print("━" * 60)
+
+        # 用户选择
+        from prompt_toolkit import prompt as pt_prompt
+
+        choice = pt_prompt("\n输入序号继续会话，或 q 退出: ").strip()
+
+        if choice == "q" or not choice:
+            return None
+
+        try:
+            idx = int(choice) - 1
+            if 0 <= idx < len(session_ids[:10]):
+                selected_id = session_ids[idx]
+                console.print(f"[green]✓ 切换到会话：{selected_id}[/green]")
+                return selected_id
+            else:
+                console.print("[yellow]⚠️  无效的序号[/yellow]")
+                return None
+        except ValueError:
+            console.print("[yellow]⚠️  无效的输入[/yellow]")
+            return None
+
+    elif command == "/export":
+        from .session_export import export_session
+
+        checkpointer = agent_instance.checkpointer
+        format = "markdown"  # 默认格式
+
+        # 解析参数（如果有）
+        if args:
+            # 简单解析：/export json 或 /export txt
+            if args.lower() in ["json", "txt", "markdown"]:
+                format = args.lower()
+
+        try:
+            output_path = export_session(session_id, checkpointer, format=format)
+            console.print(f"[green]✓ 已导出到：{output_path}[/green]")
+        except Exception as e:
+            console.print(f"[red]✗ 导出失败: {e}[/red]")
+
+        return None
+
     elif command == "/help":
         console.print("\n[cyan]可用命令：[/cyan]")
         console.print("  /compress [新提示]  - 压缩当前会话并创建新会话")
-        console.print("  /help              - 显示此帮助")
-        console.print("  exit/quit/bye      - 退出对话\n")
+        console.print("  /sessions           - 查看历史会话并切换")
+        console.print("  /export [格式]      - 导出当前会话（格式: markdown/json/txt）")
+        console.print("  /help               - 显示此帮助")
+        console.print("  exit/quit/bye       - 退出对话\n")
         return None
 
     else:
