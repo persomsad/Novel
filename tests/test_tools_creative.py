@@ -24,5 +24,12 @@ def test_dialogue_enhancer_adds_beats() -> None:
 
 
 def test_plot_twist_generator_returns_list() -> None:
-    twists = tc.plot_twist_generator("李明与张强合作", intensity="high", seed=1)
-    assert len(twists) == 3
+    """测试情节转折生成器返回格式化字符串"""
+    result = tc.plot_twist_generator("李明与张强合作", intensity="high", seed=1)
+    # 应该返回字符串而不是列表
+    assert isinstance(result, str)
+    assert "情节转折建议" in result
+    assert "高强度" in result
+    # 应该有多个建议（检查编号）
+    assert "1." in result
+    assert "2." in result
