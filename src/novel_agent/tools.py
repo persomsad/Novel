@@ -58,46 +58,6 @@ def read_file(path: str) -> str:
         raise
 
 
-def write_chapter(number: int, content: str, base_dir: str = "chapters") -> str:
-    """创建新章节
-
-    Args:
-        number: 章节编号（1-999）
-        content: 章节内容
-        base_dir: 章节目录（默认: chapters）
-
-    Returns:
-        创建的文件路径
-
-    Raises:
-        ValueError: 章节编号无效
-        OSError: 文件系统错误
-    """
-    logger.debug(f"正在创建章节: 编号={number}, 目录={base_dir}")
-
-    if not 1 <= number <= 999:
-        logger.error(f"无效的章节编号: {number}")
-        raise ValueError(f"章节编号必须在 1-999 之间，当前: {number}")
-
-    try:
-        # 创建目录
-        chapters_dir = Path(base_dir)
-        chapters_dir.mkdir(parents=True, exist_ok=True)
-
-        # 格式化文件名：ch001.md, ch002.md, ...
-        filename = f"ch{number:03d}.md"
-        file_path = chapters_dir / filename
-
-        # 写入内容
-        file_path.write_text(content, encoding="utf-8")
-
-        logger.info(f"成功创建章节: {file_path} ({len(content)} 字符)")
-        return str(file_path)
-    except OSError as e:
-        logger.error(f"创建章节失败: {e}")
-        raise
-
-
 def search_content(keyword: str, search_dir: str = ".") -> list[dict[str, str]]:
     """搜索关键词
 
@@ -1072,7 +1032,11 @@ def list_templates(category: str | None = None) -> str:
         >>> list_templates()
         >>> list_templates(category="action")
     """
-    templates_dir = Path("spec/templates")
+    # 基于当前文件位置定位项目根目录
+    # tools.py 在 src/novel_agent/ 下，向上两级到项目根
+    project_root = Path(__file__).parent.parent.parent
+    templates_dir = project_root / "spec" / "templates"
+
     if not templates_dir.exists():
         return "❌ 模板目录不存在：spec/templates/"
 
@@ -1154,7 +1118,10 @@ def apply_template(template_name: str, variables: dict[str, str]) -> str:
         ...     "weather": "乌云密布"
         ... })
     """
-    templates_dir = Path("spec/templates")
+    # 基于当前文件位置定位项目根目录
+    # tools.py 在 src/novel_agent/ 下，向上两级到项目根
+    project_root = Path(__file__).parent.parent.parent
+    templates_dir = project_root / "spec" / "templates"
     template_file = templates_dir / f"{template_name}.md"
 
     if not template_file.exists():

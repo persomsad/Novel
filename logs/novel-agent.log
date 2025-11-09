@@ -1,0 +1,415 @@
+2025-11-10 02:38:04 - novel_agent.novel_agent.file_watcher - INFO - 开始监控目录: /Volumes/WorkDrive/Develop/github/persomsad/Novel/chapters
+2025-11-10 02:38:04 - novel_agent.novel_agent.file_watcher - INFO - 开始监控目录: /Volumes/WorkDrive/Develop/github/persomsad/Novel/spec
+2025-11-10 02:38:04 - novel_agent.novel_agent.file_watcher - INFO - ✓ 文件监控已启动（后台模式）
+2025-11-10 02:38:05 - novel_agent.novel_agent.context_retriever - INFO - ✓ 索引已加载: 2 角色
+2025-11-10 02:38:05 - novel_agent.novel_agent.context_retriever - WARNING - 图数据库不存在: /Volumes/WorkDrive/Develop/github/persomsad/Novel/data/novel-graph.nervusdb
+2025-11-10 02:38:15 - novel_agent.novel_agent.context_retriever - INFO - 开始检索上下文，查询: ('user', '你来帮我在 /Volumes/WorkDrive/Develop/未命名文件夹 这个目录下规划小说，我想写的是都市仙王重生，你\n来一步一步引导我完成创作，而不是直接开始弄')
+2025-11-10 02:38:15 - novel_agent.novel_agent.context_retriever - INFO - ✓ 检索完成，返回 0 个文档
+2025-11-10 03:02:56 - novel_agent.novel_agent.file_watcher - INFO - 开始监控目录: /Volumes/WorkDrive/Develop/github/persomsad/Novel/chapters
+2025-11-10 03:02:56 - novel_agent.novel_agent.file_watcher - INFO - 开始监控目录: /Volumes/WorkDrive/Develop/github/persomsad/Novel/spec
+2025-11-10 03:02:56 - novel_agent.novel_agent.file_watcher - INFO - ✓ 文件监控已启动（后台模式）
+2025-11-10 03:02:56 - novel_agent.novel_agent.file_watcher - INFO - ✓ 文件监控已停止
+2025-11-10 03:02:56 - novel_agent.novel_agent.cache - INFO - LLM 缓存已启用（内存模式）
+2025-11-10 03:02:56 - novel_agent.novel_agent.file_watcher - INFO - 开始监控目录: /Volumes/WorkDrive/Develop/github/persomsad/Novel/chapters
+2025-11-10 03:02:56 - novel_agent.novel_agent.file_watcher - INFO - 开始监控目录: /Volumes/WorkDrive/Develop/github/persomsad/Novel/spec
+2025-11-10 03:02:56 - novel_agent.novel_agent.file_watcher - INFO - ✓ 文件监控已启动（后台模式）
+2025-11-10 03:02:56 - novel_agent.novel_agent.file_watcher - INFO - ✓ 文件监控已停止
+2025-11-10 03:02:56 - novel_agent.novel_agent.cache - INFO - LLM 缓存已启用（内存模式）
+2025-11-10 03:02:56 - novel_agent.novel_agent.file_watcher - INFO - 开始监控目录: /Volumes/WorkDrive/Develop/github/persomsad/Novel/chapters
+2025-11-10 03:02:56 - novel_agent.novel_agent.file_watcher - INFO - 开始监控目录: /Volumes/WorkDrive/Develop/github/persomsad/Novel/spec
+2025-11-10 03:02:56 - novel_agent.novel_agent.file_watcher - INFO - ✓ 文件监控已启动（后台模式）
+2025-11-10 03:02:56 - novel_agent.novel_agent.file_watcher - INFO - ✓ 文件监控已停止
+2025-11-10 03:02:56 - novel_agent.novel_agent.cache - INFO - LLM 缓存已启用（内存模式）
+2025-11-10 03:02:56 - novel_agent.novel_agent.file_watcher - INFO - 开始监控目录: /Volumes/WorkDrive/Develop/github/persomsad/Novel/chapters
+2025-11-10 03:02:56 - novel_agent.novel_agent.file_watcher - INFO - 开始监控目录: /Volumes/WorkDrive/Develop/github/persomsad/Novel/spec
+2025-11-10 03:02:56 - novel_agent.novel_agent.file_watcher - INFO - ✓ 文件监控已启动（后台模式）
+2025-11-10 03:02:56 - novel_agent.novel_agent.file_watcher - INFO - ✓ 文件监控已停止
+2025-11-10 03:02:56 - novel_agent.novel_agent.tools - INFO - 成功读取文件: spec/knowledge/character-profiles.md (181 字符)
+2025-11-10 03:02:57 - novel_agent.novel_agent.tools - INFO - 搜索完成: 找到 10 个匹配
+2025-11-10 03:02:57 - novel_agent.novel_agent.tools - INFO - 成功读取文件: chapters/ch001.md (231 字符)
+2025-11-10 03:02:57 - novel_agent.novel_agent.tools - INFO - 成功读取文件: chapters/ch002-inconsistent.md (233 字符)
+2025-11-10 03:02:57 - novel_agent.novel_agent.tools - INFO - 成功读取文件: chapters/ch002-inconsistent.md (233 字符)
+2025-11-10 03:02:57 - novel_agent.novel_agent.tools - INFO - 成功读取文件: chapters/ch003-references.md (236 字符)
+2025-11-10 03:02:57 - novel_agent.novel_agent.tools - INFO - 搜索完成: 找到 5 个匹配
+2025-11-10 03:02:57 - novel_agent.novel_agent.tools - INFO - 搜索完成: 找到 3 个匹配
+2025-11-10 03:02:57 - novel_agent.novel_agent.agent - INFO - ✓ 自动注入上下文: 1 个文档
+2025-11-10 03:02:57 - novel_agent.novel_agent.context_retriever - WARNING - 索引文件不存在: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-309/test_init0/data/continuity/index.json
+2025-11-10 03:02:57 - novel_agent.novel_agent.context_retriever - WARNING - 图数据库不存在: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-309/test_init0/data/novel-graph.nervusdb
+2025-11-10 03:02:57 - novel_agent.novel_agent.context_retriever - INFO - ✓ 索引已加载: 2 角色
+2025-11-10 03:02:57 - novel_agent.novel_agent.context_retriever - WARNING - 图数据库不存在: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-309/test_load_index0/data/novel-graph.nervusdb
+2025-11-10 03:02:57 - novel_agent.novel_agent.context_retriever - INFO - ✓ 索引已加载: 2 角色
+2025-11-10 03:02:57 - novel_agent.novel_agent.context_retriever - WARNING - 图数据库不存在: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-309/test_extract_entities_characte0/data/novel-graph.nervusdb
+2025-11-10 03:02:57 - novel_agent.novel_agent.context_retriever - WARNING - 索引文件不存在: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-309/test_extract_entities_chapters0/data/continuity/index.json
+2025-11-10 03:02:57 - novel_agent.novel_agent.context_retriever - WARNING - 图数据库不存在: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-309/test_extract_entities_chapters0/data/novel-graph.nervusdb
+2025-11-10 03:02:57 - novel_agent.novel_agent.context_retriever - WARNING - 索引文件不存在: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-309/test_merge_documents_dedup0/data/continuity/index.json
+2025-11-10 03:02:57 - novel_agent.novel_agent.context_retriever - WARNING - 图数据库不存在: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-309/test_merge_documents_dedup0/data/novel-graph.nervusdb
+2025-11-10 03:02:57 - novel_agent.novel_agent.context_retriever - WARNING - 索引文件不存在: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-309/test_rank_documents_priority0/data/continuity/index.json
+2025-11-10 03:02:57 - novel_agent.novel_agent.context_retriever - WARNING - 图数据库不存在: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-309/test_rank_documents_priority0/data/novel-graph.nervusdb
+2025-11-10 03:02:57 - novel_agent.novel_agent.context_retriever - WARNING - 索引文件不存在: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-309/test_load_document_content0/data/continuity/index.json
+2025-11-10 03:02:57 - novel_agent.novel_agent.context_retriever - WARNING - 图数据库不存在: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-309/test_load_document_content0/data/novel-graph.nervusdb
+2025-11-10 03:02:57 - novel_agent.novel_agent.context_retriever - WARNING - 索引文件不存在: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-309/test_limit_documents_count0/data/continuity/index.json
+2025-11-10 03:02:57 - novel_agent.novel_agent.context_retriever - WARNING - 图数据库不存在: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-309/test_limit_documents_count0/data/novel-graph.nervusdb
+2025-11-10 03:02:57 - novel_agent.novel_agent.context_retriever - WARNING - 索引文件不存在: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-309/test_limit_documents_tokens0/data/continuity/index.json
+2025-11-10 03:02:57 - novel_agent.novel_agent.context_retriever - WARNING - 图数据库不存在: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-309/test_limit_documents_tokens0/data/novel-graph.nervusdb
+2025-11-10 03:02:57 - novel_agent.novel_agent.context_retriever - WARNING - 索引文件不存在: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-309/test_format_context0/data/continuity/index.json
+2025-11-10 03:02:57 - novel_agent.novel_agent.context_retriever - WARNING - 图数据库不存在: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-309/test_format_context0/data/novel-graph.nervusdb
+2025-11-10 03:02:57 - novel_agent.novel_agent.context_retriever - INFO - ✓ 索引已加载: 1 角色
+2025-11-10 03:02:57 - novel_agent.novel_agent.context_retriever - WARNING - 图数据库不存在: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-309/test_retrieve_context_integrat0/test.db
+2025-11-10 03:02:57 - novel_agent.novel_agent.context_retriever - INFO - 开始检索上下文，查询: 张三
+2025-11-10 03:02:57 - novel_agent.novel_agent.context_retriever - INFO - ✓ 检索完成，返回 1 个文档
+2025-11-10 03:02:57 - novel_agent.novel_agent.tools_file - INFO - 成功创建文件: ch001.md (15 字符)
+2025-11-10 03:02:57 - novel_agent.novel_agent.tools - INFO - 搜索完成: 找到 1 个匹配
+2025-11-10 03:02:57 - novel_agent.novel_agent.tools - INFO - 正在修改章节 1 的第 3-3 行: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-309/test_edit_single_line0/ch001.md
+2025-11-10 03:02:57 - novel_agent.novel_agent.tools - INFO - ✅ 成功修改章节 1 (第 3-3 行)
+2025-11-10 03:02:57 - novel_agent.novel_agent.tools - INFO - 正在修改章节 1 的第 3-4 行: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-309/test_edit_multiple_lines0/ch001.md
+2025-11-10 03:02:57 - novel_agent.novel_agent.tools - INFO - ✅ 成功修改章节 1 (第 3-4 行)
+2025-11-10 03:02:57 - novel_agent.novel_agent.tools - INFO - 正在修改章节 1 的第 1-10 行: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-309/test_edit_line_out_of_range0/ch001.md
+2025-11-10 03:02:57 - novel_agent.novel_agent.tools - INFO - 正在修改章节 1 的第 3-3 行: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-309/test_edit_preserves_encoding0/ch001.md
+2025-11-10 03:02:57 - novel_agent.novel_agent.tools - INFO - ✅ 成功修改章节 1 (第 3-3 行)
+2025-11-10 03:02:57 - novel_agent.novel_agent.tools - INFO - 正在查找替换: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-309/test_replace_all_occurrences0/test.md ('张三' → '李四')
+2025-11-10 03:02:57 - novel_agent.novel_agent.tools - INFO - ✅ 成功替换 3 处文本: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-309/test_replace_all_occurrences0/test.md
+2025-11-10 03:02:57 - novel_agent.novel_agent.tools - INFO - 正在查找替换: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-309/test_replace_first_occurrence0/test.md ('主角' → '林逸')
+2025-11-10 03:02:57 - novel_agent.novel_agent.tools - INFO - ✅ 成功替换 1 处文本: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-309/test_replace_first_occurrence0/test.md
+2025-11-10 03:02:57 - novel_agent.novel_agent.tools - INFO - 正在查找替换: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-309/test_replace_nth_occurrence0/test.md ('AAA' → 'XXX')
+2025-11-10 03:02:57 - novel_agent.novel_agent.tools - INFO - ✅ 成功替换 1 处文本: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-309/test_replace_nth_occurrence0/test.md
+2025-11-10 03:02:57 - novel_agent.novel_agent.tools - INFO - 正在查找替换: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-309/test_replace_nonexistent_text0/test.md ('nonexistent' → 'replacement')
+2025-11-10 03:02:57 - novel_agent.novel_agent.tools - INFO - 正在查找替换: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-309/test_replace_invalid_occurrenc0/test.md ('AAA' → 'XXX')
+2025-11-10 03:02:57 - novel_agent.novel_agent.tools - INFO - 正在查找替换: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-309/test_replace_invalid_occurrenc0/test.md ('AAA' → 'XXX')
+2025-11-10 03:02:57 - novel_agent.novel_agent.tools - INFO - 正在查找替换: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-309/test_replace_preserves_encodin0/chinese.md ('测试' → '考试')
+2025-11-10 03:02:57 - novel_agent.novel_agent.tools - INFO - ✅ 成功替换 2 处文本: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-309/test_replace_preserves_encodin0/chinese.md
+2025-11-10 03:02:57 - novel_agent.novel_agent.tools - INFO - 开始批量编辑：2 个操作
+2025-11-10 03:02:57 - novel_agent.novel_agent.tools - INFO - 正在查找替换: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-309/test_multi_edit_replace_multip0/file1.md ('张三' → '李四')
+2025-11-10 03:02:57 - novel_agent.novel_agent.tools - INFO - ✅ 成功替换 1 处文本: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-309/test_multi_edit_replace_multip0/file1.md
+2025-11-10 03:02:57 - novel_agent.novel_agent.tools - INFO - 正在查找替换: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-309/test_multi_edit_replace_multip0/file2.md ('张三' → '李四')
+2025-11-10 03:02:57 - novel_agent.novel_agent.tools - INFO - ✅ 成功替换 1 处文本: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-309/test_multi_edit_replace_multip0/file2.md
+2025-11-10 03:02:57 - novel_agent.novel_agent.tools - INFO - ✅ 批量编辑完成：修改了 2 个文件
+2025-11-10 03:02:57 - novel_agent.novel_agent.tools - INFO - 开始批量编辑：2 个操作
+2025-11-10 03:02:57 - novel_agent.novel_agent.tools - INFO - 正在查找替换: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-309/test_multi_edit_mixed_operatio0/ch001.md ('主角' → '林逸')
+2025-11-10 03:02:57 - novel_agent.novel_agent.tools - INFO - ✅ 成功替换 1 处文本: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-309/test_multi_edit_mixed_operatio0/ch001.md
+2025-11-10 03:02:57 - novel_agent.novel_agent.tools - INFO - 正在修改章节 2 的第 2-2 行: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-309/test_multi_edit_mixed_operatio0/ch002.md
+2025-11-10 03:02:57 - novel_agent.novel_agent.tools - INFO - ✅ 成功修改章节 2 (第 2-2 行)
+2025-11-10 03:02:57 - novel_agent.novel_agent.tools - INFO - ✅ 批量编辑完成：修改了 2 个文件
+2025-11-10 03:02:57 - novel_agent.novel_agent.tools - INFO - 开始批量编辑：2 个操作
+2025-11-10 03:02:57 - novel_agent.novel_agent.tools - INFO - 正在查找替换: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-309/test_multi_edit_rollback_on_er0/file1.md ('original' → 'modified')
+2025-11-10 03:02:57 - novel_agent.novel_agent.tools - INFO - ✅ 成功替换 1 处文本: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-309/test_multi_edit_rollback_on_er0/file1.md
+2025-11-10 03:02:57 - novel_agent.novel_agent.tools - INFO - 正在查找替换: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-309/test_multi_edit_rollback_on_er0/file1.md ('nonexistent' → 'fail')
+2025-11-10 03:02:57 - novel_agent.novel_agent.tools - ERROR - 批量编辑失败，正在回滚: 未找到要替换的文本: 'nonexistent'
+2025-11-10 03:02:57 - novel_agent.novel_agent.tools - INFO - 开始批量编辑：1 个操作
+2025-11-10 03:02:57 - novel_agent.novel_agent.tools - ERROR - 批量编辑失败，正在回滚: 操作缺少 'file' 参数: {'type': 'replace', 'search': 'test', 'replace': 'test2'}
+2025-11-10 03:02:57 - novel_agent.novel_agent.tools - INFO - 开始批量编辑：1 个操作
+2025-11-10 03:02:57 - novel_agent.novel_agent.tools - ERROR - 批量编辑失败，正在回滚: 不支持的操作类型: invalid_type
+2025-11-10 03:02:57 - novel_agent.novel_agent.tools - INFO - 开始批量编辑：1 个操作
+2025-11-10 03:02:57 - novel_agent.novel_agent.tools - INFO - 正在修改章节 42 的第 2-2 行: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-309/test_multi_edit_auto_detect_ch0/ch042.md
+2025-11-10 03:02:57 - novel_agent.novel_agent.tools - INFO - ✅ 成功修改章节 42 (第 2-2 行)
+2025-11-10 03:02:57 - novel_agent.novel_agent.tools - INFO - ✅ 批量编辑完成：修改了 1 个文件
+2025-11-10 03:02:57 - novel_agent.novel_agent.tools - INFO - 开始批量编辑：3 个操作
+2025-11-10 03:02:57 - novel_agent.novel_agent.tools - INFO - 正在查找替换: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-309/test_multi_edit_deduplicates_f0/test.md ('AAA' → 'XXX')
+2025-11-10 03:02:57 - novel_agent.novel_agent.tools - INFO - ✅ 成功替换 1 处文本: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-309/test_multi_edit_deduplicates_f0/test.md
+2025-11-10 03:02:57 - novel_agent.novel_agent.tools - INFO - 正在查找替换: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-309/test_multi_edit_deduplicates_f0/test.md ('BBB' → 'YYY')
+2025-11-10 03:02:57 - novel_agent.novel_agent.tools - INFO - ✅ 成功替换 1 处文本: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-309/test_multi_edit_deduplicates_f0/test.md
+2025-11-10 03:02:57 - novel_agent.novel_agent.tools - INFO - 正在查找替换: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-309/test_multi_edit_deduplicates_f0/test.md ('CCC' → 'ZZZ')
+2025-11-10 03:02:57 - novel_agent.novel_agent.tools - INFO - ✅ 成功替换 1 处文本: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-309/test_multi_edit_deduplicates_f0/test.md
+2025-11-10 03:02:57 - novel_agent.novel_agent.tools - INFO - ✅ 批量编辑完成：修改了 1 个文件
+2025-11-10 03:02:57 - novel_agent.novel_agent.file_watcher - INFO - 开始监控目录: /Volumes/WorkDrive/Develop/github/persomsad/Novel/chapters
+2025-11-10 03:02:57 - novel_agent.novel_agent.file_watcher - INFO - 开始监控目录: /Volumes/WorkDrive/Develop/github/persomsad/Novel/spec
+2025-11-10 03:02:57 - novel_agent.novel_agent.file_watcher - INFO - ✓ 文件监控已启动（后台模式）
+2025-11-10 03:02:57 - novel_agent.novel_agent.file_watcher - INFO - ✓ 文件监控已停止
+2025-11-10 03:02:57 - novel_agent.novel_agent.file_watcher - INFO - 检测到文件 modified: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-309/test_handle_md_file_change0/test.md
+2025-11-10 03:02:57 - novel_agent.novel_agent.file_watcher - INFO - 开始更新索引，涉及 1 个文件
+2025-11-10 03:02:57 - novel_agent.novel_agent.file_watcher - INFO - ✓ 索引更新完成，耗时 0.00s
+2025-11-10 03:02:57 - novel_agent.novel_agent.file_watcher - INFO - 检测到文件 modified: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-309/test_debounce_multiple_changes0/test0.md
+2025-11-10 03:02:57 - novel_agent.novel_agent.file_watcher - INFO - 检测到文件 modified: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-309/test_debounce_multiple_changes0/test1.md
+2025-11-10 03:02:57 - novel_agent.novel_agent.file_watcher - INFO - 检测到文件 modified: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-309/test_debounce_multiple_changes0/test2.md
+2025-11-10 03:02:57 - novel_agent.novel_agent.file_watcher - INFO - 检测到文件 modified: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-309/test_debounce_multiple_changes0/test3.md
+2025-11-10 03:02:57 - novel_agent.novel_agent.file_watcher - INFO - 检测到文件 modified: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-309/test_debounce_multiple_changes0/test4.md
+2025-11-10 03:02:58 - novel_agent.novel_agent.file_watcher - INFO - 开始更新索引，涉及 5 个文件
+2025-11-10 03:02:58 - novel_agent.novel_agent.file_watcher - INFO - ✓ 索引更新完成，耗时 0.00s
+2025-11-10 03:02:58 - novel_agent.novel_agent.file_watcher - INFO - 检测到文件 modified: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-309/test_on_update_callback0/test.md
+2025-11-10 03:02:58 - novel_agent.novel_agent.file_watcher - INFO - 开始更新索引，涉及 1 个文件
+2025-11-10 03:02:58 - novel_agent.novel_agent.file_watcher - INFO - ✓ 索引更新完成，耗时 0.00s
+2025-11-10 03:02:58 - novel_agent.novel_agent.file_watcher - INFO - 开始监控目录: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-309/test_start_daemon0/chapters
+2025-11-10 03:02:58 - novel_agent.novel_agent.file_watcher - INFO - 开始监控目录: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-309/test_start_daemon0/spec
+2025-11-10 03:02:58 - novel_agent.novel_agent.file_watcher - INFO - ✓ 文件监控已启动（后台模式）
+2025-11-10 03:02:58 - novel_agent.novel_agent.file_watcher - INFO - ✓ 文件监控已停止
+2025-11-10 03:02:58 - novel_agent.novel_agent.file_watcher - INFO - 开始监控目录: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-309/test_integration_watch_file_ch0/chapters
+2025-11-10 03:02:58 - novel_agent.novel_agent.file_watcher - INFO - 开始监控目录: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-309/test_integration_watch_file_ch0/spec
+2025-11-10 03:02:58 - novel_agent.novel_agent.file_watcher - INFO - ✓ 文件监控已启动（后台模式）
+2025-11-10 03:02:58 - novel_agent.novel_agent.file_watcher - INFO - 检测到文件 created: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-309/test_integration_watch_file_ch0/chapters/ch001.md
+2025-11-10 03:02:58 - novel_agent.novel_agent.file_watcher - INFO - 检测到文件 modified: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-309/test_integration_watch_file_ch0/chapters/ch001.md
+2025-11-10 03:02:58 - novel_agent.novel_agent.file_watcher - INFO - 开始更新索引，涉及 1 个文件
+2025-11-10 03:02:58 - novel_agent.novel_agent.file_watcher - INFO - ✓ 索引更新完成，耗时 0.00s
+2025-11-10 03:02:59 - novel_agent.novel_agent.file_watcher - INFO - ✓ 文件监控已停止
+2025-11-10 03:02:59 - novel_agent.novel_agent.file_watcher - INFO - 开始监控目录: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-309/test_start_background_watcher0/chapters
+2025-11-10 03:02:59 - novel_agent.novel_agent.file_watcher - INFO - 开始监控目录: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-309/test_start_background_watcher0/spec
+2025-11-10 03:02:59 - novel_agent.novel_agent.file_watcher - INFO - ✓ 文件监控已启动（后台模式）
+2025-11-10 03:02:59 - novel_agent.novel_agent.file_watcher - INFO - ✓ 文件监控已停止
+2025-11-10 03:02:59 - novel_agent.novel_agent.cache - INFO - LLM 缓存已启用（内存模式）
+2025-11-10 03:02:59 - novel_agent.novel_agent.file_watcher - INFO - 开始监控目录: /Volumes/WorkDrive/Develop/github/persomsad/Novel/chapters
+2025-11-10 03:02:59 - novel_agent.novel_agent.file_watcher - INFO - 开始监控目录: /Volumes/WorkDrive/Develop/github/persomsad/Novel/spec
+2025-11-10 03:02:59 - novel_agent.novel_agent.file_watcher - INFO - ✓ 文件监控已启动（后台模式）
+2025-11-10 03:03:00 - novel_agent.novel_agent.cache - INFO - LLM 缓存已启用（内存模式）
+2025-11-10 03:03:00 - novel_agent.novel_agent.file_watcher - WARNING - 文件监控已在运行
+2025-11-10 03:03:00 - novel_agent.novel_agent.cache - INFO - LLM 缓存已启用（内存模式）
+2025-11-10 03:03:00 - novel_agent.novel_agent.cache - INFO - LLM 缓存已启用（内存模式）
+2025-11-10 03:03:00 - novel_agent.novel_agent.cache - INFO - LLM 缓存已启用（内存模式）
+2025-11-10 03:03:00 - novel_agent.novel_agent.file_watcher - WARNING - 文件监控已在运行
+2025-11-10 03:03:00 - novel_agent.novel_agent.cache - INFO - LLM 缓存已启用（内存模式）
+2025-11-10 03:03:00 - novel_agent.novel_agent.file_watcher - WARNING - 文件监控已在运行
+2025-11-10 03:03:00 - novel_agent.novel_agent.cache - INFO - LLM 缓存已启用（内存模式）
+2025-11-10 03:03:00 - novel_agent.novel_agent.file_watcher - WARNING - 文件监控已在运行
+2025-11-10 03:03:00 - novel_agent.novel_agent.cache - INFO - LLM 缓存已启用（内存模式）
+2025-11-10 03:03:00 - novel_agent.novel_agent.file_watcher - WARNING - 文件监控已在运行
+2025-11-10 03:03:00 - novel_agent.novel_agent.cache - INFO - LLM 缓存已启用（内存模式）
+2025-11-10 03:03:00 - novel_agent.novel_agent.file_watcher - WARNING - 文件监控已在运行
+2025-11-10 03:03:00 - novel_agent.novel_agent.cache - INFO - LLM 缓存已启用（内存模式）
+2025-11-10 03:03:00 - novel_agent.novel_agent.file_watcher - WARNING - 文件监控已在运行
+2025-11-10 03:03:00 - novel_agent.novel_agent.cache - INFO - LLM 缓存已启用（内存模式）
+2025-11-10 03:03:00 - novel_agent.novel_agent.file_watcher - WARNING - 文件监控已在运行
+2025-11-10 03:03:00 - novel_agent.novel_agent.cache - INFO - LLM 缓存已启用（内存模式）
+2025-11-10 03:03:00 - novel_agent.novel_agent.file_watcher - WARNING - 文件监控已在运行
+2025-11-10 03:03:00 - novel_agent.novel_agent.tools - INFO - 成功读取文件: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-309/test_read_existing_file0/test.md (31 字符)
+2025-11-10 03:03:00 - novel_agent.novel_agent.tools - ERROR - 文件不存在: /nonexistent/file.md
+2025-11-10 03:03:00 - novel_agent.novel_agent.tools - INFO - 成功读取文件: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-309/test_read_file_with_utf80/chinese.md (13 字符)
+2025-11-10 03:03:00 - novel_agent.novel_agent.tools - INFO - 搜索完成: 找到 1 个匹配
+2025-11-10 03:03:00 - novel_agent.novel_agent.tools - INFO - 搜索完成: 找到 1 个匹配
+2025-11-10 03:03:00 - novel_agent.novel_agent.tools - INFO - 搜索完成: 找到 0 个匹配
+2025-11-10 03:03:00 - novel_agent.novel_agent.tools_file - INFO - 成功创建文件: test.md (11 字符)
+2025-11-10 03:03:00 - novel_agent.novel_agent.tools_file - INFO - 成功创建文件: chapters/ch001.md (6 字符)
+2025-11-10 03:03:00 - novel_agent.novel_agent.tools_file - INFO - 成功创建文件: chapters/卷一/第一部分/ch001.md (2 字符)
+2025-11-10 03:03:00 - novel_agent.novel_agent.tools_file - INFO - 成功创建文件: test.md (3 字符)
+2025-11-10 03:03:00 - novel_agent.novel_agent.tools_file - INFO - 成功创建文件: test.md (3 字符)
+2025-11-10 03:03:00 - novel_agent.novel_agent.tools_file - ERROR - 路径验证失败: 禁止操作系统目录: /usr
+2025-11-10 03:03:00 - novel_agent.novel_agent.tools_file - ERROR - 路径验证失败: 禁止使用相对路径 '..': ../outside.md
+2025-11-10 03:03:00 - novel_agent.novel_agent.tools_file - INFO - 成功创建文件: /tmp/novel_agent_test.md (4 字符)
+2025-11-10 03:03:00 - novel_agent.novel_agent.tools_file - INFO - 成功创建目录: chapters
+2025-11-10 03:03:00 - novel_agent.novel_agent.tools_file - INFO - 成功创建目录: chapters/卷一/第一部分
+2025-11-10 03:03:00 - novel_agent.novel_agent.tools_file - INFO - 成功创建目录: chapters
+2025-11-10 03:03:00 - novel_agent.novel_agent.tools_file - INFO - 成功创建目录: chapters
+2025-11-10 03:03:00 - novel_agent.novel_agent.tools_file - ERROR - 路径验证失败: 禁止操作系统目录: /usr
+2025-11-10 03:03:00 - novel_agent.novel_agent.tools_file - INFO - 成功列出目录: . (3 项)
+2025-11-10 03:03:00 - novel_agent.novel_agent.tools_file - INFO - 成功列出目录: chapters (2 项)
+2025-11-10 03:03:00 - novel_agent.novel_agent.tools_file - ERROR - 列出目录失败: 目录不存在: notexist
+2025-11-10 03:03:00 - novel_agent.novel_agent.tools_file - ERROR - 路径验证失败: 不是目录: test.md
+2025-11-10 03:03:00 - novel_agent.novel_agent.tools_file - INFO - 成功列出目录: . (3 项)
+2025-11-10 03:03:00 - novel_agent.src.novel_agent.tools - WARNING - 模板中有未替换的变量: ['location', 'weather', 'details', 'atmosphere']
+2025-11-10 03:03:03 - novel_agent.novel_agent.file_watcher - INFO - 开始监控目录: /Volumes/WorkDrive/Develop/github/persomsad/Novel/chapters
+2025-11-10 03:03:03 - novel_agent.novel_agent.file_watcher - INFO - 开始监控目录: /Volumes/WorkDrive/Develop/github/persomsad/Novel/spec
+2025-11-10 03:03:03 - novel_agent.novel_agent.file_watcher - INFO - ✓ 文件监控已启动（后台模式）
+2025-11-10 03:03:03 - novel_agent.novel_agent.file_watcher - INFO - ✓ 文件监控已停止
+2025-11-10 03:03:03 - novel_agent.novel_agent.cache - INFO - LLM 缓存已启用（内存模式）
+2025-11-10 03:03:03 - novel_agent.novel_agent.file_watcher - INFO - 开始监控目录: /Volumes/WorkDrive/Develop/github/persomsad/Novel/chapters
+2025-11-10 03:03:03 - novel_agent.novel_agent.file_watcher - INFO - 开始监控目录: /Volumes/WorkDrive/Develop/github/persomsad/Novel/spec
+2025-11-10 03:03:03 - novel_agent.novel_agent.file_watcher - INFO - ✓ 文件监控已启动（后台模式）
+2025-11-10 03:03:04 - novel_agent.novel_agent.file_watcher - INFO - ✓ 文件监控已停止
+2025-11-10 03:03:04 - novel_agent.novel_agent.cache - INFO - LLM 缓存已启用（内存模式）
+2025-11-10 03:03:04 - novel_agent.novel_agent.file_watcher - INFO - 开始监控目录: /Volumes/WorkDrive/Develop/github/persomsad/Novel/chapters
+2025-11-10 03:03:04 - novel_agent.novel_agent.file_watcher - INFO - 开始监控目录: /Volumes/WorkDrive/Develop/github/persomsad/Novel/spec
+2025-11-10 03:03:04 - novel_agent.novel_agent.file_watcher - INFO - ✓ 文件监控已启动（后台模式）
+2025-11-10 03:03:04 - novel_agent.novel_agent.file_watcher - INFO - ✓ 文件监控已停止
+2025-11-10 03:03:04 - novel_agent.novel_agent.cache - INFO - LLM 缓存已启用（内存模式）
+2025-11-10 03:03:04 - novel_agent.novel_agent.file_watcher - INFO - 开始监控目录: /Volumes/WorkDrive/Develop/github/persomsad/Novel/chapters
+2025-11-10 03:03:04 - novel_agent.novel_agent.file_watcher - INFO - 开始监控目录: /Volumes/WorkDrive/Develop/github/persomsad/Novel/spec
+2025-11-10 03:03:04 - novel_agent.novel_agent.file_watcher - INFO - ✓ 文件监控已启动（后台模式）
+2025-11-10 03:03:04 - novel_agent.novel_agent.file_watcher - INFO - ✓ 文件监控已停止
+2025-11-10 03:03:04 - novel_agent.novel_agent.tools - INFO - 成功读取文件: spec/knowledge/character-profiles.md (181 字符)
+2025-11-10 03:03:04 - novel_agent.novel_agent.tools - INFO - 搜索完成: 找到 10 个匹配
+2025-11-10 03:03:04 - novel_agent.novel_agent.tools - INFO - 成功读取文件: chapters/ch001.md (231 字符)
+2025-11-10 03:03:04 - novel_agent.novel_agent.tools - INFO - 成功读取文件: chapters/ch002-inconsistent.md (233 字符)
+2025-11-10 03:03:04 - novel_agent.novel_agent.tools - INFO - 成功读取文件: chapters/ch002-inconsistent.md (233 字符)
+2025-11-10 03:03:04 - novel_agent.novel_agent.tools - INFO - 成功读取文件: chapters/ch003-references.md (236 字符)
+2025-11-10 03:03:04 - novel_agent.novel_agent.tools - INFO - 搜索完成: 找到 5 个匹配
+2025-11-10 03:03:04 - novel_agent.novel_agent.tools - INFO - 搜索完成: 找到 3 个匹配
+2025-11-10 03:03:04 - novel_agent.novel_agent.agent - INFO - ✓ 自动注入上下文: 1 个文档
+2025-11-10 03:03:04 - novel_agent.novel_agent.context_retriever - WARNING - 索引文件不存在: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-310/test_init0/data/continuity/index.json
+2025-11-10 03:03:04 - novel_agent.novel_agent.context_retriever - WARNING - 图数据库不存在: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-310/test_init0/data/novel-graph.nervusdb
+2025-11-10 03:03:04 - novel_agent.novel_agent.context_retriever - INFO - ✓ 索引已加载: 2 角色
+2025-11-10 03:03:04 - novel_agent.novel_agent.context_retriever - WARNING - 图数据库不存在: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-310/test_load_index0/data/novel-graph.nervusdb
+2025-11-10 03:03:04 - novel_agent.novel_agent.context_retriever - INFO - ✓ 索引已加载: 2 角色
+2025-11-10 03:03:04 - novel_agent.novel_agent.context_retriever - WARNING - 图数据库不存在: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-310/test_extract_entities_characte0/data/novel-graph.nervusdb
+2025-11-10 03:03:04 - novel_agent.novel_agent.context_retriever - WARNING - 索引文件不存在: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-310/test_extract_entities_chapters0/data/continuity/index.json
+2025-11-10 03:03:04 - novel_agent.novel_agent.context_retriever - WARNING - 图数据库不存在: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-310/test_extract_entities_chapters0/data/novel-graph.nervusdb
+2025-11-10 03:03:04 - novel_agent.novel_agent.context_retriever - WARNING - 索引文件不存在: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-310/test_merge_documents_dedup0/data/continuity/index.json
+2025-11-10 03:03:04 - novel_agent.novel_agent.context_retriever - WARNING - 图数据库不存在: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-310/test_merge_documents_dedup0/data/novel-graph.nervusdb
+2025-11-10 03:03:04 - novel_agent.novel_agent.context_retriever - WARNING - 索引文件不存在: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-310/test_rank_documents_priority0/data/continuity/index.json
+2025-11-10 03:03:04 - novel_agent.novel_agent.context_retriever - WARNING - 图数据库不存在: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-310/test_rank_documents_priority0/data/novel-graph.nervusdb
+2025-11-10 03:03:04 - novel_agent.novel_agent.context_retriever - WARNING - 索引文件不存在: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-310/test_load_document_content0/data/continuity/index.json
+2025-11-10 03:03:04 - novel_agent.novel_agent.context_retriever - WARNING - 图数据库不存在: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-310/test_load_document_content0/data/novel-graph.nervusdb
+2025-11-10 03:03:04 - novel_agent.novel_agent.context_retriever - WARNING - 索引文件不存在: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-310/test_limit_documents_count0/data/continuity/index.json
+2025-11-10 03:03:04 - novel_agent.novel_agent.context_retriever - WARNING - 图数据库不存在: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-310/test_limit_documents_count0/data/novel-graph.nervusdb
+2025-11-10 03:03:04 - novel_agent.novel_agent.context_retriever - WARNING - 索引文件不存在: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-310/test_limit_documents_tokens0/data/continuity/index.json
+2025-11-10 03:03:04 - novel_agent.novel_agent.context_retriever - WARNING - 图数据库不存在: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-310/test_limit_documents_tokens0/data/novel-graph.nervusdb
+2025-11-10 03:03:04 - novel_agent.novel_agent.context_retriever - WARNING - 索引文件不存在: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-310/test_format_context0/data/continuity/index.json
+2025-11-10 03:03:04 - novel_agent.novel_agent.context_retriever - WARNING - 图数据库不存在: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-310/test_format_context0/data/novel-graph.nervusdb
+2025-11-10 03:03:04 - novel_agent.novel_agent.context_retriever - INFO - ✓ 索引已加载: 1 角色
+2025-11-10 03:03:04 - novel_agent.novel_agent.context_retriever - WARNING - 图数据库不存在: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-310/test_retrieve_context_integrat0/test.db
+2025-11-10 03:03:04 - novel_agent.novel_agent.context_retriever - INFO - 开始检索上下文，查询: 张三
+2025-11-10 03:03:04 - novel_agent.novel_agent.context_retriever - INFO - ✓ 检索完成，返回 1 个文档
+2025-11-10 03:03:04 - novel_agent.novel_agent.tools_file - INFO - 成功创建文件: ch001.md (15 字符)
+2025-11-10 03:03:04 - novel_agent.novel_agent.tools - INFO - 搜索完成: 找到 1 个匹配
+2025-11-10 03:03:04 - novel_agent.novel_agent.tools - INFO - 正在修改章节 1 的第 3-3 行: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-310/test_edit_single_line0/ch001.md
+2025-11-10 03:03:04 - novel_agent.novel_agent.tools - INFO - ✅ 成功修改章节 1 (第 3-3 行)
+2025-11-10 03:03:04 - novel_agent.novel_agent.tools - INFO - 正在修改章节 1 的第 3-4 行: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-310/test_edit_multiple_lines0/ch001.md
+2025-11-10 03:03:04 - novel_agent.novel_agent.tools - INFO - ✅ 成功修改章节 1 (第 3-4 行)
+2025-11-10 03:03:04 - novel_agent.novel_agent.tools - INFO - 正在修改章节 1 的第 1-10 行: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-310/test_edit_line_out_of_range0/ch001.md
+2025-11-10 03:03:04 - novel_agent.novel_agent.tools - INFO - 正在修改章节 1 的第 3-3 行: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-310/test_edit_preserves_encoding0/ch001.md
+2025-11-10 03:03:04 - novel_agent.novel_agent.tools - INFO - ✅ 成功修改章节 1 (第 3-3 行)
+2025-11-10 03:03:04 - novel_agent.novel_agent.tools - INFO - 正在查找替换: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-310/test_replace_all_occurrences0/test.md ('张三' → '李四')
+2025-11-10 03:03:04 - novel_agent.novel_agent.tools - INFO - ✅ 成功替换 3 处文本: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-310/test_replace_all_occurrences0/test.md
+2025-11-10 03:03:04 - novel_agent.novel_agent.tools - INFO - 正在查找替换: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-310/test_replace_first_occurrence0/test.md ('主角' → '林逸')
+2025-11-10 03:03:04 - novel_agent.novel_agent.tools - INFO - ✅ 成功替换 1 处文本: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-310/test_replace_first_occurrence0/test.md
+2025-11-10 03:03:04 - novel_agent.novel_agent.tools - INFO - 正在查找替换: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-310/test_replace_nth_occurrence0/test.md ('AAA' → 'XXX')
+2025-11-10 03:03:04 - novel_agent.novel_agent.tools - INFO - ✅ 成功替换 1 处文本: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-310/test_replace_nth_occurrence0/test.md
+2025-11-10 03:03:04 - novel_agent.novel_agent.tools - INFO - 正在查找替换: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-310/test_replace_nonexistent_text0/test.md ('nonexistent' → 'replacement')
+2025-11-10 03:03:04 - novel_agent.novel_agent.tools - INFO - 正在查找替换: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-310/test_replace_invalid_occurrenc0/test.md ('AAA' → 'XXX')
+2025-11-10 03:03:04 - novel_agent.novel_agent.tools - INFO - 正在查找替换: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-310/test_replace_invalid_occurrenc0/test.md ('AAA' → 'XXX')
+2025-11-10 03:03:04 - novel_agent.novel_agent.tools - INFO - 正在查找替换: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-310/test_replace_preserves_encodin0/chinese.md ('测试' → '考试')
+2025-11-10 03:03:04 - novel_agent.novel_agent.tools - INFO - ✅ 成功替换 2 处文本: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-310/test_replace_preserves_encodin0/chinese.md
+2025-11-10 03:03:04 - novel_agent.novel_agent.tools - INFO - 开始批量编辑：2 个操作
+2025-11-10 03:03:04 - novel_agent.novel_agent.tools - INFO - 正在查找替换: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-310/test_multi_edit_replace_multip0/file1.md ('张三' → '李四')
+2025-11-10 03:03:04 - novel_agent.novel_agent.tools - INFO - ✅ 成功替换 1 处文本: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-310/test_multi_edit_replace_multip0/file1.md
+2025-11-10 03:03:04 - novel_agent.novel_agent.tools - INFO - 正在查找替换: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-310/test_multi_edit_replace_multip0/file2.md ('张三' → '李四')
+2025-11-10 03:03:04 - novel_agent.novel_agent.tools - INFO - ✅ 成功替换 1 处文本: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-310/test_multi_edit_replace_multip0/file2.md
+2025-11-10 03:03:04 - novel_agent.novel_agent.tools - INFO - ✅ 批量编辑完成：修改了 2 个文件
+2025-11-10 03:03:04 - novel_agent.novel_agent.tools - INFO - 开始批量编辑：2 个操作
+2025-11-10 03:03:04 - novel_agent.novel_agent.tools - INFO - 正在查找替换: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-310/test_multi_edit_mixed_operatio0/ch001.md ('主角' → '林逸')
+2025-11-10 03:03:04 - novel_agent.novel_agent.tools - INFO - ✅ 成功替换 1 处文本: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-310/test_multi_edit_mixed_operatio0/ch001.md
+2025-11-10 03:03:04 - novel_agent.novel_agent.tools - INFO - 正在修改章节 2 的第 2-2 行: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-310/test_multi_edit_mixed_operatio0/ch002.md
+2025-11-10 03:03:04 - novel_agent.novel_agent.tools - INFO - ✅ 成功修改章节 2 (第 2-2 行)
+2025-11-10 03:03:04 - novel_agent.novel_agent.tools - INFO - ✅ 批量编辑完成：修改了 2 个文件
+2025-11-10 03:03:04 - novel_agent.novel_agent.tools - INFO - 开始批量编辑：2 个操作
+2025-11-10 03:03:04 - novel_agent.novel_agent.tools - INFO - 正在查找替换: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-310/test_multi_edit_rollback_on_er0/file1.md ('original' → 'modified')
+2025-11-10 03:03:04 - novel_agent.novel_agent.tools - INFO - ✅ 成功替换 1 处文本: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-310/test_multi_edit_rollback_on_er0/file1.md
+2025-11-10 03:03:04 - novel_agent.novel_agent.tools - INFO - 正在查找替换: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-310/test_multi_edit_rollback_on_er0/file1.md ('nonexistent' → 'fail')
+2025-11-10 03:03:04 - novel_agent.novel_agent.tools - ERROR - 批量编辑失败，正在回滚: 未找到要替换的文本: 'nonexistent'
+2025-11-10 03:03:04 - novel_agent.novel_agent.tools - INFO - 开始批量编辑：1 个操作
+2025-11-10 03:03:04 - novel_agent.novel_agent.tools - ERROR - 批量编辑失败，正在回滚: 操作缺少 'file' 参数: {'type': 'replace', 'search': 'test', 'replace': 'test2'}
+2025-11-10 03:03:04 - novel_agent.novel_agent.tools - INFO - 开始批量编辑：1 个操作
+2025-11-10 03:03:04 - novel_agent.novel_agent.tools - ERROR - 批量编辑失败，正在回滚: 不支持的操作类型: invalid_type
+2025-11-10 03:03:04 - novel_agent.novel_agent.tools - INFO - 开始批量编辑：1 个操作
+2025-11-10 03:03:04 - novel_agent.novel_agent.tools - INFO - 正在修改章节 42 的第 2-2 行: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-310/test_multi_edit_auto_detect_ch0/ch042.md
+2025-11-10 03:03:04 - novel_agent.novel_agent.tools - INFO - ✅ 成功修改章节 42 (第 2-2 行)
+2025-11-10 03:03:04 - novel_agent.novel_agent.tools - INFO - ✅ 批量编辑完成：修改了 1 个文件
+2025-11-10 03:03:04 - novel_agent.novel_agent.tools - INFO - 开始批量编辑：3 个操作
+2025-11-10 03:03:04 - novel_agent.novel_agent.tools - INFO - 正在查找替换: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-310/test_multi_edit_deduplicates_f0/test.md ('AAA' → 'XXX')
+2025-11-10 03:03:04 - novel_agent.novel_agent.tools - INFO - ✅ 成功替换 1 处文本: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-310/test_multi_edit_deduplicates_f0/test.md
+2025-11-10 03:03:04 - novel_agent.novel_agent.tools - INFO - 正在查找替换: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-310/test_multi_edit_deduplicates_f0/test.md ('BBB' → 'YYY')
+2025-11-10 03:03:04 - novel_agent.novel_agent.tools - INFO - ✅ 成功替换 1 处文本: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-310/test_multi_edit_deduplicates_f0/test.md
+2025-11-10 03:03:04 - novel_agent.novel_agent.tools - INFO - 正在查找替换: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-310/test_multi_edit_deduplicates_f0/test.md ('CCC' → 'ZZZ')
+2025-11-10 03:03:04 - novel_agent.novel_agent.tools - INFO - ✅ 成功替换 1 处文本: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-310/test_multi_edit_deduplicates_f0/test.md
+2025-11-10 03:03:04 - novel_agent.novel_agent.tools - INFO - ✅ 批量编辑完成：修改了 1 个文件
+2025-11-10 03:03:04 - novel_agent.novel_agent.file_watcher - INFO - 开始监控目录: /Volumes/WorkDrive/Develop/github/persomsad/Novel/chapters
+2025-11-10 03:03:04 - novel_agent.novel_agent.file_watcher - INFO - 开始监控目录: /Volumes/WorkDrive/Develop/github/persomsad/Novel/spec
+2025-11-10 03:03:04 - novel_agent.novel_agent.file_watcher - INFO - ✓ 文件监控已启动（后台模式）
+2025-11-10 03:03:04 - novel_agent.novel_agent.file_watcher - INFO - ✓ 文件监控已停止
+2025-11-10 03:03:04 - novel_agent.novel_agent.file_watcher - INFO - 检测到文件 modified: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-310/test_handle_md_file_change0/test.md
+2025-11-10 03:03:04 - novel_agent.novel_agent.file_watcher - INFO - 开始更新索引，涉及 1 个文件
+2025-11-10 03:03:04 - novel_agent.novel_agent.file_watcher - INFO - ✓ 索引更新完成，耗时 0.00s
+2025-11-10 03:03:04 - novel_agent.novel_agent.file_watcher - INFO - 检测到文件 modified: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-310/test_debounce_multiple_changes0/test0.md
+2025-11-10 03:03:04 - novel_agent.novel_agent.file_watcher - INFO - 检测到文件 modified: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-310/test_debounce_multiple_changes0/test1.md
+2025-11-10 03:03:05 - novel_agent.novel_agent.file_watcher - INFO - 检测到文件 modified: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-310/test_debounce_multiple_changes0/test2.md
+2025-11-10 03:03:05 - novel_agent.novel_agent.file_watcher - INFO - 检测到文件 modified: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-310/test_debounce_multiple_changes0/test3.md
+2025-11-10 03:03:05 - novel_agent.novel_agent.file_watcher - INFO - 检测到文件 modified: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-310/test_debounce_multiple_changes0/test4.md
+2025-11-10 03:03:05 - novel_agent.novel_agent.file_watcher - INFO - 开始更新索引，涉及 5 个文件
+2025-11-10 03:03:05 - novel_agent.novel_agent.file_watcher - INFO - ✓ 索引更新完成，耗时 0.00s
+2025-11-10 03:03:05 - novel_agent.novel_agent.file_watcher - INFO - 检测到文件 modified: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-310/test_on_update_callback0/test.md
+2025-11-10 03:03:05 - novel_agent.novel_agent.file_watcher - INFO - 开始更新索引，涉及 1 个文件
+2025-11-10 03:03:05 - novel_agent.novel_agent.file_watcher - INFO - ✓ 索引更新完成，耗时 0.00s
+2025-11-10 03:03:05 - novel_agent.novel_agent.file_watcher - INFO - 开始监控目录: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-310/test_start_daemon0/chapters
+2025-11-10 03:03:05 - novel_agent.novel_agent.file_watcher - INFO - 开始监控目录: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-310/test_start_daemon0/spec
+2025-11-10 03:03:05 - novel_agent.novel_agent.file_watcher - INFO - ✓ 文件监控已启动（后台模式）
+2025-11-10 03:03:05 - novel_agent.novel_agent.file_watcher - INFO - ✓ 文件监控已停止
+2025-11-10 03:03:05 - novel_agent.novel_agent.file_watcher - INFO - 开始监控目录: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-310/test_integration_watch_file_ch0/chapters
+2025-11-10 03:03:05 - novel_agent.novel_agent.file_watcher - INFO - 开始监控目录: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-310/test_integration_watch_file_ch0/spec
+2025-11-10 03:03:05 - novel_agent.novel_agent.file_watcher - INFO - ✓ 文件监控已启动（后台模式）
+2025-11-10 03:03:06 - novel_agent.novel_agent.file_watcher - INFO - 检测到文件 created: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-310/test_integration_watch_file_ch0/chapters/ch001.md
+2025-11-10 03:03:06 - novel_agent.novel_agent.file_watcher - INFO - 检测到文件 modified: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-310/test_integration_watch_file_ch0/chapters/ch001.md
+2025-11-10 03:03:06 - novel_agent.novel_agent.file_watcher - INFO - 开始更新索引，涉及 1 个文件
+2025-11-10 03:03:06 - novel_agent.novel_agent.file_watcher - INFO - ✓ 索引更新完成，耗时 0.00s
+2025-11-10 03:03:06 - novel_agent.novel_agent.file_watcher - INFO - ✓ 文件监控已停止
+2025-11-10 03:03:06 - novel_agent.novel_agent.file_watcher - INFO - 开始监控目录: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-310/test_start_background_watcher0/chapters
+2025-11-10 03:03:06 - novel_agent.novel_agent.file_watcher - INFO - 开始监控目录: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-310/test_start_background_watcher0/spec
+2025-11-10 03:03:06 - novel_agent.novel_agent.file_watcher - INFO - ✓ 文件监控已启动（后台模式）
+2025-11-10 03:03:06 - novel_agent.novel_agent.file_watcher - INFO - ✓ 文件监控已停止
+2025-11-10 03:03:06 - novel_agent.novel_agent.cache - INFO - LLM 缓存已启用（内存模式）
+2025-11-10 03:03:06 - novel_agent.novel_agent.file_watcher - INFO - 开始监控目录: /Volumes/WorkDrive/Develop/github/persomsad/Novel/chapters
+2025-11-10 03:03:06 - novel_agent.novel_agent.file_watcher - INFO - 开始监控目录: /Volumes/WorkDrive/Develop/github/persomsad/Novel/spec
+2025-11-10 03:03:06 - novel_agent.novel_agent.file_watcher - INFO - ✓ 文件监控已启动（后台模式）
+2025-11-10 03:03:07 - novel_agent.novel_agent.cache - INFO - LLM 缓存已启用（内存模式）
+2025-11-10 03:03:07 - novel_agent.novel_agent.file_watcher - WARNING - 文件监控已在运行
+2025-11-10 03:03:07 - novel_agent.novel_agent.cache - INFO - LLM 缓存已启用（内存模式）
+2025-11-10 03:03:07 - novel_agent.novel_agent.cache - INFO - LLM 缓存已启用（内存模式）
+2025-11-10 03:03:07 - novel_agent.novel_agent.cache - INFO - LLM 缓存已启用（内存模式）
+2025-11-10 03:03:07 - novel_agent.novel_agent.file_watcher - WARNING - 文件监控已在运行
+2025-11-10 03:03:07 - novel_agent.novel_agent.cache - INFO - LLM 缓存已启用（内存模式）
+2025-11-10 03:03:07 - novel_agent.novel_agent.file_watcher - WARNING - 文件监控已在运行
+2025-11-10 03:03:07 - novel_agent.novel_agent.cache - INFO - LLM 缓存已启用（内存模式）
+2025-11-10 03:03:07 - novel_agent.novel_agent.file_watcher - WARNING - 文件监控已在运行
+2025-11-10 03:03:07 - novel_agent.novel_agent.cache - INFO - LLM 缓存已启用（内存模式）
+2025-11-10 03:03:07 - novel_agent.novel_agent.file_watcher - WARNING - 文件监控已在运行
+2025-11-10 03:03:07 - novel_agent.novel_agent.cache - INFO - LLM 缓存已启用（内存模式）
+2025-11-10 03:03:07 - novel_agent.novel_agent.file_watcher - WARNING - 文件监控已在运行
+2025-11-10 03:03:07 - novel_agent.novel_agent.cache - INFO - LLM 缓存已启用（内存模式）
+2025-11-10 03:03:07 - novel_agent.novel_agent.file_watcher - WARNING - 文件监控已在运行
+2025-11-10 03:03:07 - novel_agent.novel_agent.cache - INFO - LLM 缓存已启用（内存模式）
+2025-11-10 03:03:07 - novel_agent.novel_agent.file_watcher - WARNING - 文件监控已在运行
+2025-11-10 03:03:07 - novel_agent.novel_agent.cache - INFO - LLM 缓存已启用（内存模式）
+2025-11-10 03:03:07 - novel_agent.novel_agent.file_watcher - WARNING - 文件监控已在运行
+2025-11-10 03:03:07 - novel_agent.novel_agent.tools - INFO - 成功读取文件: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-310/test_read_existing_file0/test.md (31 字符)
+2025-11-10 03:03:07 - novel_agent.novel_agent.tools - ERROR - 文件不存在: /nonexistent/file.md
+2025-11-10 03:03:07 - novel_agent.novel_agent.tools - INFO - 成功读取文件: /private/var/folders/yj/6s4w73r916b7t_p_84qglh6h0000gn/T/pytest-of-luhui/pytest-310/test_read_file_with_utf80/chinese.md (13 字符)
+2025-11-10 03:03:07 - novel_agent.novel_agent.tools - INFO - 搜索完成: 找到 1 个匹配
+2025-11-10 03:03:07 - novel_agent.novel_agent.tools - INFO - 搜索完成: 找到 1 个匹配
+2025-11-10 03:03:07 - novel_agent.novel_agent.tools - INFO - 搜索完成: 找到 0 个匹配
+2025-11-10 03:03:07 - novel_agent.novel_agent.tools_file - INFO - 成功创建文件: test.md (11 字符)
+2025-11-10 03:03:07 - novel_agent.novel_agent.tools_file - INFO - 成功创建文件: chapters/ch001.md (6 字符)
+2025-11-10 03:03:07 - novel_agent.novel_agent.tools_file - INFO - 成功创建文件: chapters/卷一/第一部分/ch001.md (2 字符)
+2025-11-10 03:03:07 - novel_agent.novel_agent.tools_file - INFO - 成功创建文件: test.md (3 字符)
+2025-11-10 03:03:07 - novel_agent.novel_agent.tools_file - INFO - 成功创建文件: test.md (3 字符)
+2025-11-10 03:03:07 - novel_agent.novel_agent.tools_file - ERROR - 路径验证失败: 禁止操作系统目录: /usr
+2025-11-10 03:03:07 - novel_agent.novel_agent.tools_file - ERROR - 路径验证失败: 禁止使用相对路径 '..': ../outside.md
+2025-11-10 03:03:07 - novel_agent.novel_agent.tools_file - INFO - 成功创建文件: /tmp/novel_agent_test.md (4 字符)
+2025-11-10 03:03:07 - novel_agent.novel_agent.tools_file - INFO - 成功创建目录: chapters
+2025-11-10 03:03:07 - novel_agent.novel_agent.tools_file - INFO - 成功创建目录: chapters/卷一/第一部分
+2025-11-10 03:03:07 - novel_agent.novel_agent.tools_file - INFO - 成功创建目录: chapters
+2025-11-10 03:03:07 - novel_agent.novel_agent.tools_file - INFO - 成功创建目录: chapters
+2025-11-10 03:03:07 - novel_agent.novel_agent.tools_file - ERROR - 路径验证失败: 禁止操作系统目录: /usr
+2025-11-10 03:03:07 - novel_agent.novel_agent.tools_file - INFO - 成功列出目录: . (3 项)
+2025-11-10 03:03:07 - novel_agent.novel_agent.tools_file - INFO - 成功列出目录: chapters (2 项)
+2025-11-10 03:03:07 - novel_agent.novel_agent.tools_file - ERROR - 列出目录失败: 目录不存在: notexist
+2025-11-10 03:03:07 - novel_agent.novel_agent.tools_file - ERROR - 路径验证失败: 不是目录: test.md
+2025-11-10 03:03:07 - novel_agent.novel_agent.tools_file - INFO - 成功列出目录: . (3 项)
+2025-11-10 03:03:07 - novel_agent.src.novel_agent.tools - WARNING - 模板中有未替换的变量: ['location', 'weather', 'details', 'atmosphere']
+2025-11-10 03:04:20 - novel_agent.novel_agent.file_watcher - INFO - 开始监控目录: /Volumes/WorkDrive/Develop/github/persomsad/Novel/chapters
+2025-11-10 03:04:20 - novel_agent.novel_agent.file_watcher - INFO - 开始监控目录: /Volumes/WorkDrive/Develop/github/persomsad/Novel/spec
+2025-11-10 03:04:20 - novel_agent.novel_agent.file_watcher - INFO - ✓ 文件监控已启动（后台模式）
+2025-11-10 03:04:20 - novel_agent.novel_agent.context_retriever - INFO - ✓ 索引已加载: 2 角色
+2025-11-10 03:04:20 - novel_agent.novel_agent.context_retriever - WARNING - 图数据库不存在: /Volumes/WorkDrive/Develop/github/persomsad/Novel/data/novel-graph.nervusdb
+2025-11-10 03:06:00 - novel_agent.novel_agent.file_watcher - INFO - 开始监控目录: /Volumes/WorkDrive/Develop/github/persomsad/Novel/chapters
+2025-11-10 03:06:00 - novel_agent.novel_agent.file_watcher - INFO - 开始监控目录: /Volumes/WorkDrive/Develop/github/persomsad/Novel/spec
+2025-11-10 03:06:00 - novel_agent.novel_agent.file_watcher - INFO - ✓ 文件监控已启动（后台模式）
+2025-11-10 03:06:00 - novel_agent.novel_agent.file_watcher - INFO - ✓ 文件监控已停止
+2025-11-10 03:06:26 - novel_agent.novel_agent.file_watcher - INFO - 开始监控目录: /Volumes/WorkDrive/Develop/github/persomsad/Novel/chapters
+2025-11-10 03:06:26 - novel_agent.novel_agent.file_watcher - INFO - 开始监控目录: /Volumes/WorkDrive/Develop/github/persomsad/Novel/spec
+2025-11-10 03:06:26 - novel_agent.novel_agent.file_watcher - INFO - ✓ 文件监控已启动（后台模式）
+2025-11-10 03:06:26 - novel_agent.novel_agent.context_retriever - INFO - ✓ 索引已加载: 2 角色
+2025-11-10 03:06:26 - novel_agent.novel_agent.context_retriever - WARNING - 图数据库不存在: /Volumes/WorkDrive/Develop/github/persomsad/Novel/data/novel-graph.nervusdb
+2025-11-10 03:06:31 - novel_agent.novel_agent.context_retriever - INFO - 开始检索上下文，查询: ('user', '你好 ，')
+2025-11-10 03:06:31 - novel_agent.novel_agent.context_retriever - INFO - ✓ 检索完成，返回 0 个文档
+2025-11-10 03:06:53 - novel_agent.novel_agent.context_retriever - INFO - 开始检索上下文，查询: ('user', '你可以做什么')
+2025-11-10 03:06:54 - novel_agent.novel_agent.context_retriever - INFO - ✓ 检索完成，返回 0 个文档
+2025-11-10 03:12:19 - novel_agent.novel_agent.file_watcher - INFO - ✓ 文件监控已停止
+2025-11-10 03:12:23 - novel_agent.novel_agent.file_watcher - INFO - 开始监控目录: /Volumes/WorkDrive/Develop/github/persomsad/Novel/chapters
+2025-11-10 03:12:23 - novel_agent.novel_agent.file_watcher - INFO - 开始监控目录: /Volumes/WorkDrive/Develop/github/persomsad/Novel/spec
+2025-11-10 03:12:23 - novel_agent.novel_agent.file_watcher - INFO - ✓ 文件监控已启动（后台模式）
+2025-11-10 03:12:23 - novel_agent.novel_agent.context_retriever - INFO - ✓ 索引已加载: 2 角色
+2025-11-10 03:12:23 - novel_agent.novel_agent.context_retriever - WARNING - 图数据库不存在: /Volumes/WorkDrive/Develop/github/persomsad/Novel/data/novel-graph.nervusdb
+2025-11-10 03:12:26 - novel_agent.novel_agent.context_retriever - INFO - 开始检索上下文，查询: ('user', '你好')
+2025-11-10 03:12:26 - novel_agent.novel_agent.context_retriever - INFO - ✓ 检索完成，返回 0 个文档
+2025-11-10 03:17:12 - novel_agent.novel_agent.file_watcher - INFO - ✓ 文件监控已停止
+2025-11-10 03:17:28 - novel_agent.novel_agent.file_watcher - INFO - 开始监控目录: /Volumes/WorkDrive/Develop/github/persomsad/Novel/chapters
+2025-11-10 03:17:28 - novel_agent.novel_agent.file_watcher - INFO - 开始监控目录: /Volumes/WorkDrive/Develop/github/persomsad/Novel/spec
+2025-11-10 03:17:28 - novel_agent.novel_agent.file_watcher - INFO - ✓ 文件监控已启动（后台模式）
+2025-11-10 03:17:28 - novel_agent.novel_agent.context_retriever - INFO - ✓ 索引已加载: 2 角色
+2025-11-10 03:17:28 - novel_agent.novel_agent.context_retriever - WARNING - 图数据库不存在: /Volumes/WorkDrive/Develop/github/persomsad/Novel/data/novel-graph.nervusdb
+2025-11-10 03:17:33 - novel_agent.novel_agent.context_retriever - INFO - 开始检索上下文，查询: ('user', '你好')
+2025-11-10 03:17:33 - novel_agent.novel_agent.context_retriever - INFO - ✓ 检索完成，返回 0 个文档

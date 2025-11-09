@@ -7,24 +7,53 @@ import json
 import os
 import sys
 import uuid
+from contextlib import contextmanager
 from pathlib import Path
 from typing import Any, Optional
 
-import typer
-from langchain_google_genai import ChatGoogleGenerativeAI
-from prompt_toolkit import PromptSession
-from rich.console import Console
-from rich.markdown import Markdown
-from rich.panel import Panel
+# 在导入任何第三方库之前，设置环境变量抑制日志
+os.environ.setdefault("GRPC_VERBOSITY", "ERROR")
+os.environ.setdefault("GRPC_TRACE", "")
+os.environ.setdefault("TF_CPP_MIN_LOG_LEVEL", "3")
 
-from . import memory_ingest as memory_ingest_module
-from .agent import AGENT_CONFIGS, create_novel_agent, create_specialized_agent
-from .continuity import build_continuity_index
-from .logging_config import get_logger
-from .permissions import get_readonly_tools
-from .session_store import delete_session, open_checkpointer
-from .session_store import list_sessions as list_session_ids
-from .workflows import build_chapter_workflow
+
+@contextmanager
+def suppress_stderr():
+    """临时抑制 STDERR 输出（用于抑制 gRPC C 库的初始化日志）"""
+    stderr = sys.stderr
+    try:
+        # 重定向 stderr 到 devnull
+        sys.stderr = open(os.devnull, "w")
+        yield
+    finally:
+        # 恢复 stderr
+        sys.stderr.close()
+        sys.stderr = stderr
+
+
+import typer  # noqa: E402
+
+# 在导入 Google AI SDK 时临时抑制 STDERR（避免 gRPC C 库日志）
+with suppress_stderr():
+    from langchain_google_genai import ChatGoogleGenerativeAI  # noqa: E402
+
+from prompt_toolkit import PromptSession  # noqa: E402
+from rich.console import Console  # noqa: E402
+from rich.markdown import Markdown  # noqa: E402
+from rich.panel import Panel  # noqa: E402
+
+from . import memory_ingest as memory_ingest_module  # noqa: E402
+from .agent import (  # noqa: E402
+    AGENT_CONFIGS,
+    create_novel_agent,
+    create_specialized_agent,
+)
+from .continuity import build_continuity_index  # noqa: E402
+from .logging_config import get_logger  # noqa: E402
+from .permissions import get_readonly_tools  # noqa: E402
+from .session_store import delete_session, open_checkpointer  # noqa: E402
+from .session_store import list_sessions as list_session_ids  # noqa: E402
+from .workflows import build_chapter_workflow  # noqa: E402
 
 logger = get_logger(__name__)
 
@@ -400,13 +429,19 @@ def chat(
         )
         return
 
+    # 交互模式：禁用控制台日志输出（避免干扰用户输入）
+    from .logging_config import setup_logging
+
+    setup_logging(level="INFO", console_output=False)
+
     # 交互模式：显示Agent类型
     agent_name = agent if agent != "default" else "通用写作助手"
     console.print(
         Panel.fit(
             f"[bold cyan]🤖 Novel Agent[/bold cyan]\n"
             f"AI写作助手已启动 - [yellow]{agent_name}[/yellow]\n\n"
-            "[dim]输入 'exit' 或按 Ctrl+C 退出[/dim]",
+            "[dim]输入 'exit' 或按 Ctrl+C 退出[/dim]\n"
+            "[dim]按 ESC 可中断 Agent 响应[/dim]",
             border_style="cyan",
         )
     )
@@ -750,20 +785,68 @@ def _chat_loop(agent_instance: Any, session_id: str, input_offset: int = 5) -> N
                     current_session_id = command_result
                 continue
 
-            with console.status("[yellow]正在思考...[/yellow]"):
-                result = agent_instance.invoke(
-                    {"messages": [("user", user_input)]},
-                    config={"configurable": {"thread_id": current_session_id}},
-                )
+            # 使用线程化执行 + ESC 中断支持
+            import threading
 
-            if "messages" in result and result["messages"]:
+            from prompt_toolkit.input import create_input
+            from prompt_toolkit.keys import Keys
+
+            result: Any | None = None
+            interrupted = False
+            error: Exception | None = None
+
+            def run_agent() -> None:
+                nonlocal result, error
+                try:
+                    result = agent_instance.invoke(
+                        {"messages": [("user", user_input)]},
+                        config={"configurable": {"thread_id": current_session_id}},
+                    )
+                except Exception as e:
+                    error = e
+
+            # 在后台线程运行 Agent
+            agent_thread = threading.Thread(target=run_agent, daemon=True)
+            agent_thread.start()
+
+            # 显示状态并监听 ESC 键
+            console.print("\n[yellow]正在思考... (按 ESC 中断)[/yellow]", end="\r")
+
+            input_obj = create_input()
+            with input_obj.raw_mode():
+                while agent_thread.is_alive():
+                    # 检查是否有按键输入
+                    if input_obj.read_keys():
+                        keys = input_obj.read_keys()
+                        for key in keys:
+                            if key.key == Keys.Escape:
+                                interrupted = True
+                                console.print("\n[red]⚠️  已中断 Agent 响应[/red]")
+                                break
+                        if interrupted:
+                            break
+                    agent_thread.join(timeout=0.1)
+
+            # 清除"正在思考"提示
+            console.print(" " * 50, end="\r")
+
+            if interrupted:
+                console.print("[yellow]提示：请重新输入问题[/yellow]\n")
+                continue
+
+            if error:
+                raise error
+
+            if result and "messages" in result and result["messages"]:
                 last_message = result["messages"][-1]
-                response = (
-                    last_message.content if hasattr(last_message, "content") else str(last_message)
-                )
+                content = last_message.content if hasattr(last_message, "content") else last_message
+                # 提取纯文本（处理字符串、列表等类型）
+                from .agent import _extract_text_from_content
+
+                response = _extract_text_from_content(content)
 
                 # 显示置信度评分
-                confidence = result.get("confidence", 0)
+                confidence = result.get("confidence", 0) if result else 0
                 confidence_color = (
                     "green" if confidence >= 80 else "yellow" if confidence >= 60 else "red"
                 )
@@ -1365,9 +1448,11 @@ def _run_print_mode(
                 raise typer.Exit(1)
 
             last_message = messages[-1]
-            response = (
-                last_message.content if hasattr(last_message, "content") else str(last_message)
-            )
+            content = last_message.content if hasattr(last_message, "content") else last_message
+            # 提取纯文本（处理字符串、列表等类型）
+            from .agent import _extract_text_from_content
+
+            response = _extract_text_from_content(content)
 
             # 计算置信度
             from .agent import _estimate_confidence
@@ -1516,7 +1601,11 @@ def _check_file_task(file: Path, agent: Any, auto_fix: bool) -> dict[str, Any]:
             return {"file": str(file), "status": "error", "issues": ["Agent 未返回响应"]}
 
         last_message = result["messages"][-1]
-        response = last_message.content if hasattr(last_message, "content") else str(last_message)
+        content = last_message.content if hasattr(last_message, "content") else last_message
+        # 提取纯文本（处理字符串、列表等类型）
+        from .agent import _extract_text_from_content
+
+        response = _extract_text_from_content(content)
 
         # 解析响应
         if "通过" in response or "no issues" in response.lower():

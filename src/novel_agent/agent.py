@@ -33,14 +33,40 @@ from .tools import (
     trace_foreshadow_tool,
     verify_strict_references,
     verify_strict_timeline,
-    write_chapter,
 )
+from .tools_file import create_directory, create_file, list_files
 from .tools_task import (
     complete_task,
     create_task_list,
     show_task_progress,
     start_task,
 )
+
+
+def _extract_text_from_content(content: Any) -> str:
+    """从 LangChain 消息内容中提取纯文本
+
+    LangChain 的 message.content 可能是：
+    - 字符串：直接返回
+    - 列表：提取每个元素的 text 字段
+    - 其他：转换为字符串
+
+    Args:
+        content: 消息内容
+
+    Returns:
+        提取的文本字符串
+    """
+    if isinstance(content, str):
+        return content
+    elif isinstance(content, list):
+        # 提取列表中的文本内容
+        return " ".join(
+            item.get("text", str(item)) if isinstance(item, dict) else str(item) for item in content
+        )
+    else:
+        return str(content)
+
 
 # Agent配置注册表
 AGENT_CONFIGS = {
@@ -53,6 +79,7 @@ AGENT_CONFIGS = {
 **精确验证**：verify_strict_timeline()、verify_strict_references()
 **精准编辑**：edit_chapter_lines()、replace_in_file()、multi_edit()
 **智能检索**：smart_context_search()、build_character_network()、trace_foreshadow()
+**文件操作**：create_file()、create_directory()、list_files()
 **任务可视化**：create_task_list()、start_task()、complete_task()
 
 ## 工具选择
@@ -62,7 +89,9 @@ AGENT_CONFIGS = {
 - **修改特定行** → edit_chapter_lines
 - **批量替换** → replace_in_file
 - **修改多文件** → multi_edit
-- **创建章节** → write_chapter
+- **创建文件** → create_file（任意路径）
+- **创建目录** → create_directory
+- **列出目录** → list_files
 - **智能搜索** → smart_context_search（需先 build-graph）
 - **角色关系** → build_character_network
 - **伏笔追踪** → trace_foreshadow
@@ -72,12 +101,15 @@ AGENT_CONFIGS = {
 
 - 编辑工具直接修改文件，执行前询问确认
 - 图查询需要先运行 `novel-agent build-graph`
+- 文件操作支持任意路径，仅禁止系统关键目录（/System、/usr 等）
 - 复杂任务（3+ 步骤）使用 create_task_list 展示进度
 - 用中文回复
 """,
         "tools": [
             "read_file",
-            "write_chapter",
+            "create_file",
+            "create_directory",
+            "list_files",
             "search_content",
             "verify_timeline",
             "verify_references",
@@ -210,13 +242,13 @@ AGENT_CONFIGS = {
 3. 草稿：输出新的段落，保证语气与人设一致，可适度加强细节与张力。
 4. 修订：检查用词重复、句式单调与逻辑断点，给出最终确认稿和改动说明。
 
-工具：read_file / search_content（调取上下文或参考素材），write_chapter（必要时落盘）。
+工具：read_file / search_content（调取上下文或参考素材），create_file（必要时落盘）。
 
 输出：
 - 新文本（带分段）。
 - “改动说明”，解释每段处理原因。
 """,
-        "tools": ["read_file", "search_content", "write_chapter"],
+        "tools": ["read_file", "search_content", "create_file"],
     },
 }
 
@@ -279,7 +311,9 @@ def create_specialized_agent(
     tool_map = {
         "read_file": read_file_tool,
         "read_multiple_files": read_multiple_files_tool,
-        "write_chapter": write_chapter_tool,
+        "create_file": create_file,
+        "create_directory": create_directory,
+        "list_files": list_files,
         "search_content": search_content_tool,
         "verify_timeline": verify_timeline_tool,
         "verify_references": verify_references_tool,
@@ -366,9 +400,9 @@ def create_specialized_agent(
             if messages:
                 # 获取最后一条用户消息
                 last_message = messages[-1]
-                query = (
-                    last_message.content if hasattr(last_message, "content") else str(last_message)
-                )
+                content = last_message.content if hasattr(last_message, "content") else last_message
+                # 提取纯文本（处理字符串、列表等类型）
+                query = _extract_text_from_content(content)
 
                 # 检索相关上下文
                 try:
@@ -461,20 +495,6 @@ def read_file_tool(path: str) -> str:
         文件内容
     """
     return read_file(path)
-
-
-@tool
-def write_chapter_tool(number: int, content: str) -> str:
-    """创建新章节
-
-    Args:
-        number: 章节编号（1-999）
-        content: 章节内容
-
-    Returns:
-        创建的文件路径
-    """
-    return write_chapter(number, content)
 
 
 @tool
@@ -805,6 +825,8 @@ def _estimate_confidence(messages: Any) -> int:
 
     last = messages[-1]
     content = getattr(last, "content", None) or str(last)
+    # 提取纯文本（处理字符串、列表等类型）
+    content = _extract_text_from_content(content)
 
     # 基础分：根据输出长度
     words = len(content.split())

@@ -12,7 +12,8 @@ from unittest.mock import patch
 import pytest
 
 from novel_agent.logging_config import get_logger, setup_logging
-from novel_agent.tools import read_file, search_content, write_chapter
+from novel_agent.tools import read_file, search_content
+from novel_agent.tools_file import create_file
 
 
 class TestLoggingConfig:
@@ -76,30 +77,45 @@ class TestReadFileErrors:
                 test_file.chmod(0o644)
 
 
-class TestWriteChapterErrors:
-    """测试write_chapter的错误处理"""
+class TestCreateFileErrors:
+    """测试create_file的错误处理"""
 
-    def test_write_chapter_invalid_number(self) -> None:
-        """测试无效的章节编号"""
-        with pytest.raises(ValueError, match="章节编号必须在 1-999 之间"):
-            write_chapter(0, "内容")
+    def test_create_file_forbidden_path(self) -> None:
+        """测试禁止访问的路径"""
+        import os
 
-        with pytest.raises(ValueError, match="章节编号必须在 1-999 之间"):
-            write_chapter(1000, "内容")
+        # 保存当前目录
+        orig_cwd = os.getcwd()
+        try:
+            with tempfile.TemporaryDirectory() as tmpdir:
+                os.chdir(tmpdir)
 
-    def test_write_chapter_readonly_directory(self) -> None:
+                # 尝试在系统目录创建文件（应该失败）
+                with pytest.raises(ValueError, match="禁止操作系统目录"):
+                    create_file.invoke({"path": "/usr/test.py", "content": "code"})
+        finally:
+            os.chdir(orig_cwd)
+
+    def test_create_file_readonly_directory(self) -> None:
         """测试写入只读目录"""
-        with tempfile.TemporaryDirectory() as tmpdir:
-            readonly_dir = Path(tmpdir) / "readonly"
-            readonly_dir.mkdir()
-            readonly_dir.chmod(0o444)  # 只读
+        import os
 
-            try:
-                with pytest.raises(OSError):
-                    write_chapter(1, "测试内容", base_dir=str(readonly_dir))
-            finally:
-                # 恢复权限以便清理
-                readonly_dir.chmod(0o755)
+        orig_cwd = os.getcwd()
+        try:
+            with tempfile.TemporaryDirectory() as tmpdir:
+                os.chdir(tmpdir)
+                readonly_dir = Path("readonly")
+                readonly_dir.mkdir()
+                readonly_dir.chmod(0o444)  # 只读
+
+                try:
+                    with pytest.raises(OSError):
+                        create_file.invoke({"path": "readonly/test.md", "content": "测试内容"})
+                finally:
+                    # 恢复权限以便清理
+                    readonly_dir.chmod(0o755)
+        finally:
+            os.chdir(orig_cwd)
 
 
 class TestSearchContentErrors:

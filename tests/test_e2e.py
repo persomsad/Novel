@@ -98,28 +98,36 @@ class TestE2ECreateChapter:
     """测试端到端章节创作流程"""
 
     def test_write_chapter_tool_e2e(self) -> None:
-        """测试write_chapter工具的端到端流程
+        """测试create_file工具的端到端流程
 
         验收标准：
         - 创建章节文件
         - 文件包含正确内容
         - 返回文件路径
         """
-        from novel_agent.tools import write_chapter
+        import os
+
+        from novel_agent.tools_file import create_file
 
         with tempfile.TemporaryDirectory() as tmpdir:
-            # 创建章节
-            content = "# 第一章\n\n李明走进咖啡馆。"
-            file_path = write_chapter(1, content, base_dir=tmpdir)
+            # 切换到临时目录
+            orig_cwd = os.getcwd()
+            try:
+                os.chdir(tmpdir)
 
-            # 验证文件创建
-            assert Path(file_path).exists()
+                # 创建章节
+                content = "# 第一章\n\n李明走进咖啡馆。"
+                result = create_file.invoke({"path": "ch001.md", "content": content})
 
-            # 验证文件内容
-            assert Path(file_path).read_text() == content
+                # 验证文件创建
+                assert Path(result).exists()
 
-            # 验证文件命名格式
-            assert "ch001.md" in file_path
+                # 验证文件内容
+                assert Path(result).read_text() == content
+                # 验证文件命名格式
+                assert "ch001.md" in result
+            finally:
+                os.chdir(orig_cwd)
 
 
 class TestE2ESearchContent:
