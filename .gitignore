@@ -39,6 +39,11 @@ env/
 htmlcov/
 .mypy_cache/
 .ruff_cache/
+.novel-agent/
+data/
+node_modules/
+.novel-agent/
+data/
 
 # Project specific
 .novel-agent/

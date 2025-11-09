@@ -148,6 +148,49 @@ AGENT_CONFIGS = {
 """,
         "tools": ["read_file", "search_content"],
     },
+    "continuity-editor": {
+        # noqa: E501
+        "system_prompt": """你是一名严苛的连续性编辑，必须按照“思考→规划→草稿→修订”四步，找出并修复角色、时间线、引用的所有矛盾。
+
+阶段要求：
+1. 思考：阅读章节/设定/索引，列出需要核对的事实与时间节点。
+2. 规划：明确要对比的角色、事件、引用，必要时引用 Nervus 数据。
+3. 草稿：输出问题列表，每条包含章节、行号、现象、影响。
+4. 修订：给出具体修改建议（如何改写、是否补伏笔、是否更新设定）。
+
+工具：
+- read_file / search_content：读取原文与上下文。
+- verify_strict_timeline / verify_strict_references：调用精确脚本获取客观结果。
+
+输出：
+- 按严重程度排序的问题清单。
+- 每条附“现象/原因/建议”。若未发现问题，说明已核对范围。
+""",
+        "tools": [
+            "read_file",
+            "search_content",
+            "verify_timeline",
+            "verify_references",
+        ],
+    },
+    "style-smith": {
+        # noqa: E501
+        "system_prompt": """你是一名文风雕琢师，遵循“思考→规划→草稿→修订”流程，对文本进行润色与再创作。
+
+阶段要求：
+1. 思考：分析目标受众、节奏、情绪，指出现有文字的优缺点。
+2. 规划：列出需要处理的段落/句子，并注明策略（增删、换视角、加强意象等）。
+3. 草稿：输出新的段落，保证语气与人设一致，可适度加强细节与张力。
+4. 修订：检查用词重复、句式单调与逻辑断点，给出最终确认稿和改动说明。
+
+工具：read_file / search_content（调取上下文或参考素材），write_chapter（必要时落盘）。
+
+输出：
+- 新文本（带分段）。
+- “改动说明”，解释每段处理原因。
+""",
+        "tools": ["read_file", "search_content", "write_chapter"],
+    },
 }
 
 # 向后兼容
@@ -212,6 +255,17 @@ def create_specialized_agent(
         checkpointer=checkpointer,
     )
 
+    original_invoke = agent.invoke
+
+    def invoke_with_confidence(input_data: dict[str, Any], *_, **kwargs) -> Any:
+        result = original_invoke(input_data, *_, **kwargs)
+        messages = result.get("messages") if isinstance(result, dict) else None
+        confidence = _estimate_confidence(messages)
+        if isinstance(result, dict):
+            result["confidence"] = confidence
+        return result
+
+    agent.invoke = invoke_with_confidence  # type: ignore[assignment]
     return agent
 
 
@@ -332,3 +386,20 @@ def verify_references_tool() -> str:
         output.extend(f"  - {w}" for w in result["warnings"])
 
     return "\n".join(output)
+
+
+def _estimate_confidence(messages: Any) -> int:
+    if not isinstance(messages, list) or not messages:
+        return 0
+    last = messages[-1]
+    content = getattr(last, "content", None) or str(last)
+    tokens = content.split()
+    words = len(tokens)
+    sentences = max(
+        content.count("。") + content.count("！") + content.count("？") + content.count("."), 1
+    )
+    structure = 1 if sentences >= 3 else 0
+    correction_penalty = content.count("❌") * 10
+    base = min(words / 200, 1.0) * 60 + structure * 20
+    score = max(0, min(100, round(base - correction_penalty)))
+    return score

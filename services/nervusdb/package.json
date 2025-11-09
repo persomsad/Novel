@@ -1,0 +1,26 @@
+{
+  "name": "@novel-agent/nervusdb-gateway",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "memory:dev": "tsx src/server.ts",
+    "memory:check": "tsx src/scripts/check.ts",
+    "memory:compact": "tsx src/scripts/compact.ts",
+    "lint": "biome check .",
+    "test": "vitest"
+  },
+  "dependencies": {
+    "@nervusdb/core": "^0.1.4",
+    "fastify": "^4.25.1",
+    "pino": "^9.2.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.5",
+    "@biomejs/biome": "^1.9.4",
+    "tsx": "^4.7.0",
+    "typescript": "^5.4.5",
+    "vitest": "^2.1.1"
+  }
+}

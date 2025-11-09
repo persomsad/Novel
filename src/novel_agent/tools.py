@@ -8,9 +8,14 @@
 5. verify_strict_references - 引用完整性验证
 """
 
+import json
+import os
 import subprocess
+from datetime import datetime
 from pathlib import Path
+from typing import Any
 
+from . import nervus_cli
 from .logging_config import get_logger
 
 logger = get_logger(__name__)
@@ -171,31 +176,173 @@ def _search_content_fallback(keyword: str, search_dir: str) -> list[dict[str, st
     return matches
 
 
-def verify_strict_timeline() -> dict[str, list[str]]:
-    """时间线精确验证
-
-    调用外部脚本检查时间线数字一致性
-
-    Returns:
-        验证结果：
-        - errors: 错误列表
-        - warnings: 警告列表
-    """
-    # TODO: 实现时间线检查脚本
-    # 目前返回空结果
-    return {"errors": [], "warnings": []}
+def _load_continuity_index(path: Path | None = None) -> dict[str, Any]:
+    target = path or Path("data/continuity/index.json")
+    if not target.exists():
+        raise FileNotFoundError(
+            f"连续性索引 {target} 不存在。请先运行 `poetry run novel-agent refresh-memory`。"
+        )
+    return json.loads(target.read_text(encoding="utf-8"))
 
 
-def verify_strict_references() -> dict[str, list[str]]:
-    """引用完整性验证
+def _get_nervus_db_path(explicit: str | None = None) -> str | None:
+    return explicit or os.getenv("NERVUSDB_DB_PATH")
 
-    调用外部脚本检查引用 ID 完整性
 
-    Returns:
-        验证结果：
-        - errors: 错误列表（引用不存在）
-        - warnings: 警告列表（未使用的伏笔）
-    """
-    # TODO: 实现引用检查脚本
-    # 目前返回空结果
-    return {"errors": [], "warnings": []}
+def _fetch_nervus_events(db_path: str) -> list[tuple[str, str]]:
+    try:
+        result = nervus_cli.cypher_query(
+            db_path,
+            """
+            MATCH (ch:Chapter)-[:HAS_EVENT]->(e:Event)
+            RETURN ch.id as chapter_id, e.timestamp as timestamp
+            ORDER BY chapter_id, timestamp
+            """,
+        )
+    except Exception as exc:
+        raise RuntimeError(f"NervusDB 时间线查询失败: {exc}") from exc
+
+    rows = result.get("rows") if isinstance(result, dict) else result
+    if not rows and isinstance(result, dict) and "result" in result:
+        rows = result["result"]
+    events: list[tuple[str, str]] = []
+    for row in rows or []:
+        chapter_id = row.get("chapter_id") or row.get("CHAPTER_ID")
+        timestamp = row.get("timestamp") or row.get("TIMESTAMP")
+        if chapter_id and timestamp:
+            events.append((str(chapter_id), str(timestamp)))
+    return events
+
+
+def _fetch_nervus_references(db_path: str) -> set[tuple[str, str]]:
+    try:
+        result = nervus_cli.cypher_query(
+            db_path,
+            """
+            MATCH (ch:Chapter)-[:USES_REFERENCE]->(r:Reference)
+            RETURN ch.id as chapter_id, r.id as ref_id
+            """,
+        )
+    except Exception as exc:
+        raise RuntimeError(f"NervusDB 引用查询失败: {exc}") from exc
+
+    rows = result.get("rows") if isinstance(result, dict) else result
+    if not rows and isinstance(result, dict) and "result" in result:
+        rows = result["result"]
+    refs: set[tuple[str, str]] = set()
+    for row in rows or []:
+        chapter_id = row.get("chapter_id") or row.get("CHAPTER_ID")
+        ref_id = row.get("ref_id") or row.get("REF_ID")
+        if chapter_id and ref_id:
+            refs.add((str(chapter_id), str(ref_id)))
+    return refs
+
+
+def verify_strict_timeline(
+    index_path: Path | None = None,
+    *,
+    db_path: str | None = None,
+) -> dict[str, list[str]]:
+    """时间线精确验证。"""
+
+    data = _load_continuity_index(index_path)
+    errors: list[str] = []
+    warnings: list[str] = []
+
+    def parse_date(value: str) -> datetime | None:
+        for fmt in ("%Y-%m-%d", "%Y/%m/%d", "%Y.%m.%d"):
+            try:
+                return datetime.strptime(value, fmt)
+            except ValueError:
+                continue
+        return None
+
+    last_date: datetime | None = None
+    for chapter in sorted(data.get("chapters", []), key=lambda c: c.get("chapter_id", "")):
+        chapter_id = chapter.get("chapter_id")
+        for marker in chapter.get("time_markers", []):
+            value = marker.get("value")
+            dt = parse_date(value)
+            if not dt:
+                warnings.append(
+                    f"[{chapter_id}] 时间标记 `{value}` 无法解析 (line {marker.get('line')})"
+                )
+                continue
+            if last_date and dt < last_date:
+                errors.append(f"[{chapter_id}] 时间 `{value}` 早于上一事件 ({last_date.date()})")
+            last_date = dt
+
+    nervus_db = _get_nervus_db_path(db_path)
+    if nervus_db:
+        try:
+            db_events = _fetch_nervus_events(nervus_db)
+            db_set = set(db_events)
+            local_set = {
+                (chapter.get("chapter_id"), marker.get("value"))
+                for chapter in data.get("chapters", [])
+                for marker in chapter.get("time_markers", [])
+            }
+            for chapter in data.get("chapters", []):
+                cid = chapter.get("chapter_id")
+                for marker in chapter.get("time_markers", []):
+                    value = marker.get("value")
+                    if (cid, value) not in db_set:
+                        errors.append(f"[{cid}] 时间 `{value}` 未写入 NervusDB")
+
+            extra = db_set - local_set
+            for cid, value in sorted(extra):
+                warnings.append(f"NervusDB 中存在未在章节出现的时间 `{value}` (chapter {cid})")
+        except RuntimeError as exc:
+            warnings.append(str(exc))
+
+    return {"errors": errors, "warnings": warnings}
+
+
+def verify_strict_references(
+    index_path: Path | None = None,
+    *,
+    db_path: str | None = None,
+) -> dict[str, list[str]]:
+    """引用完整性验证。"""
+
+    data = _load_continuity_index(index_path)
+    errors: list[str] = []
+    warnings: list[str] = []
+
+    reference_map = {ref["id"]: ref["occurrences"] for ref in data.get("references", [])}
+    for ref_id, occurrences in reference_map.items():
+        if not occurrences:
+            warnings.append(f"引用 `{ref_id}` 无任何章节使用。")
+
+    defined = set(reference_map.keys())
+    for chapter in data.get("chapters", []):
+        chapter_id = chapter.get("chapter_id")
+        for ref in chapter.get("references", []):
+            ref_id = ref.get("id")
+            if ref_id not in defined:
+                errors.append(f"[{chapter_id}] 引用 `{ref_id}` 未定义 (line {ref.get('line')})")
+
+    nervus_db = _get_nervus_db_path(db_path)
+    if nervus_db:
+        try:
+            db_refs = _fetch_nervus_references(nervus_db)
+            db_set = set(db_refs)
+            local_refs = {
+                (chapter.get("chapter_id"), ref.get("id"))
+                for chapter in data.get("chapters", [])
+                for ref in chapter.get("references", [])
+            }
+            for chapter in data.get("chapters", []):
+                cid = chapter.get("chapter_id")
+                for ref in chapter.get("references", []):
+                    ref_id = ref.get("id")
+                    if (cid, ref_id) not in db_set:
+                        errors.append(f"[{cid}] 引用 `{ref_id}` 未写入 NervusDB")
+
+            extra_refs = db_set - local_refs
+            for cid, ref_id in sorted(extra_refs):
+                warnings.append(f"NervusDB 中存在未在章节使用的引用 `{ref_id}` (chapter {cid})")
+        except RuntimeError as exc:
+            warnings.append(str(exc))
+
+    return {"errors": errors, "warnings": warnings}

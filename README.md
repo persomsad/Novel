@@ -156,6 +156,66 @@ Agent 推理过程：
 - 时间数字错误（"第2天晚上 → 第2天早上"）
 - 引用 ID 不存在（"第10章引用第5章伏笔，但第5章不存在"）
 
+## NervusDB 长期记忆（v0.2.0 规划中）
+
+> 为什么不用向量数据库？因为我们需要“谁在何时做了什么”这类可追溯的事实，而不是模糊相似度。
+
+自 v0.2.0 起，项目会把 NervusDB 作为长期记忆与知识基座（详见 `docs/memory-cli.md`），整体流程如下：
+
+1. **准备环境**
+   - Node.js ≥ 20，已安装 `pnpm`
+   - `pnpm install`（根目录）后，运行 `pnpm install --filter services/nervusdb`（服务子目录将在实现时提供）
+2. **构建连续性索引**
+   - `just refresh-memory`（#43）会生成 `data/continuity/index.json` + `facts.ndjson`
+3. **写入 NervusDB**
+   - `novel-agent memory ingest`（#45）会调用 Node Gateway，将章节/设定事实与时间线写入 NervusDB
+4. **运行 Gateway**
+   - `pnpm --filter services/nervusdb memory:dev` 启动 HTTP/Unix Socket 服务
+   - CLI 仍可使用 `nervusdb stats|check|bench` 等命令维护数据库
+5. **Agent 调用**
+   - 新增 LangChain Tools：`nervus_query`（结构化事实查询）、`nervus_timeline`（时间线）、`nervus_ingest`（增量写入）
+   - LangGraph Workflow（#46）在规划/草稿阶段自动查询 NervusDB，再结合脚本验证
+   - 设置 `NERVUSDB_DB_PATH` 后，`verify_strict_timeline` / `verify_strict_references` 会自动与 NervusDB 对比，报告“章节 vs 数据库”的差异
+
+> 详细的架构与操作指南见 `docs/architecture/ADR-002-nervusdb-memory.md`。在 v0.2.0 合并前，以上命令/路径可能有轻微调整。
+
+## Agent 类型
+
+| 类型 | 用途 | 工具组合 |
+|------|------|-----------|
+| `default` | 通用创作 + 一致性检查 | read_file, write_chapter, search_content, verify_* |
+| `outline-architect` | 大纲设计、情节规划 | read_file, search_content |
+| `continuity-editor` | 连续性稽核，按“思考→规划→草稿→修订”产出问题/修复建议 | read_file, search_content, verify_* |
+| `style-smith` | 文风润色、再创作，输出新段落 + 改动说明 | read_file, search_content, write_chapter |
+
+通过 `novel-agent chat --agent <type>` 切换角色。未来还会在 workflow 中将它们编排组合。
+
+### 创作辅助工具（程序内可直接调用）
+
+- `calculate_word_count(text)`：统计字符、词数、句子数与平均句长。
+- `random_name_generator(genre, gender, seed=None)`：根据类型/性别输出稳定的人名。
+- `style_analyzer(text)`：返回语气推断、感叹/省略比、形容词命中等指标。
+- `dialogue_enhancer(dialogue_text, character_hint=None)`：为对白自动添加动作描写。
+- `plot_twist_generator(current_plot, intensity='medium')`：生成 3 条反转思路。
+
+这些函数位于 `src/novel_agent/tools_creative.py`，可在 prompt eval、workflow 或 CLI 扩展中复用。
+
+## 会话管理
+
+- 默认会话保存在 `.novel-agent/state.sqlite`。
+- 使用 `novel-agent chat --session hero-arc` 可以延续特定会话，便于多轮创作。
+- `novel-agent sessions --list` 查看所有线程；`novel-agent sessions --delete <id>` 清理旧会话。
+- 会话底层由 LangGraph `SqliteSaver` 支持，可在多次 CLI 运行之间恢复状态。
+
+## 连续创作流程
+
+1. **刷新索引**：`poetry run novel-agent refresh-memory` → 生成 `data/continuity/index.json`。
+2. **（可选）写入 NervusDB**：`poetry run novel-agent memory ingest --db path/to/demo.nervusdb`。
+3. **运行 workflow**：`poetry run novel-agent run chapter --prompt "写李明的成长" --api-key $GOOGLE_API_KEY [--nervus-db ...]`。
+4. **人工 Review**：终端输出 Outline、Draft、Issues，可再结合 `continuity-editor` / `style-smith` 进一步处理。
+
+以上步骤确保“索引 → Nervus → Workflow → 脚本检查”形成闭环，避免遗忘设定或破坏时间线。
+
 ## 开发
 
 ### 安装开发依赖
@@ -179,6 +239,23 @@ just fix
 
 # 运行测试
 just test
+
+# 重新生成连续性索引
+poetry run novel-agent refresh-memory
+
+# 查看/删除持久化会话
+poetry run novel-agent sessions --list
+poetry run novel-agent sessions --delete hero-arc
+
+# 将连续性索引写入 NervusDB
+poetry run novel-agent memory ingest --db path/to/demo.nervusdb
+
+# 运行章节 workflow
+poetry run novel-agent run chapter --prompt "写一段李明的成长" --api-key $GOOGLE_API_KEY
+
+# 启动 Nervus Gateway (Node)
+pnpm install --filter services/nervusdb
+pnpm --filter services/nervusdb memory:dev
 ```
 
 ### 提交代码

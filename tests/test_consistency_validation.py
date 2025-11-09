@@ -1,5 +1,9 @@
 """集成测试：验证一致性检查工具"""
 
+from unittest import mock
+
+import pytest
+
 from novel_agent.tools import (
     read_file,
     search_content,
@@ -102,3 +106,23 @@ class TestConsistencyTools:
 
         # 应该找到引用标记
         assert len(results) > 0
+
+    @mock.patch("novel_agent.tools.nervus_cli.cypher_query")
+    def test_verify_timeline_nervus_diff(
+        self, mock_cypher, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setenv("NERVUSDB_DB_PATH", "demo.nervusdb")
+        mock_cypher.return_value = {"rows": []}
+        result = verify_strict_timeline()
+        assert any("NervusDB" in err for err in result["errors"]), result
+        monkeypatch.delenv("NERVUSDB_DB_PATH")
+
+    @mock.patch("novel_agent.tools.nervus_cli.cypher_query")
+    def test_verify_references_nervus_diff(
+        self, mock_cypher, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setenv("NERVUSDB_DB_PATH", "demo.nervusdb")
+        mock_cypher.return_value = {"rows": []}
+        result = verify_strict_references()
+        assert any("NervusDB" in err for err in result["errors"]), result
+        monkeypatch.delenv("NERVUSDB_DB_PATH")
