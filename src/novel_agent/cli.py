@@ -177,6 +177,21 @@ def chat(
         "--no-cache",
         help="禁用缓存（默认启用）",
     ),
+    allowed_tools: Optional[str] = typer.Option(
+        None,
+        "--allowed-tools",
+        help="允许使用的工具列表（逗号分隔，白名单）",
+    ),
+    disallowed_tools: Optional[str] = typer.Option(
+        None,
+        "--disallowed-tools",
+        help="禁止使用的工具列表（逗号分隔，黑名单）",
+    ),
+    tools_mode: str = typer.Option(
+        "default",
+        "--tools",
+        help="工具模式：default（所有工具）、minimal（只读工具）、custom（自定义）",
+    ),
 ) -> None:
     """启动对话模式
 
@@ -199,6 +214,15 @@ def chat(
         disable_cache()
         logger.debug("缓存已禁用")
 
+    # 解析工具权限参数（在两种模式之前）
+    allowed_tools_list = None
+    if allowed_tools:
+        allowed_tools_list = [t.strip() for t in allowed_tools.split(",")]
+
+    disallowed_tools_list = None
+    if disallowed_tools:
+        disallowed_tools_list = [t.strip() for t in disallowed_tools.split(",")]
+
     # 处理非交互模式
     if print_mode:
         # 验证输出格式
@@ -218,7 +242,7 @@ def chat(
             user_input = sys.stdin.read().strip()
         else:
             console.print(
-                "[red]错误：--print 模式需要提供提示词或从管道输入[/red]\n"
+                "[red]错误：--print 模式需要提示词或从管道输入[/red]\n"
                 "示例: novel-agent chat --print '你的问题'\n"
                 "或: echo '你的问题' | novel-agent chat --print"
             )
@@ -238,6 +262,9 @@ def chat(
             enable_context,
             stream,
             cache_manager,
+            allowed_tools_list,
+            disallowed_tools_list,
+            tools_mode,
         )
         return
 
@@ -279,6 +306,9 @@ def chat(
                     checkpointer=checkpointer,
                     enable_context_retrieval=enable_context,
                     project_root=str(project_root) if enable_context else None,
+                    allowed_tools=allowed_tools_list,
+                    disallowed_tools=disallowed_tools_list,
+                    tools_mode=tools_mode,
                 )
 
             if enable_context:
@@ -886,6 +916,9 @@ def _run_print_mode(
     enable_context: bool,
     stream: bool = False,
     cache_manager: Optional[Any] = None,
+    allowed_tools: list[str] | None = None,
+    disallowed_tools: list[str] | None = None,
+    tools_mode: str = "default",
 ) -> None:
     """执行非交互模式的单次查询"""
     import json as json_module
@@ -913,6 +946,9 @@ def _run_print_mode(
                 checkpointer=checkpointer,
                 enable_context_retrieval=enable_context,
                 project_root=str(project_root) if enable_context else None,
+                allowed_tools=allowed_tools,
+                disallowed_tools=disallowed_tools,
+                tools_mode=tools_mode,
             )
 
             # 执行单次查询

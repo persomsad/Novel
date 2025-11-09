@@ -264,6 +264,9 @@ def create_specialized_agent(
     checkpointer: BaseCheckpointSaver[Any] | None = None,
     enable_context_retrieval: bool = True,
     project_root: str | None = None,
+    allowed_tools: list[str] | None = None,
+    disallowed_tools: list[str] | None = None,
+    tools_mode: str = "default",
 ) -> Any:
     """创建专业化Agent
 
@@ -274,6 +277,9 @@ def create_specialized_agent(
         checkpointer: 会话持久化存储（可选）
         enable_context_retrieval: 是否启用自动上下文检索（默认True）
         project_root: 项目根目录（用于上下文检索）
+        allowed_tools: 允许使用的工具列表（白名单）
+        disallowed_tools: 禁止使用的工具列表（黑名单）
+        tools_mode: 工具模式（default/minimal/custom）
 
     Returns:
         ReAct Agent实例
@@ -313,7 +319,34 @@ def create_specialized_agent(
         "trace_foreshadow": trace_foreshadow,
     }
 
-    tools: list[BaseTool] = [tool_map[t] for t in config["tools"]]
+    # 工具预设模式
+    tool_presets = {
+        "minimal": ["read_file", "search_content", "verify_timeline", "verify_references"],
+        "default": list(tool_map.keys()),
+    }
+
+    # 确定基础工具集
+    # 规则：如果没有指定任何工具权限参数，使用 Agent 配置的工具
+    if allowed_tools is None and disallowed_tools is None and tools_mode == "default":
+        # 默认模式：使用 Agent 配置的工具
+        base_tools = config["tools"]
+    elif tools_mode == "custom":
+        # 自定义模式：使用 Agent 配置的工具
+        base_tools = config["tools"]
+    else:
+        # 预设模式：使用预设的工具集
+        base_tools = tool_presets.get(tools_mode, tool_presets["default"])
+
+    # 应用白名单
+    if allowed_tools is not None:
+        base_tools = [t for t in base_tools if t in allowed_tools]
+
+    # 应用黑名单
+    if disallowed_tools is not None:
+        base_tools = [t for t in base_tools if t not in disallowed_tools]
+
+    # 转换为工具对象
+    tools: list[BaseTool] = [tool_map[t] for t in base_tools if t in tool_map]
 
     # 初始化上下文检索器
     context_retriever: ContextRetriever | None = None
@@ -402,6 +435,9 @@ def create_novel_agent(
     model: BaseChatModel | None = None,
     api_key: str | None = None,
     checkpointer: BaseCheckpointSaver[Any] | None = None,
+    allowed_tools: list[str] | None = None,
+    disallowed_tools: list[str] | None = None,
+    tools_mode: str = "default",
 ) -> Any:
     """创建小说写作Agent（向后兼容）
 
@@ -409,11 +445,22 @@ def create_novel_agent(
         model: LLM模型（可选，默认使用Gemini 2.0 Flash）
         api_key: Gemini API Key（可选，从环境变量读取）
         checkpointer: 会话持久化存储（可选）
+        allowed_tools: 允许使用的工具列表（白名单）
+        disallowed_tools: 禁止使用的工具列表（黑名单）
+        tools_mode: 工具模式（default/minimal/custom）
 
     Returns:
         ReAct Agent实例
     """
-    return create_specialized_agent("default", model, api_key, checkpointer)
+    return create_specialized_agent(
+        "default",
+        model,
+        api_key,
+        checkpointer,
+        allowed_tools=allowed_tools,
+        disallowed_tools=disallowed_tools,
+        tools_mode=tools_mode,
+    )
 
 
 # ========== Tool Wrappers ==========
