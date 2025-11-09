@@ -754,17 +754,71 @@ def trace_foreshadow(foreshadow_id: str) -> str:
 
 
 def _estimate_confidence(messages: Any) -> int:
+    """评估 Agent 输出的置信度（0-100）
+
+    评分标准：
+    1. 基础分（50分）：输出长度适中（50-300字）
+    2. 结构化加分（30分）：
+       - 有完整句子结构（10分）
+       - 有条理（列表/标题）（10分）
+       - 有具体建议/引用（10分）
+    3. 质量加分（20分）：
+       - 包含文件路径/行号（10分）
+       - 包含具体示例（10分）
+    4. 扣分项：
+       - 错误标记（❌）：每个扣5分
+       - 空洞回答（"不清楚"/"不确定"等）：扣20分
+    """
     if not isinstance(messages, list) or not messages:
         return 0
+
     last = messages[-1]
     content = getattr(last, "content", None) or str(last)
-    tokens = content.split()
-    words = len(tokens)
-    sentences = max(
-        content.count("。") + content.count("！") + content.count("？") + content.count("."), 1
-    )
-    structure = 1 if sentences >= 3 else 0
-    correction_penalty = content.count("❌") * 10
-    base = min(words / 200, 1.0) * 60 + structure * 20
-    score = max(0, min(100, round(base - correction_penalty)))
-    return score
+
+    # 基础分：根据输出长度
+    words = len(content.split())
+    if words < 20:
+        base_score = 20  # 太短
+    elif 20 <= words <= 300:
+        base_score = 50  # 适中
+    else:
+        base_score = 40  # 太长可能冗余
+
+    # 结构化加分
+    structure_score = 0
+    sentences = content.count("。") + content.count("！") + content.count("？") + content.count(".")
+    if sentences >= 3:
+        structure_score += 10  # 有完整句子
+
+    # 有列表或标题
+    if any(marker in content for marker in ["- ", "* ", "1.", "2.", "##", "###"]):
+        structure_score += 10
+
+    # 有具体建议或引用
+    if any(
+        keyword in content
+        for keyword in ["建议", "推荐", "可以", "[REF:", "[TIME:", "spec/", "chapters/"]
+    ):
+        structure_score += 10
+
+    # 质量加分
+    quality_score = 0
+    # 包含文件路径/行号
+    if any(pattern in content for pattern in [".md", "Line ", "第", "行"]):
+        quality_score += 10
+
+    # 包含具体示例
+    if "```" in content or "例如" in content or "比如" in content:
+        quality_score += 10
+
+    # 扣分项
+    penalty = 0
+    penalty += content.count("❌") * 5  # 错误标记
+    if any(
+        phrase in content for phrase in ["不清楚", "不确定", "无法判断", "需要更多信息", "不知道"]
+    ):
+        penalty += 20  # 空洞回答
+
+    # 计算总分
+    total = base_score + structure_score + quality_score - penalty
+    return max(0, min(100, total))
