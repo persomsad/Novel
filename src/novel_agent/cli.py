@@ -400,13 +400,19 @@ def chat(
         )
         return
 
+    # 交互模式：禁用控制台日志输出（避免干扰用户输入）
+    from .logging_config import setup_logging
+
+    setup_logging(level="INFO", console_output=False)
+
     # 交互模式：显示Agent类型
     agent_name = agent if agent != "default" else "通用写作助手"
     console.print(
         Panel.fit(
             f"[bold cyan]🤖 Novel Agent[/bold cyan]\n"
             f"AI写作助手已启动 - [yellow]{agent_name}[/yellow]\n\n"
-            "[dim]输入 'exit' 或按 Ctrl+C 退出[/dim]",
+            "[dim]输入 'exit' 或按 Ctrl+C 退出[/dim]\n"
+            "[dim]按 ESC 可中断 Agent 响应[/dim]",
             border_style="cyan",
         )
     )
@@ -750,11 +756,57 @@ def _chat_loop(agent_instance: Any, session_id: str, input_offset: int = 5) -> N
                     current_session_id = command_result
                 continue
 
-            with console.status("[yellow]正在思考...[/yellow]"):
-                result = agent_instance.invoke(
-                    {"messages": [("user", user_input)]},
-                    config={"configurable": {"thread_id": current_session_id}},
-                )
+            # 使用线程化执行 + ESC 中断支持
+            import threading
+
+            from prompt_toolkit.input import create_input
+            from prompt_toolkit.keys import Keys
+
+            result = None
+            interrupted = False
+            error = None
+
+            def run_agent():
+                nonlocal result, error
+                try:
+                    result = agent_instance.invoke(
+                        {"messages": [("user", user_input)]},
+                        config={"configurable": {"thread_id": current_session_id}},
+                    )
+                except Exception as e:
+                    error = e
+
+            # 在后台线程运行 Agent
+            agent_thread = threading.Thread(target=run_agent, daemon=True)
+            agent_thread.start()
+
+            # 显示状态并监听 ESC 键
+            console.print("\n[yellow]正在思考... (按 ESC 中断)[/yellow]", end="\r")
+
+            input_obj = create_input()
+            with input_obj.raw_mode():
+                while agent_thread.is_alive():
+                    # 检查是否有按键输入
+                    if input_obj.read_keys():
+                        keys = input_obj.read_keys()
+                        for key in keys:
+                            if key.key == Keys.Escape:
+                                interrupted = True
+                                console.print("\n[red]⚠️  已中断 Agent 响应[/red]")
+                                break
+                        if interrupted:
+                            break
+                    agent_thread.join(timeout=0.1)
+
+            # 清除"正在思考"提示
+            console.print(" " * 50, end="\r")
+
+            if interrupted:
+                console.print("[yellow]提示：请重新输入问题[/yellow]\n")
+                continue
+
+            if error:
+                raise error
 
             if "messages" in result and result["messages"]:
                 last_message = result["messages"][-1]
