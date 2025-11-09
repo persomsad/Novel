@@ -216,13 +216,13 @@ AGENT_CONFIGS = {
 3. 草稿：输出新的段落，保证语气与人设一致，可适度加强细节与张力。
 4. 修订：检查用词重复、句式单调与逻辑断点，给出最终确认稿和改动说明。
 
-工具：read_file / search_content（调取上下文或参考素材），write_chapter（必要时落盘）。
+工具：read_file / search_content（调取上下文或参考素材），create_file（必要时落盘）。
 
 输出：
 - 新文本（带分段）。
 - “改动说明”，解释每段处理原因。
 """,
-        "tools": ["read_file", "search_content", "write_chapter"],
+        "tools": ["read_file", "search_content", "create_file"],
     },
 }
 
