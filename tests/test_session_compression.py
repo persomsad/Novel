@@ -3,7 +3,7 @@
 from unittest.mock import AsyncMock, Mock
 
 import pytest
-from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
+from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage
 
 from novel_agent.session_compression import (
     compress_session,
@@ -81,7 +81,7 @@ def test_format_messages_skip_system() -> None:
 def test_format_messages_truncate_long() -> None:
     """测试截断长消息"""
     long_content = "x" * 1000
-    messages = [HumanMessage(content=long_content)]
+    messages: list[BaseMessage] = [HumanMessage(content=long_content)]
 
     formatted = format_messages_for_summary(messages)
 
@@ -114,7 +114,7 @@ async def test_generate_summary() -> None:
 @pytest.mark.anyio
 async def test_generate_summary_strips_whitespace() -> None:
     """测试摘要去除空白"""
-    messages = [HumanMessage(content="测试")]
+    messages: list[BaseMessage] = [HumanMessage(content="测试")]
 
     mock_llm = AsyncMock()
     mock_response = Mock()
@@ -205,7 +205,7 @@ async def test_compress_session_with_new_prompt() -> None:
 async def test_compress_session_token_reduction() -> None:
     """测试 token 减少率"""
     # 创建长对话
-    messages = []
+    messages: list[BaseMessage] = []
     for i in range(20):
         messages.append(HumanMessage(content=f"问题 {i}: 这是一个关于角色设定的问题"))
         messages.append(AIMessage(content=f"回答 {i}: 让我详细解释这个角色的特点和发展..."))

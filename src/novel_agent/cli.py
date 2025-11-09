@@ -543,6 +543,103 @@ def _get_optimal_input_offset() -> int:
     return max(3, min(10, offset))
 
 
+def _handle_slash_command(user_input: str, session_id: str, agent_instance: Any) -> str | None:
+    """处理斜杠命令
+
+    Args:
+        user_input: 用户输入
+        session_id: 当前会话 ID
+        agent_instance: Agent 实例
+
+    Returns:
+        新的 session_id（如果需要切换会话），否则返回 None
+    """
+    parts = user_input.split(maxsplit=1)
+    command = parts[0].lower()
+    args = parts[1] if len(parts) > 1 else ""
+
+    if command == "/compress":
+        try:
+            import asyncio
+
+            from .session_compression import compress_session
+
+            # 获取当前会话的历史消息
+            # 从 agent state 中获取
+            checkpointer = agent_instance.checkpointer
+            config = {"configurable": {"thread_id": session_id}}
+
+            # 获取当前状态
+            state = checkpointer.get(config)
+            if not state or "messages" not in state.get("channel_values", {}):
+                console.print("[yellow]⚠️  当前会话为空，无需压缩[/yellow]")
+                return None
+
+            messages = state["channel_values"]["messages"]
+
+            # 显示压缩提示
+            console.print("\n[cyan]🔄 正在压缩会话...[/cyan]")
+            console.print(f"  当前会话：{session_id}")
+            console.print(f"  消息数量：{len(messages)} 条")
+
+            # 执行压缩（获取 LLM 实例）
+            llm = agent_instance.llm  # 假设 agent 有 llm 属性
+
+            with console.status("[yellow]生成摘要中...[/yellow]"):
+                new_id, summary, original_tokens, compressed_tokens = asyncio.run(
+                    compress_session(messages, llm, new_prompt=args if args else None)
+                )
+
+            # 显示压缩统计
+            reduction_rate = (original_tokens - compressed_tokens) / original_tokens * 100
+
+            console.print("\n[green]✓ 会话已压缩[/green]")
+            console.print(f"  原始：{original_tokens:,} tokens ({len(messages)} 条消息)")
+            console.print(f"  压缩：{compressed_tokens:,} tokens (摘要)")
+            console.print(f"  节省：{reduction_rate:.0f}% tokens\n")
+
+            # 显示摘要预览
+            preview = summary[:150] + "..." if len(summary) > 150 else summary
+            console.print("  摘要预览：")
+            console.print(f"  [dim]{preview}[/dim]\n")
+
+            console.print(f"[green]✓ 新会话已创建：{new_id}[/green]")
+
+            # 初始化新会话的 checkpointer
+            from langchain_core.messages import BaseMessage, HumanMessage, SystemMessage
+
+            initial_messages: list[BaseMessage] = [
+                SystemMessage(content=f"上次对话摘要：\n{summary}")
+            ]
+            if args:
+                initial_messages.append(HumanMessage(content=args))
+
+            # 保存到新会话
+            new_config = {"configurable": {"thread_id": new_id}}
+            checkpointer.put(new_config, {"channel_values": {"messages": initial_messages}})
+
+            return new_id
+
+        except Exception as e:
+            console.print(f"[red]✗ 压缩失败: {e}[/red]")
+            import traceback
+
+            traceback.print_exc()
+            return None
+
+    elif command == "/help":
+        console.print("\n[cyan]可用命令：[/cyan]")
+        console.print("  /compress [新提示]  - 压缩当前会话并创建新会话")
+        console.print("  /help              - 显示此帮助")
+        console.print("  exit/quit/bye      - 退出对话\n")
+        return None
+
+    else:
+        console.print(f"[yellow]⚠️  未知命令：{command}[/yellow]")
+        console.print("  输入 /help 查看可用命令")
+        return None
+
+
 def _chat_loop(agent_instance: Any, session_id: str, input_offset: int = 5) -> None:
     """交互式对话循环
 
@@ -554,6 +651,9 @@ def _chat_loop(agent_instance: Any, session_id: str, input_offset: int = 5) -> N
     # 创建 PromptSession 用于更好的输入处理（支持中文、特殊键等）
     # reserve_space_for_menu 参数让输入框向上偏移
     prompt_session: PromptSession[str] = PromptSession(reserve_space_for_menu=input_offset)
+
+    # 当前会话 ID（可能会因为 /compress 而改变）
+    current_session_id = session_id
 
     while True:
         try:
@@ -572,10 +672,20 @@ def _chat_loop(agent_instance: Any, session_id: str, input_offset: int = 5) -> N
             if not user_input.strip():
                 continue
 
+            # 处理斜杠命令
+            if user_input.startswith("/"):
+                command_result = _handle_slash_command(
+                    user_input, current_session_id, agent_instance
+                )
+                if command_result:
+                    # 命令返回新的 session_id
+                    current_session_id = command_result
+                continue
+
             with console.status("[yellow]正在思考...[/yellow]"):
                 result = agent_instance.invoke(
                     {"messages": [("user", user_input)]},
-                    config={"configurable": {"thread_id": session_id}},
+                    config={"configurable": {"thread_id": current_session_id}},
                 )
 
             if "messages" in result and result["messages"]:
