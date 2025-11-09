@@ -1,5 +1,7 @@
 """集成测试：验证一致性检查工具"""
 
+import json
+from pathlib import Path
 from unittest import mock
 
 import pytest
@@ -39,10 +41,14 @@ class TestConsistencyTools:
             assert "line" in result
             assert "content" in result
 
-    def test_verify_timeline_basic(self) -> None:
+    def test_verify_timeline_basic(self, tmp_path: Path) -> None:
         """测试时间线验证工具"""
+        # 创建临时索引文件
+        index_path = tmp_path / "index.json"
+        index_path.write_text(json.dumps({"chapters": [], "references": []}), encoding="utf-8")
+
         # 这个工具返回验证报告（字典格式）
-        result = verify_strict_timeline()
+        result = verify_strict_timeline(index_path)
 
         # 应该返回dict报告
         assert isinstance(result, dict)
@@ -50,10 +56,14 @@ class TestConsistencyTools:
         assert "errors" in result
         assert "warnings" in result
 
-    def test_verify_references_basic(self) -> None:
+    def test_verify_references_basic(self, tmp_path: Path) -> None:
         """测试引用验证工具"""
+        # 创建临时索引文件
+        index_path = tmp_path / "index.json"
+        index_path.write_text(json.dumps({"chapters": [], "references": []}), encoding="utf-8")
+
         # 这个工具返回验证报告（字典格式）
-        result = verify_strict_references()
+        result = verify_strict_references(index_path)
 
         # 应该返回dict报告
         assert isinstance(result, dict)
@@ -109,11 +119,30 @@ class TestConsistencyTools:
 
     @mock.patch("novel_agent.tools.nervus_cli.cypher_query")
     def test_verify_timeline_nervus_diff(
-        self, mock_cypher: mock.Mock, monkeypatch: pytest.MonkeyPatch
+        self, mock_cypher: mock.Mock, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
     ) -> None:
+        # 创建临时索引文件，包含符合实际结构的章节数据
+        index_path = tmp_path / "index.json"
+        index_path.write_text(
+            json.dumps(
+                {
+                    "chapters": [
+                        {
+                            "chapter_id": "ch001",
+                            "time_markers": [
+                                {"value": "2024-01-15", "context": "测试日期", "line": 10}
+                            ],
+                        }
+                    ],
+                    "references": [],
+                }
+            ),
+            encoding="utf-8",
+        )
+
         monkeypatch.setenv("NERVUSDB_DB_PATH", "demo.nervusdb")
-        mock_cypher.return_value = {"rows": []}
-        result = verify_strict_timeline()
+        mock_cypher.return_value = {"rows": []}  # NervusDB 返回空，会产生差异错误
+        result = verify_strict_timeline(index_path)
 
         # 新格式：errors 是 dict 列表，检查 message 或 type 字段
         has_nervus_error = any(
@@ -125,11 +154,25 @@ class TestConsistencyTools:
 
     @mock.patch("novel_agent.tools.nervus_cli.cypher_query")
     def test_verify_references_nervus_diff(
-        self, mock_cypher: mock.Mock, monkeypatch: pytest.MonkeyPatch
+        self, mock_cypher: mock.Mock, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
     ) -> None:
+        # 创建临时索引文件，包含符合实际结构的引用数据
+        index_path = tmp_path / "index.json"
+        index_path.write_text(
+            json.dumps(
+                {
+                    "chapters": [
+                        {"chapter_id": "ch001", "references": [{"id": "ref001", "line": 10}]}
+                    ],
+                    "references": [{"id": "ref001", "occurrences": 1}],
+                }
+            ),
+            encoding="utf-8",
+        )
+
         monkeypatch.setenv("NERVUSDB_DB_PATH", "demo.nervusdb")
-        mock_cypher.return_value = {"rows": []}
-        result = verify_strict_references()
+        mock_cypher.return_value = {"rows": []}  # NervusDB 返回空，会产生差异错误
+        result = verify_strict_references(index_path)
 
         # 新格式：errors 是 dict 列表，检查 message 或 type 字段
         has_nervus_error = any(
