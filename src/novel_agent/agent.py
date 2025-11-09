@@ -374,9 +374,9 @@ def create_specialized_agent(
             if messages:
                 # 获取最后一条用户消息
                 last_message = messages[-1]
-                query = (
-                    last_message.content if hasattr(last_message, "content") else str(last_message)
-                )
+                content = last_message.content if hasattr(last_message, "content") else last_message
+                # 确保 query 是字符串（LangChain 的 content 可能是列表）
+                query = str(content) if not isinstance(content, str) else content
 
                 # 检索相关上下文
                 try:

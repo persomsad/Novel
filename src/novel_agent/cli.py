@@ -758,9 +758,9 @@ def _chat_loop(agent_instance: Any, session_id: str, input_offset: int = 5) -> N
 
             if "messages" in result and result["messages"]:
                 last_message = result["messages"][-1]
-                response = (
-                    last_message.content if hasattr(last_message, "content") else str(last_message)
-                )
+                content = last_message.content if hasattr(last_message, "content") else last_message
+                # 确保 response 是字符串（LangChain 的 content 可能是列表）
+                response = str(content) if not isinstance(content, str) else content
 
                 # 显示置信度评分
                 confidence = result.get("confidence", 0)
