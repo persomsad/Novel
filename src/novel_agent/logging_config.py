@@ -4,7 +4,9 @@
 """
 
 import logging
+import os
 import sys
+import warnings
 from pathlib import Path
 
 
@@ -18,6 +20,18 @@ def setup_logging(
         log_file: 日志文件路径（可选）
         console_output: 是否输出到控制台（交互模式下应设为 False）
     """
+    # 如果禁用控制台输出，同时抑制所有警告和第三方库日志
+    if not console_output:
+        # 抑制 Python warnings
+        warnings.filterwarnings("ignore")
+
+        # 抑制 gRPC 日志（通过环境变量）
+        os.environ["GRPC_VERBOSITY"] = "ERROR"
+        os.environ["GRPC_TRACE"] = ""
+
+        # 抑制 TensorFlow 日志（如果使用）
+        os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
+
     # 转换日志级别
     numeric_level = getattr(logging, level.upper(), logging.INFO)
 
@@ -65,6 +79,24 @@ def setup_logging(
     logging.getLogger("httpx").setLevel(logging.WARNING)
     logging.getLogger("httpcore").setLevel(logging.WARNING)
     logging.getLogger("langchain").setLevel(logging.WARNING)
+    logging.getLogger("google").setLevel(logging.ERROR)
+    logging.getLogger("grpc").setLevel(logging.ERROR)
+    logging.getLogger("absl").setLevel(logging.ERROR)
+
+    # 如果禁用控制台输出，将所有第三方库设为 ERROR 级别
+    if not console_output:
+        for logger_name in [
+            "httpx",
+            "httpcore",
+            "langchain",
+            "google",
+            "grpc",
+            "absl",
+            "urllib3",
+            "asyncio",
+        ]:
+            logging.getLogger(logger_name).setLevel(logging.ERROR)
+            logging.getLogger(logger_name).propagate = False
 
 
 def get_logger(name: str) -> logging.Logger:

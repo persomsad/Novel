@@ -10,6 +10,11 @@ import uuid
 from pathlib import Path
 from typing import Any, Optional
 
+# 在导入任何第三方库之前，设置环境变量抑制日志
+os.environ.setdefault("GRPC_VERBOSITY", "ERROR")
+os.environ.setdefault("GRPC_TRACE", "")
+os.environ.setdefault("TF_CPP_MIN_LOG_LEVEL", "3")
+
 import typer
 from langchain_google_genai import ChatGoogleGenerativeAI
 from prompt_toolkit import PromptSession
