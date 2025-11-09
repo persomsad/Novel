@@ -275,6 +275,11 @@ def chat(
             "工具模式：default（所有工具）、minimal（只读工具）、custom（自定义）"
         ),
     ),
+    input_offset: Optional[int] = typer.Option(
+        None,
+        "--input-offset",
+        help="输入框向上偏移行数（默认：自动适应终端高度，通常 5-8 行）",
+    ),
 ) -> None:
     """启动对话模式
 
@@ -320,6 +325,9 @@ def chat(
         # 旧的黑名单方式（兼容）
         disallowed_tools_list = [t.strip() for t in disallowed_tools.split(",")]
     # else: 默认模式，允许所有工具（allowed_tools_list = None）
+
+    # 计算输入框偏移（用于交互模式）
+    calculated_offset = input_offset if input_offset is not None else _get_optimal_input_offset()
 
     # 处理从文件读取 Prompt
     file_prompt = None
@@ -481,7 +489,14 @@ def chat(
                     console.print(Markdown(response))
                 console.print()  # 空行
 
-            _chat_loop(agent_instance, session_id)
+            # 显示输入框偏移提示（首次）
+            if calculated_offset != 5:
+                console.print(
+                    f"[dim]ℹ️  输入框偏移：{calculated_offset} 行"
+                    f"（可使用 --input-offset 自定义）[/dim]\n"
+                )
+
+            _chat_loop(agent_instance, session_id, input_offset=calculated_offset)
 
     except ValueError as e:
         console.print(format_error(e))
@@ -507,9 +522,38 @@ def chat(
                 pass  # 忽略停止失败
 
 
-def _chat_loop(agent_instance: Any, session_id: str) -> None:
+def _get_optimal_input_offset() -> int:
+    """根据终端高度计算最佳输入框偏移
+
+    目标：输入框在屏幕 60-70% 位置（参考 Claude Desktop）
+    """
+    import shutil
+
+    try:
+        terminal_height = shutil.get_terminal_size().lines
+    except (AttributeError, ValueError):
+        # 如果无法获取终端大小，使用默认值
+        return 5
+
+    # 输入框在屏幕 65% 位置
+    optimal_position = int(terminal_height * 0.65)
+    offset = terminal_height - optimal_position
+
+    # 最小 3 行，最大 10 行
+    return max(3, min(10, offset))
+
+
+def _chat_loop(agent_instance: Any, session_id: str, input_offset: int = 5) -> None:
+    """交互式对话循环
+
+    Args:
+        agent_instance: Agent 实例
+        session_id: 会话 ID
+        input_offset: 输入框向上偏移行数
+    """
     # 创建 PromptSession 用于更好的输入处理（支持中文、特殊键等）
-    prompt_session: PromptSession[str] = PromptSession()
+    # reserve_space_for_menu 参数让输入框向上偏移
+    prompt_session: PromptSession[str] = PromptSession(reserve_space_for_menu=input_offset)
 
     while True:
         try:
