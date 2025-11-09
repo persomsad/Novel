@@ -89,12 +89,10 @@ class TestCreateFileErrors:
         try:
             with tempfile.TemporaryDirectory() as tmpdir:
                 os.chdir(tmpdir)
-                # 创建 src 目录（关键目录）
-                Path("src").mkdir()
 
-                # 尝试在关键目录创建文件（应该失败）
-                with pytest.raises(ValueError, match="禁止操作关键"):
-                    create_file.invoke({"path": "src/test.py", "content": "code"})
+                # 尝试在系统目录创建文件（应该失败）
+                with pytest.raises(ValueError, match="禁止操作系统目录"):
+                    create_file.invoke({"path": "/usr/test.py", "content": "code"})
         finally:
             os.chdir(orig_cwd)
 
