@@ -286,6 +286,13 @@ def chat(
     # 获取项目根目录
     project_root = Path.cwd()
 
+    # 启动性能跟踪器
+    from .performance_tracker import get_tracker
+
+    tracker = get_tracker()
+    tracker.reset()
+    tracker.start()
+
     # 启动文件监控（如果启用）
     watcher_thread = None
     if enable_watcher:
@@ -329,6 +336,10 @@ def chat(
         console.print(f"[red]✗ 未知错误: {e}[/red]")
         sys.exit(1)
     finally:
+        # 停止性能跟踪并显示统计
+        tracker.stop()
+        console.print("\n" + tracker.get_stats().format_summary())
+
         # 停止文件监控
         if enable_watcher and watcher_thread:
             try:

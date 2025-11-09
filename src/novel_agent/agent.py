@@ -18,6 +18,7 @@ from .tools import (
     edit_chapter_lines,
     multi_edit,
     read_file,
+    read_multiple_files_tool,
     replace_in_file,
     search_content,
     smart_context_search_tool,
@@ -307,6 +308,7 @@ def create_specialized_agent(
     # 根据配置选择工具
     tool_map = {
         "read_file": read_file_tool,
+        "read_multiple_files": read_multiple_files_tool,
         "write_chapter": write_chapter_tool,
         "search_content": search_content_tool,
         "verify_timeline": verify_timeline_tool,
