@@ -35,6 +35,12 @@ from .tools import (
     verify_strict_timeline,
     write_chapter,
 )
+from .tools_task import (
+    complete_task,
+    create_task_list,
+    show_task_progress,
+    start_task,
+)
 
 # Agent配置注册表
 AGENT_CONFIGS = {
@@ -47,6 +53,7 @@ AGENT_CONFIGS = {
 **精确验证**：verify_strict_timeline()、verify_strict_references()
 **精准编辑**：edit_chapter_lines()、replace_in_file()、multi_edit()
 **智能检索**：smart_context_search()、build_character_network()、trace_foreshadow()
+**任务可视化**：create_task_list()、start_task()、complete_task()
 
 ## 工具选择
 
@@ -59,11 +66,13 @@ AGENT_CONFIGS = {
 - **智能搜索** → smart_context_search（需先 build-graph）
 - **角色关系** → build_character_network
 - **伏笔追踪** → trace_foreshadow
+- **复杂任务（3+ 步骤）** → create_task_list
 
 ## 约束
 
 - 编辑工具直接修改文件，执行前询问确认
 - 图查询需要先运行 `novel-agent build-graph`
+- 复杂任务（3+ 步骤）使用 create_task_list 展示进度
 - 用中文回复
 """,
         "tools": [
@@ -78,6 +87,10 @@ AGENT_CONFIGS = {
             "smart_context_search",
             "build_character_network",
             "trace_foreshadow",
+            "create_task_list",
+            "start_task",
+            "complete_task",
+            "show_task_progress",
         ],
     },
     "outline-architect": {
@@ -280,6 +293,10 @@ def create_specialized_agent(
         "dialogue_enhancer": dialogue_enhancer_tool,
         "plot_twist_generator": plot_twist_generator_tool,
         "scene_transition": scene_transition_tool,
+        "create_task_list": create_task_list,
+        "start_task": start_task,
+        "complete_task": complete_task,
+        "show_task_progress": show_task_progress,
     }
 
     # 工具预设模式
