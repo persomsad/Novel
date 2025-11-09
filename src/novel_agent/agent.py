@@ -33,8 +33,8 @@ from .tools import (
     trace_foreshadow_tool,
     verify_strict_references,
     verify_strict_timeline,
-    write_chapter,
 )
+from .tools_file import create_directory, create_file, list_files
 from .tools_task import (
     complete_task,
     create_task_list,
@@ -53,6 +53,7 @@ AGENT_CONFIGS = {
 **精确验证**：verify_strict_timeline()、verify_strict_references()
 **精准编辑**：edit_chapter_lines()、replace_in_file()、multi_edit()
 **智能检索**：smart_context_search()、build_character_network()、trace_foreshadow()
+**文件操作**：create_file()、create_directory()、list_files()
 **任务可视化**：create_task_list()、start_task()、complete_task()
 
 ## 工具选择
@@ -62,7 +63,9 @@ AGENT_CONFIGS = {
 - **修改特定行** → edit_chapter_lines
 - **批量替换** → replace_in_file
 - **修改多文件** → multi_edit
-- **创建章节** → write_chapter
+- **创建文件** → create_file（任意路径）
+- **创建目录** → create_directory
+- **列出目录** → list_files
 - **智能搜索** → smart_context_search（需先 build-graph）
 - **角色关系** → build_character_network
 - **伏笔追踪** → trace_foreshadow
@@ -72,12 +75,15 @@ AGENT_CONFIGS = {
 
 - 编辑工具直接修改文件，执行前询问确认
 - 图查询需要先运行 `novel-agent build-graph`
+- 文件操作禁止访问 src/、.git/ 等关键目录
 - 复杂任务（3+ 步骤）使用 create_task_list 展示进度
 - 用中文回复
 """,
         "tools": [
             "read_file",
-            "write_chapter",
+            "create_file",
+            "create_directory",
+            "list_files",
             "search_content",
             "verify_timeline",
             "verify_references",
@@ -279,7 +285,9 @@ def create_specialized_agent(
     tool_map = {
         "read_file": read_file_tool,
         "read_multiple_files": read_multiple_files_tool,
-        "write_chapter": write_chapter_tool,
+        "create_file": create_file,
+        "create_directory": create_directory,
+        "list_files": list_files,
         "search_content": search_content_tool,
         "verify_timeline": verify_timeline_tool,
         "verify_references": verify_references_tool,
@@ -461,20 +469,6 @@ def read_file_tool(path: str) -> str:
         文件内容
     """
     return read_file(path)
-
-
-@tool
-def write_chapter_tool(number: int, content: str) -> str:
-    """创建新章节
-
-    Args:
-        number: 章节编号（1-999）
-        content: 章节内容
-
-    Returns:
-        创建的文件路径
-    """
-    return write_chapter(number, content)
 
 
 @tool

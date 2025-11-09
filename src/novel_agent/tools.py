@@ -58,46 +58,6 @@ def read_file(path: str) -> str:
         raise
 
 
-def write_chapter(number: int, content: str, base_dir: str = "chapters") -> str:
-    """创建新章节
-
-    Args:
-        number: 章节编号（1-999）
-        content: 章节内容
-        base_dir: 章节目录（默认: chapters）
-
-    Returns:
-        创建的文件路径
-
-    Raises:
-        ValueError: 章节编号无效
-        OSError: 文件系统错误
-    """
-    logger.debug(f"正在创建章节: 编号={number}, 目录={base_dir}")
-
-    if not 1 <= number <= 999:
-        logger.error(f"无效的章节编号: {number}")
-        raise ValueError(f"章节编号必须在 1-999 之间，当前: {number}")
-
-    try:
-        # 创建目录
-        chapters_dir = Path(base_dir)
-        chapters_dir.mkdir(parents=True, exist_ok=True)
-
-        # 格式化文件名：ch001.md, ch002.md, ...
-        filename = f"ch{number:03d}.md"
-        file_path = chapters_dir / filename
-
-        # 写入内容
-        file_path.write_text(content, encoding="utf-8")
-
-        logger.info(f"成功创建章节: {file_path} ({len(content)} 字符)")
-        return str(file_path)
-    except OSError as e:
-        logger.error(f"创建章节失败: {e}")
-        raise
-
-
 def search_content(keyword: str, search_dir: str = ".") -> list[dict[str, str]]:
     """搜索关键词
 
