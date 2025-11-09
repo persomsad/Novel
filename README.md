@@ -59,7 +59,40 @@ novel-agent chat
 export GOOGLE_API_KEY="your-gemini-api-key"
 ```
 
-### 2. 启动对话
+### 2. 自定义模型配置（可选）⭐ v0.6.0 新增
+
+默认使用 `gemini-2.0-flash-exp`，你可以通过环境变量自定义模型和参数：
+
+```bash
+# 使用 Gemini 1.5 Pro（更高质量，适合正式创作）
+export GOOGLE_MODEL=gemini-1.5-pro
+export GOOGLE_TEMPERATURE=0.5
+
+# 使用 Gemini 1.5 Flash（更快速度，适合快速迭代）
+export GOOGLE_MODEL=gemini-1.5-flash
+export GOOGLE_TEMPERATURE=0.7
+
+# 使用 Gemini 2.0 Flash Exp（默认，平衡质量和速度）
+export GOOGLE_MODEL=gemini-2.0-flash-exp
+export GOOGLE_TEMPERATURE=0.7
+```
+
+**环境变量说明**：
+
+| 变量 | 默认值 | 说明 |
+|------|--------|------|
+| `GOOGLE_MODEL` | `gemini-2.0-flash-exp` | 模型名称，支持所有 Gemini 模型 |
+| `GOOGLE_TEMPERATURE` | `0.7` | 温度参数（0.0-1.0），越低越稳定，越高越多样 |
+
+**使用场景**：
+
+| 场景 | 推荐配置 | 说明 |
+|------|----------|------|
+| 正式创作 | `gemini-1.5-pro` + 温度 `0.3-0.5` | 高质量输出，更稳定 |
+| 快速迭代 | `gemini-1.5-flash` + 温度 `0.7-0.9` | 快速响应，更多样性 |
+| 日常使用 | 默认配置（不设置） | 平衡质量和速度 |
+
+### 3. 启动对话
 
 #### 交互模式（默认）
 
