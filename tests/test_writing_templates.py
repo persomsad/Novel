@@ -3,8 +3,12 @@
 from pathlib import Path
 
 import pytest
+from typer.testing import CliRunner
 
+from src.novel_agent.cli import app
 from src.novel_agent.tools import apply_template, list_templates
+
+runner = CliRunner()
 
 
 class TestListTemplates:
@@ -203,3 +207,59 @@ class TestTemplateIntegration:
             result = apply_template(template_name, {})
             assert isinstance(result, str)
             assert len(result) > 0
+
+
+class TestCLICommands:
+    """测试 CLI 命令"""
+
+    def test_template_list_command(self):
+        """测试 template list 命令"""
+        result = runner.invoke(app, ["template", "list"])
+        assert result.exit_code == 0
+        assert "可用的写作模板" in result.stdout
+        assert "scene-description" in result.stdout
+
+    def test_template_list_with_category(self):
+        """测试 template list 带分类过滤"""
+        result = runner.invoke(app, ["template", "list", "--category", "scene"])
+        assert result.exit_code == 0
+        assert "scene-description" in result.stdout
+
+    def test_template_apply_command(self):
+        """测试 template apply 命令"""
+        result = runner.invoke(
+            app,
+            [
+                "template",
+                "apply",
+                "--name",
+                "scene-description",
+                "--var",
+                "time=黄昏",
+                "--var",
+                "location=战场",
+                "--var",
+                "weather=乌云密布",
+                "--var",
+                "details=残旗飘扬",
+                "--var",
+                "atmosphere=肃杀",
+            ],
+        )
+        assert result.exit_code == 0
+        assert "黄昏" in result.stdout
+        assert "战场" in result.stdout
+
+    def test_template_apply_without_name(self):
+        """测试 apply 缺少 name 参数"""
+        result = runner.invoke(app, ["template", "apply"])
+        assert result.exit_code == 1
+        output = result.stdout + result.stderr
+        assert "错误" in output or "需要" in output
+
+    def test_template_invalid_action(self):
+        """测试无效操作"""
+        result = runner.invoke(app, ["template", "invalid"])
+        assert result.exit_code == 1
+        output = result.stdout + result.stderr
+        assert "未知操作" in output or "错误" in output
