@@ -15,6 +15,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+from langchain_core.tools import tool as lc_tool
+
 from . import nervus_cli
 from .logging_config import get_logger
 
@@ -1014,3 +1016,36 @@ def trace_foreshadow_tool(foreshadow_id: str) -> str:
     except Exception as e:
         logger.error(f"追溯伏笔失败: {e}")
         return f"❌ 追溯伏笔失败: {e}\n提示：请先运行 'novel-agent build-graph' 构建图数据库"
+
+
+def read_multiple_files(paths: str) -> str:
+    """批量读取多个文件（性能优化）
+
+    一次性读取多个文件，减少 API 调用次数
+
+    Args:
+        paths: 文件路径列表，用逗号分隔（如 "ch1.md,ch2.md,ch3.md"）
+
+    Returns:
+        所有文件的内容，格式化为易读的字符串
+
+    Raises:
+        FileNotFoundError: 某个文件不存在
+    """
+    path_list = [p.strip() for p in paths.split(",")]
+    logger.info(f"批量读取 {len(path_list)} 个文件")
+
+    results = []
+    for path in path_list:
+        try:
+            content = read_file(path)
+            results.append(f"=== {path} ===\n{content}\n")
+        except FileNotFoundError:
+            logger.warning(f"文件不存在，跳过: {path}")
+            results.append(f"=== {path} ===\n❌ 文件不存在\n")
+
+    return "\n".join(results)
+
+
+# 工具装饰器包装（用于 LangChain）
+read_multiple_files_tool = lc_tool(read_multiple_files)
