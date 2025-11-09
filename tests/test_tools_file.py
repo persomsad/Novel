@@ -64,18 +64,15 @@ class TestFileOperations:
         assert result == "test.md"
         assert Path("test.md").read_text() == "新内容"
 
-    def test_create_file_forbidden_path(self, tmp_path):
-        """测试禁止访问的路径"""
+    def test_create_file_system_path(self, tmp_path):
+        """测试禁止访问系统目录"""
         import os
 
         os.chdir(tmp_path)
 
-        # 创建 src 目录（模拟关键目录）
-        Path("src").mkdir()
-
-        # 尝试在 src 目录创建文件（应该失败）
-        with pytest.raises(ValueError, match="禁止操作关键目录"):
-            create_file.invoke({"path": "src/test.py", "content": "code"})
+        # 尝试访问系统目录（应该失败）
+        with pytest.raises(ValueError, match="禁止操作系统目录"):
+            create_file.invoke({"path": "/usr/test.txt", "content": "hack"})
 
     def test_create_file_path_traversal(self, tmp_path):
         """测试路径遍历攻击"""
@@ -135,15 +132,14 @@ class TestFileOperations:
         assert Path("chapters").is_dir()
 
     def test_create_directory_forbidden(self, tmp_path):
-        """测试禁止创建关键目录"""
+        """测试禁止创建系统目录"""
         import os
 
         os.chdir(tmp_path)
 
-        # 尝试创建 src 子目录（应该失败）
-        Path("src").mkdir()
-        with pytest.raises(ValueError, match="禁止操作关键目录"):
-            create_directory.invoke({"path": "src/new"})
+        # 尝试创建系统子目录（应该失败）
+        with pytest.raises(ValueError, match="禁止操作系统目录"):
+            create_directory.invoke({"path": "/etc/new_config"})
 
     def test_list_files_simple(self, tmp_path):
         """测试列出目录内容"""

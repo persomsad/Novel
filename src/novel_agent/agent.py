@@ -101,7 +101,7 @@ AGENT_CONFIGS = {
 
 - 编辑工具直接修改文件，执行前询问确认
 - 图查询需要先运行 `novel-agent build-graph`
-- 文件操作禁止访问 src/、.git/ 等关键目录
+- 文件操作支持任意路径，仅禁止系统关键目录（/System、/usr 等）
 - 复杂任务（3+ 步骤）使用 create_task_list 展示进度
 - 用中文回复
 """,

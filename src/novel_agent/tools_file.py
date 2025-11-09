@@ -11,17 +11,16 @@ from .logging_config import get_logger
 
 logger = get_logger(__name__)
 
-# 禁止操作的关键目录和文件
-FORBIDDEN_PATHS = {
-    ".git",
-    "src",
-    "tests",
-    "pyproject.toml",
-    "poetry.lock",
-    ".env",
-    ".venv",
-    "node_modules",
-    "__pycache__",
+# 禁止操作的系统关键目录（仅限绝对路径）
+FORBIDDEN_SYSTEM_PATHS = {
+    "/System",
+    "/Library",
+    "/usr",
+    "/bin",
+    "/sbin",
+    "/etc",
+    "/var",
+    "/private",
 }
 
 
@@ -43,26 +42,16 @@ def _validate_path(path: str) -> Path:
 
     # 转换为 Path 对象
     target_path = Path(path).resolve()
-    current_dir = Path.cwd().resolve()
 
-    # 检查2：禁止访问项目外部
-    try:
-        target_path.relative_to(current_dir)
-    except ValueError:
-        raise ValueError(f"禁止访问项目外部路径: {path}")
-
-    # 检查3：禁止操作关键目录/文件
-    for forbidden in FORBIDDEN_PATHS:
-        forbidden_path = current_dir / forbidden
-        # 检查是否在禁止目录内或就是禁止目录本身
-        if target_path == forbidden_path:
-            raise ValueError(f"禁止操作关键文件/目录: {forbidden}")
+    # 检查2：禁止访问系统关键目录
+    for forbidden in FORBIDDEN_SYSTEM_PATHS:
+        forbidden_path = Path(forbidden)
         try:
             target_path.relative_to(forbidden_path)
-            raise ValueError(f"禁止操作关键目录: {forbidden}")
+            raise ValueError(f"禁止操作系统目录: {forbidden}")
         except ValueError as e:
             # 不在禁止目录内，继续检查下一个
-            if "禁止操作关键目录" in str(e):
+            if "禁止操作系统目录" in str(e):
                 raise
             continue
 
