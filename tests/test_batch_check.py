@@ -33,7 +33,7 @@ class TestBatchCheck:
             # Mock agent响应
             mock_agent = MagicMock()
 
-            def mock_invoke(input_data, config):
+            def mock_invoke(input_data: dict, config: dict) -> dict:
                 # 根据文件名返回不同结果
                 thread_id = config["configurable"]["thread_id"]
                 if "ch003" in thread_id:
@@ -238,7 +238,7 @@ class TestBatchCheck:
             # Mock agent响应
             mock_agent = MagicMock()
 
-            def mock_invoke(input_data, config):
+            def mock_invoke(input_data: dict, config: dict) -> dict:
                 thread_id = config["configurable"]["thread_id"]
                 if "ch001" in thread_id:
                     return {"messages": [MagicMock(content="- Line 5: 严重错误：时间线崩溃")]}
