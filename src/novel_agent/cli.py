@@ -1638,6 +1638,55 @@ def memory(
         raise typer.Exit(1)
 
 
+@app.command()
+def template(
+    action: str = typer.Argument(..., help="操作：list/apply"),
+    name: Optional[str] = typer.Option(None, "--name", "-n", help="模板名称"),
+    category: Optional[str] = typer.Option(None, "--category", "-c", help="模板分类过滤"),
+    var: Optional[list[str]] = typer.Option(None, "--var", help="变量，格式：KEY=VALUE"),
+) -> None:
+    """管理写作模板
+
+    支持的操作：
+    - list: 列出可用模板
+    - apply: 应用模板
+
+    示例:
+        novel-agent template list
+        novel-agent template list --category scene
+        novel-agent template apply --name scene-description --var time=黄昏 --var location=战场
+    """
+    from .tools import apply_template, list_templates
+
+    if action == "list":
+        # 列出模板
+        result = list_templates(category=category)
+        typer.echo(result)
+
+    elif action == "apply":
+        # 应用模板
+        if not name:
+            typer.echo("❌ 错误：apply 操作需要 --name 参数", err=True)
+            raise typer.Exit(1)
+
+        # 解析变量
+        variables = {}
+        if var:
+            for v in var:
+                if "=" not in v:
+                    typer.echo(f"❌ 错误：变量格式错误 '{v}'，应为 KEY=VALUE", err=True)
+                    raise typer.Exit(1)
+                key, value = v.split("=", 1)
+                variables[key.strip()] = value.strip()
+
+        result = apply_template(name, variables)
+        typer.echo(result)
+
+    else:
+        typer.echo(f"❌ 错误：未知操作 '{action}'，支持: list, apply", err=True)
+        raise typer.Exit(1)
+
+
 def main() -> None:
     """Entry point for CLI"""
     app()

@@ -55,7 +55,7 @@ repos:
       # 类型检查（使用local以使用项目依赖）
       - id: mypy-local
         name: "🔍 Mypy (type check with project deps)"
-        entry: poetry run mypy .
+        entry: poetry run mypy src
         language: system
         types: [python]
         pass_filenames: false
