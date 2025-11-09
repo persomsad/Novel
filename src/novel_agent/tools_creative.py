@@ -67,17 +67,52 @@ def _infer_tone(avg_sentence_length: float, exclamations: int, ellipsis: int) ->
     return "平稳"
 
 
-def dialogue_enhancer(dialogue_text: str, character_hint: str | None = None) -> str:
-    """Add simple beats/动作 to dialogue text."""
+def dialogue_enhancer(
+    dialogue_text: str, character_hint: str | None = None, emotion: str | None = None
+) -> str:
+    """对话润色，添加动作、表情、心理描写
 
+    Args:
+        dialogue_text: 对话文本
+        character_hint: 角色提示
+        emotion: 情绪（如：警惕、愤怒、悲伤、喜悦、平静）
+
+    Returns:
+        润色后的对话文本
+
+    Example:
+        >>> dialogue_enhancer("你是谁？", "张三", "警惕")
+        张三眉头一皱，右手按在剑柄上，警惕地问道："你是谁？"
+    """
     lines = [line.strip() for line in dialogue_text.splitlines() if line.strip()]
     enhanced: list[str] = []
+
+    # 根据情绪选择动作和语气
+    emotion_map = {
+        "警惕": {"action": "眉头一皱，右手按在剑柄上", "tone": "警惕地问道"},
+        "愤怒": {"action": "怒目圆睁，握紧拳头", "tone": "怒声喝道"},
+        "悲伤": {"action": "眼眶泛红，声音哽咽", "tone": "低声说道"},
+        "喜悦": {"action": "脸上露出笑容，眼神柔和", "tone": "欣喜地说道"},
+        "平静": {"action": "神色平静，语气淡然", "tone": "平静地说道"},
+        "惊讶": {"action": "瞪大眼睛，倒吸一口凉气", "tone": "惊呼道"},
+        "恐惧": {"action": "脸色煞白，身体颤抖", "tone": "颤声说道"},
+    }
+
     for line in lines:
         prefix = character_hint or "他"
-        beat = "沉声" if "!" in line or "？" in line else "低声"
-        # 同时删除中英文引号（U+201C/D 左右双引号，U+2018/9 左右单引号，以及英文引号）
+        # 同时删除中英文引号
         cleaned_line = line.strip("\"\u201c\u201d'\u2018\u2019")
-        enhanced.append(prefix + beat + '道："' + cleaned_line + '"')
+
+        # 根据情绪添加动作和语气
+        if emotion and emotion in emotion_map:
+            action = emotion_map[emotion]["action"]
+            tone = emotion_map[emotion]["tone"]
+            enhanced.append(f'{prefix}{action}，{tone}："{cleaned_line}"')
+        else:
+            # 默认处理
+            beat = "沉声" if "!" in line or "？" in line else "低声"
+            enhanced.append(prefix + beat + '道："' + cleaned_line + '"')
+
     return "\n".join(enhanced)
 
 
@@ -90,7 +125,23 @@ _TWIST_TEMPLATES = [
 
 def plot_twist_generator(
     current_plot: str, intensity: str = "medium", seed: int | None = None
-) -> list[str]:
+) -> str:
+    """生成情节转折建议
+
+    Args:
+        current_plot: 当前情节描述
+        intensity: 强度（low/medium/high）
+        seed: 随机种子
+
+    Returns:
+        格式化的情节转折建议文本
+
+    Example:
+        >>> plot_twist_generator("张三与李四合作", "high")
+        情节转折建议（高强度）：
+        1. 李四背叛张三，原来是卧底
+        2. ...
+    """
     rng = random.Random(seed or hash(current_plot))
     variants = []
     for template in _TWIST_TEMPLATES:
@@ -101,7 +152,20 @@ def plot_twist_generator(
             twist=_derive_twist(current_plot, intensity, rng),
         )
         variants.append(twist)
-    return variants
+
+    # 根据强度生成额外建议
+    extra_twists = _generate_extra_twists(intensity, rng)
+    variants.extend(extra_twists)
+
+    # 格式化输出
+    intensity_name = {"low": "低强度", "medium": "中强度", "high": "高强度"}.get(
+        intensity, "中强度"
+    )
+    result = [f"情节转折建议（{intensity_name}）：\n"]
+    for i, twist in enumerate(variants[:5], 1):
+        result.append(f"{i}. {twist}")
+
+    return "\n".join(result)
 
 
 def _extract_keyword(text: str, rng: random.Random, fallback: str | None = None) -> str:
@@ -124,10 +188,82 @@ def _derive_twist(plot: str, intensity: str, rng: random.Random) -> str:
     return choice
 
 
+def _generate_extra_twists(intensity: str, rng: random.Random) -> list[str]:
+    """根据强度生成额外的转折建议"""
+    twists = [
+        "神秘人物的真实身份揭晓，竟然是失散多年的亲人",
+        "看似强大的敌人其实是虚张声势，真正的威胁另有其人",
+        "关键道具被调包，导致计划全盘失败",
+        "原本的目标地其实是陷阱，幕后黑手早已布局",
+        "队伍中出现叛徒，关键信息被泄露",
+    ]
+    selected = rng.sample(twists, min(2, len(twists)))
+    if intensity == "high":
+        selected = [t + "，引发连锁反应" for t in selected]
+    return selected
+
+
+def scene_transition(from_scene: str, to_scene: str, transition_type: str = "time") -> str:
+    """生成场景过渡文本
+
+    Args:
+        from_scene: 起始场景
+        to_scene: 目标场景
+        transition_type: 过渡类型（time/space/perspective）
+
+    Returns:
+        场景过渡文本
+
+    Example:
+        >>> scene_transition("战斗结束", "回到家中", "time")
+        三天后，张三拖着疲惫的身躯回到家中。
+    """
+    if transition_type == "time":
+        time_phrases = [
+            "三天后",
+            "第二天清晨",
+            "一周之后",
+            "当晚",
+            "数日后",
+            "转眼间",
+            "时光荏苒",
+        ]
+        phrase = random.choice(time_phrases)
+        return f"{phrase}，从{from_scene}到{to_scene}。"
+
+    elif transition_type == "space":
+        space_phrases = [
+            "离开",
+            "穿过繁华的街市",
+            "一路奔波",
+            "跨越千山万水",
+            "快步走出",
+            "悄然离去",
+        ]
+        phrase = random.choice(space_phrases)
+        return f"{phrase}{from_scene}后，来到了{to_scene}。"
+
+    elif transition_type == "perspective":
+        perspective_phrases = [
+            "与此同时",
+            "另一边",
+            "而在",
+            "此时此刻",
+            "就在同一时间",
+        ]
+        phrase = random.choice(perspective_phrases)
+        return f"{phrase}，{to_scene}正在发生着另一番景象。"
+
+    else:
+        # 默认使用时间过渡
+        return f"随后，场景从{from_scene}转移到{to_scene}。"
+
+
 __all__ = [
     "calculate_word_count",
     "random_name_generator",
     "style_analyzer",
     "dialogue_enhancer",
     "plot_twist_generator",
+    "scene_transition",
 ]

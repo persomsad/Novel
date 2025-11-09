@@ -18,13 +18,16 @@ from .tools import (
     apply_template_tool,
     build_character_network_tool,
     check_style_compliance_tool,
+    dialogue_enhancer_tool,
     edit_chapter_lines,
     generate_outline_tool,
     list_templates_tool,
     multi_edit,
+    plot_twist_generator_tool,
     read_file,
     read_multiple_files_tool,
     replace_in_file,
+    scene_transition_tool,
     search_content,
     smart_context_search_tool,
     trace_foreshadow_tool,
@@ -329,6 +332,9 @@ def create_specialized_agent(
         "check_style_compliance": check_style_compliance_tool,
         "apply_style_fix": apply_style_fix_tool,
         "generate_outline": generate_outline_tool,
+        "dialogue_enhancer": dialogue_enhancer_tool,
+        "plot_twist_generator": plot_twist_generator_tool,
+        "scene_transition": scene_transition_tool,
     }
 
     # 工具预设模式
