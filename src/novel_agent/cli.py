@@ -167,6 +167,11 @@ def chat(
         "--output-format",
         help="输出格式：text（默认）、json、stream-json",
     ),
+    stream: bool = typer.Option(
+        False,
+        "--stream",
+        help="流式输出：实时显示 LLM 生成过程",
+    ),
 ) -> None:
     """启动对话模式
 
@@ -216,6 +221,7 @@ def chat(
             output_format,
             enable_watcher,
             enable_context,
+            stream,
         )
         return
 
@@ -638,6 +644,84 @@ def network(
         raise typer.Exit(code=1) from exc
 
 
+def _handle_streaming_output(
+    agent_instance: Any,
+    user_input: str,
+    config: dict,
+    output_format: str,
+) -> None:
+    """处理流式输出"""
+    import json as json_module
+    import sys
+
+    collected_chunks = []
+    all_messages = []
+
+    try:
+        # 流式调用 Agent
+        for chunk in agent_instance.stream({"messages": [("user", user_input)]}, config):
+            messages = chunk.get("messages", [])
+            if messages:
+                last_message = messages[-1]
+                if hasattr(last_message, "content"):
+                    content = last_message.content
+
+                    # 收集所有消息（用于最后计算置信度）
+                    all_messages = messages
+
+                    # 如果是新内容
+                    if content and (not collected_chunks or content != "".join(collected_chunks)):
+                        # 计算新增的部分
+                        existing_text = "".join(collected_chunks)
+                        if content.startswith(existing_text):
+                            new_text = content[len(existing_text) :]
+                            collected_chunks.append(new_text)
+
+                            # 根据格式输出
+                            if output_format == "stream-json":
+                                # 流式 JSON：每个 chunk 一行
+                                chunk_data = {"chunk": new_text, "done": False}
+                                print(json_module.dumps(chunk_data, ensure_ascii=False))
+                                sys.stdout.flush()
+                            else:
+                                # text 格式：直接输出
+                                print(new_text, end="", flush=True)
+
+        # 流式输出结束
+        if output_format == "stream-json":
+            # 计算置信度
+            from .agent import _estimate_confidence
+
+            confidence = _estimate_confidence(all_messages) if all_messages else 0
+
+            # 最后一个 chunk，包含置信度
+            final_data = {
+                "chunk": "",
+                "done": True,
+                "confidence": confidence,
+                "response": "".join(collected_chunks),
+            }
+            print(json_module.dumps(final_data, ensure_ascii=False))
+        elif output_format == "json":
+            # JSON 格式：输出完整结果
+            from .agent import _estimate_confidence
+
+            confidence = _estimate_confidence(all_messages) if all_messages else 0
+            output_data = {
+                "response": "".join(collected_chunks),
+                "confidence": confidence,
+            }
+            print("\n" + json_module.dumps(output_data, ensure_ascii=False, indent=2))
+        else:
+            # text 格式：换行
+            print()
+
+    except KeyboardInterrupt:
+        if output_format in ["json", "stream-json"]:
+            print(json_module.dumps({"error": "Interrupted", "confidence": 0}))
+        raise typer.Exit(130)
+
+
 def _run_print_mode(
     user_input: str,
     agent: str,
@@ -645,6 +729,7 @@ def _run_print_mode(
     output_format: str,
     enable_watcher: bool,
     enable_context: bool,
+    stream: bool = False,
 ) -> None:
     """执行非交互模式的单次查询"""
     import json as json_module
@@ -680,7 +765,12 @@ def _run_print_mode(
             thread_id = str(uuid.uuid4())
             config = {"configurable": {"thread_id": thread_id}}
 
-            # 调用 Agent
+            # 流式输出
+            if stream:
+                _handle_streaming_output(agent_instance, user_input, config, output_format)
+                return
+
+            # 调用 Agent（非流式）
             result = agent_instance.invoke({"messages": [("user", user_input)]}, config)
 
             # 提取响应
