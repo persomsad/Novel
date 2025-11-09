@@ -117,7 +117,7 @@ class TestNovelFileHandler:
 
         callback_files = []
 
-        def on_update(file_path: str):
+        def on_update(file_path: str) -> None:
             callback_files.append(file_path)
 
         handler = NovelFileHandler(
