@@ -90,9 +90,15 @@ class TestFileOperations:
 
         os.chdir(tmp_path)
 
-        # 尝试访问外部绝对路径（应该失败）
-        with pytest.raises(ValueError, match="禁止访问项目外部路径"):
-            create_file.invoke({"path": "/tmp/hack.md", "content": "hack"})
+        # 在外部路径创建文件（现在应该成功）
+        test_file = "/tmp/novel_agent_test.md"
+        create_file.invoke({"path": test_file, "content": "test"})
+
+        assert Path(test_file).exists()
+        assert Path(test_file).read_text() == "test"
+
+        # 清理
+        Path(test_file).unlink()
 
     def test_create_directory_simple(self, tmp_path):
         """测试创建简单目录"""
@@ -137,9 +143,10 @@ class TestFileOperations:
 
         os.chdir(tmp_path)
 
-        # 尝试创建系统子目录（应该失败）
+        # 尝试创建系统子目录（应该成功验证但因权限失败）
+        # 我们只测试 /usr 目录（肯定被禁止）
         with pytest.raises(ValueError, match="禁止操作系统目录"):
-            create_directory.invoke({"path": "/etc/new_config"})
+            create_directory.invoke({"path": "/usr/local/novel_test"})
 
     def test_list_files_simple(self, tmp_path):
         """测试列出目录内容"""

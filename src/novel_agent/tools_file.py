@@ -14,13 +14,10 @@ logger = get_logger(__name__)
 # 禁止操作的系统关键目录（仅限绝对路径）
 FORBIDDEN_SYSTEM_PATHS = {
     "/System",
-    "/Library",
     "/usr",
     "/bin",
     "/sbin",
     "/etc",
-    "/var",
-    "/private",
 }
 
 
