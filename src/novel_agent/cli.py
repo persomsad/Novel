@@ -7,6 +7,7 @@ import json
 import os
 import sys
 import uuid
+from contextlib import contextmanager
 from pathlib import Path
 from typing import Any, Optional
 
@@ -15,21 +16,44 @@ os.environ.setdefault("GRPC_VERBOSITY", "ERROR")
 os.environ.setdefault("GRPC_TRACE", "")
 os.environ.setdefault("TF_CPP_MIN_LOG_LEVEL", "3")
 
-import typer
-from langchain_google_genai import ChatGoogleGenerativeAI
-from prompt_toolkit import PromptSession
-from rich.console import Console
-from rich.markdown import Markdown
-from rich.panel import Panel
 
-from . import memory_ingest as memory_ingest_module
-from .agent import AGENT_CONFIGS, create_novel_agent, create_specialized_agent
-from .continuity import build_continuity_index
-from .logging_config import get_logger
-from .permissions import get_readonly_tools
-from .session_store import delete_session, open_checkpointer
-from .session_store import list_sessions as list_session_ids
-from .workflows import build_chapter_workflow
+@contextmanager
+def suppress_stderr():
+    """临时抑制 STDERR 输出（用于抑制 gRPC C 库的初始化日志）"""
+    stderr = sys.stderr
+    try:
+        # 重定向 stderr 到 devnull
+        sys.stderr = open(os.devnull, "w")
+        yield
+    finally:
+        # 恢复 stderr
+        sys.stderr.close()
+        sys.stderr = stderr
+
+
+import typer  # noqa: E402
+
+# 在导入 Google AI SDK 时临时抑制 STDERR（避免 gRPC C 库日志）
+with suppress_stderr():
+    from langchain_google_genai import ChatGoogleGenerativeAI  # noqa: E402
+
+from prompt_toolkit import PromptSession  # noqa: E402
+from rich.console import Console  # noqa: E402
+from rich.markdown import Markdown  # noqa: E402
+from rich.panel import Panel  # noqa: E402
+
+from . import memory_ingest as memory_ingest_module  # noqa: E402
+from .agent import (  # noqa: E402
+    AGENT_CONFIGS,
+    create_novel_agent,
+    create_specialized_agent,
+)
+from .continuity import build_continuity_index  # noqa: E402
+from .logging_config import get_logger  # noqa: E402
+from .permissions import get_readonly_tools  # noqa: E402
+from .session_store import delete_session, open_checkpointer  # noqa: E402
+from .session_store import list_sessions as list_session_ids  # noqa: E402
+from .workflows import build_chapter_workflow  # noqa: E402
 
 logger = get_logger(__name__)
 

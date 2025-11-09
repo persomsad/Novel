@@ -398,3 +398,18 @@
 2025-11-10 03:06:53 - novel_agent.novel_agent.context_retriever - INFO - 开始检索上下文，查询: ('user', '你可以做什么')
 2025-11-10 03:06:54 - novel_agent.novel_agent.context_retriever - INFO - ✓ 检索完成，返回 0 个文档
 2025-11-10 03:12:19 - novel_agent.novel_agent.file_watcher - INFO - ✓ 文件监控已停止
+2025-11-10 03:12:23 - novel_agent.novel_agent.file_watcher - INFO - 开始监控目录: /Volumes/WorkDrive/Develop/github/persomsad/Novel/chapters
+2025-11-10 03:12:23 - novel_agent.novel_agent.file_watcher - INFO - 开始监控目录: /Volumes/WorkDrive/Develop/github/persomsad/Novel/spec
+2025-11-10 03:12:23 - novel_agent.novel_agent.file_watcher - INFO - ✓ 文件监控已启动（后台模式）
+2025-11-10 03:12:23 - novel_agent.novel_agent.context_retriever - INFO - ✓ 索引已加载: 2 角色
+2025-11-10 03:12:23 - novel_agent.novel_agent.context_retriever - WARNING - 图数据库不存在: /Volumes/WorkDrive/Develop/github/persomsad/Novel/data/novel-graph.nervusdb
+2025-11-10 03:12:26 - novel_agent.novel_agent.context_retriever - INFO - 开始检索上下文，查询: ('user', '你好')
+2025-11-10 03:12:26 - novel_agent.novel_agent.context_retriever - INFO - ✓ 检索完成，返回 0 个文档
+2025-11-10 03:17:12 - novel_agent.novel_agent.file_watcher - INFO - ✓ 文件监控已停止
+2025-11-10 03:17:28 - novel_agent.novel_agent.file_watcher - INFO - 开始监控目录: /Volumes/WorkDrive/Develop/github/persomsad/Novel/chapters
+2025-11-10 03:17:28 - novel_agent.novel_agent.file_watcher - INFO - 开始监控目录: /Volumes/WorkDrive/Develop/github/persomsad/Novel/spec
+2025-11-10 03:17:28 - novel_agent.novel_agent.file_watcher - INFO - ✓ 文件监控已启动（后台模式）
+2025-11-10 03:17:28 - novel_agent.novel_agent.context_retriever - INFO - ✓ 索引已加载: 2 角色
+2025-11-10 03:17:28 - novel_agent.novel_agent.context_retriever - WARNING - 图数据库不存在: /Volumes/WorkDrive/Develop/github/persomsad/Novel/data/novel-graph.nervusdb
+2025-11-10 03:17:33 - novel_agent.novel_agent.context_retriever - INFO - 开始检索上下文，查询: ('user', '你好')
+2025-11-10 03:17:33 - novel_agent.novel_agent.context_retriever - INFO - ✓ 检索完成，返回 0 个文档
