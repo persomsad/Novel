@@ -265,10 +265,14 @@ def create_specialized_agent(
                 "未找到 Gemini API Key。请设置环境变量 GOOGLE_API_KEY 或通过 api_key 参数传入。"
             )
 
+        # 从环境变量读取模型配置
+        model_name = os.getenv("GOOGLE_MODEL", "gemini-2.0-flash-exp")
+        temperature = float(os.getenv("GOOGLE_TEMPERATURE", "0.7"))
+
         model = ChatGoogleGenerativeAI(
-            model="gemini-2.0-flash-exp",
+            model=model_name,
             google_api_key=gemini_key,
-            temperature=0.7,
+            temperature=temperature,
         )
 
     # 根据配置选择工具
