@@ -233,7 +233,7 @@ def chat(
 
 def _chat_loop(agent_instance: Any, session_id: str) -> None:
     # 创建 PromptSession 用于更好的输入处理（支持中文、特殊键等）
-    prompt_session = PromptSession()
+    prompt_session: PromptSession[str] = PromptSession()
 
     while True:
         try:

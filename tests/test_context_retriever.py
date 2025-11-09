@@ -69,6 +69,7 @@ class TestContextRetriever:
         # 加载
         retriever = ContextRetriever(project_root=tmp_path)
 
+        assert retriever.index is not None
         assert len(retriever.index["characters"]) == 2
         assert len(retriever.index["locations"]) == 1
 

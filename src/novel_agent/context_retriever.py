@@ -77,7 +77,7 @@ class ContextRetriever:
             index_path = str(self.project_root / "data" / "continuity" / "index.json")
 
         self.index_path = index_path
-        self.index: Optional[dict] = None
+        self.index: Optional[dict[str, Any]] = None
 
         # 加载索引
         self._load_index()
@@ -198,8 +198,10 @@ class ContextRetriever:
         for entity_type, entity_name in entities:
             try:
                 # 从图中搜索实体
+                # 将 entity_type 转换为 Literal 类型
+                search_type: Any = entity_type
                 result = self.graph_querier.smart_context_search(
-                    query=entity_name, search_type=entity_type, max_hops=1, limit=10
+                    query=entity_name, search_type=search_type, max_hops=1, limit=10
                 )
 
                 # 提取文档路径
@@ -384,7 +386,7 @@ class ContextRetriever:
             限制后的文档列表
         """
         limited_docs = []
-        total_tokens = 0
+        total_tokens: float = 0.0
 
         for doc in docs[:max_docs]:
             # 加载文档内容
@@ -392,7 +394,7 @@ class ContextRetriever:
                 doc.content = self._load_document_content(doc.path)
 
             # 估算 token 数（粗略：1 token ≈ 1.5 字符）
-            doc_tokens = len(doc.content) // 1.5
+            doc_tokens = len(doc.content) / 1.5
 
             if total_tokens + doc_tokens > max_tokens:
                 # 截断文档

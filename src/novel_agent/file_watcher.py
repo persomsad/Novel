@@ -7,7 +7,7 @@
 import threading
 import time
 from pathlib import Path
-from typing import Callable, Optional
+from typing import Any, Callable, Optional
 
 from watchdog.events import FileSystemEvent, FileSystemEventHandler
 from watchdog.observers import Observer
@@ -142,7 +142,7 @@ class FileWatcher:
         self.watch_dirs = watch_dirs or ["chapters", "spec"]
         self.on_update = on_update
 
-        self.observer: Optional[Observer] = None
+        self.observer: Optional[Any] = None  # Observer 类型标注问题
         self.handler = NovelFileHandler(
             project_root=self.project_root,
             index_path=self.index_path,
@@ -164,10 +164,10 @@ class FileWatcher:
                 logger.warning(f"监控目录不存在，跳过: {dir_path}")
                 continue
 
-            self.observer.schedule(self.handler, str(dir_path), recursive=True)
+            self.observer.schedule(self.handler, str(dir_path), recursive=True)  # type: ignore[no-untyped-call]
             logger.info(f"开始监控目录: {dir_path}")
 
-        self.observer.start()
+        self.observer.start()  # type: ignore[no-untyped-call]
         logger.info("✓ 文件监控已启动")
 
     def start_daemon(self) -> threading.Thread:
@@ -180,7 +180,7 @@ class FileWatcher:
             logger.warning("文件监控已在运行")
             return threading.current_thread()
 
-        def run():
+        def run() -> None:
             try:
                 self.observer = Observer()
 
@@ -191,10 +191,10 @@ class FileWatcher:
                         logger.warning(f"监控目录不存在，跳过: {dir_path}")
                         continue
 
-                    self.observer.schedule(self.handler, str(dir_path), recursive=True)
+                    self.observer.schedule(self.handler, str(dir_path), recursive=True)  # type: ignore[no-untyped-call]
                     logger.info(f"开始监控目录: {dir_path}")
 
-                self.observer.start()
+                self.observer.start()  # type: ignore[no-untyped-call]
                 logger.info("✓ 文件监控已启动（后台模式）")
 
                 # 保持线程运行
