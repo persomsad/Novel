@@ -172,6 +172,11 @@ def chat(
         "--stream",
         help="流式输出：实时显示 LLM 生成过程",
     ),
+    no_cache: bool = typer.Option(
+        False,
+        "--no-cache",
+        help="禁用缓存（默认启用）",
+    ),
 ) -> None:
     """启动对话模式
 
@@ -183,6 +188,17 @@ def chat(
         novel-agent chat --print --output-format json '检查一致性'
     """
     import sys
+
+    # 初始化缓存
+    from .cache import disable_cache, enable_cache
+
+    cache_manager = None
+    if not no_cache:
+        cache_manager = enable_cache()
+        logger.debug("缓存已启用")
+    else:
+        disable_cache()
+        logger.debug("缓存已禁用")
 
     # 处理非交互模式
     if print_mode:
@@ -222,6 +238,7 @@ def chat(
             enable_watcher,
             enable_context,
             stream,
+            cache_manager,
         )
         return
 
@@ -730,6 +747,7 @@ def _run_print_mode(
     enable_watcher: bool,
     enable_context: bool,
     stream: bool = False,
+    cache_manager: Optional[Any] = None,
 ) -> None:
     """执行非交互模式的单次查询"""
     import json as json_module
@@ -834,6 +852,15 @@ def _run_print_mode(
             console.print(f"[red]错误：{e}[/red]")
         raise typer.Exit(1)
     finally:
+        # 显示缓存统计（仅在非 JSON 格式下）
+        if cache_manager and output_format == "text":
+            stats = cache_manager.get_stats()
+            if stats["total_queries"] > 0:
+                console.print(
+                    f"\n[dim]缓存命中率: {stats['hit_rate']:.1f}% "
+                    f"({stats['hits']}/{stats['total_queries']})[/dim]"
+                )
+
         # 停止文件监控
         if watcher_thread and watcher_thread.is_alive():
             try:
