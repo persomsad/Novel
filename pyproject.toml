@@ -62,7 +62,8 @@ module = [
     "langchain_core.*",
     "langchain_google_genai",
     "langgraph.*",
-    "pytest"
+    "pytest",
+    "yaml"
 ]
 ignore_missing_imports = true
 

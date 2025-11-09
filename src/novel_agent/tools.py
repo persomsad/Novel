@@ -1403,15 +1403,15 @@ def apply_style_fix(chapter_number: int, auto_fix: bool = False) -> str:
             with open(chapter_file, "w", encoding="utf-8") as f:
                 f.write(modified)
 
-            report = [
+            fix_report: list[str] = [
                 f"# 第{chapter_number}章风格修复报告\n",
                 f"## ✅ 已应用修复（{len(fixes_applied)}项）\n",
             ]
-            report.extend(fixes_applied)
-            report.append("\n## 📝 提示\n")
-            report.append("- 文件已保存")
-            report.append("- 建议重新运行检查确认效果")
-            return "\n".join(report)
+            fix_report.extend(fixes_applied)
+            fix_report.append("\n## 📝 提示\n")
+            fix_report.append("- 文件已保存")
+            fix_report.append("- 建议重新运行检查确认效果")
+            return "\n".join(fix_report)
         else:
             return f"第{chapter_number}章没有可自动修复的问题。"
 
