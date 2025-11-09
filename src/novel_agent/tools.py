@@ -1118,7 +1118,7 @@ def list_templates(category: str | None = None) -> str:
         lines[0] = f"可用的写作模板（分类：{category}）：\n"
 
     # 按分类分组
-    by_category: dict[str, list] = {}
+    by_category: dict[str, list[dict[str, str]]] = {}
     for t in templates:
         cat = t["category"]
         if cat not in by_category:
@@ -1165,7 +1165,7 @@ def apply_template(template_name: str, variables: dict[str, str]) -> str:
         with open(template_file, encoding="utf-8") as f:
             post = frontmatter.load(f)
 
-        content = post.content
+        content: str = str(post.content)
 
         # 提取模板内容（去掉使用示例部分）
         if "---\n\n**使用示例**：" in content:
@@ -1186,7 +1186,7 @@ def apply_template(template_name: str, variables: dict[str, str]) -> str:
 
     except Exception as e:
         logger.error(f"应用模板失败: {e}")
-        return f"❌ 应用模板失败：{e}"
+        return f"❌ 应用模板失败：{str(e)}"
 
 
 # 工具装饰器包装（用于 LangChain）
