@@ -197,6 +197,17 @@ def chat(
         "-k",
         help="Gemini API Key（可选，默认从环境变量GOOGLE_API_KEY读取）",
     ),
+    prompt_file: Optional[str] = typer.Option(
+        None,
+        "--file",
+        "-f",
+        help="从文件读取 Prompt",
+    ),
+    variables: Optional[list[str]] = typer.Option(
+        None,
+        "--var",
+        help="变量替换（格式：KEY=value）",
+    ),
     agent: str = typer.Option(
         "default",
         "--agent",
@@ -310,6 +321,29 @@ def chat(
         disallowed_tools_list = [t.strip() for t in disallowed_tools.split(",")]
     # else: 默认模式，允许所有工具（allowed_tools_list = None）
 
+    # 处理从文件读取 Prompt
+    file_prompt = None
+    if prompt_file:
+        from .prompt_loader import load_prompt_from_file, parse_variables
+
+        try:
+            # 解析变量
+            variables_dict = parse_variables(variables) if variables else None
+
+            # 加载 Prompt
+            file_prompt = load_prompt_from_file(prompt_file, variables_dict)
+
+            console.print(f"[green]✓[/green] 从文件加载 Prompt: [cyan]{prompt_file}[/cyan]")
+            if variables_dict:
+                console.print(f"[green]✓[/green] 变量替换: {len(variables_dict)} 个变量")
+
+        except FileNotFoundError as e:
+            console.print(f"[red]错误：{e}[/red]")
+            raise typer.Exit(1) from e
+        except Exception as e:
+            console.print(f"[red]错误：加载 Prompt 文件失败: {e}[/red]")
+            raise typer.Exit(1) from e
+
     # 处理非交互模式
     if print_mode:
         # 验证输出格式
@@ -321,8 +355,10 @@ def chat(
             )
             raise typer.Exit(1)
 
-        # 获取输入
-        if prompt:
+        # 获取输入（优先级：文件 > 参数 > 管道）
+        if file_prompt:
+            user_input = file_prompt
+        elif prompt:
             user_input = prompt
         elif not sys.stdin.isatty():
             # 从管道读取
@@ -331,6 +367,7 @@ def chat(
             console.print(
                 "[red]错误：--print 模式需要提示词或从管道输入[/red]\n"
                 "示例: novel-agent chat --print '你的问题'\n"
+                "示例: novel-agent chat --print -f prompts/check.md\n"
                 "或: echo '你的问题' | novel-agent chat --print"
             )
             raise typer.Exit(1)
@@ -409,6 +446,40 @@ def chat(
                 console.print("[green]✓[/green] Agent初始化完成（自动上下文检索已启用）\n")
             else:
                 console.print("[green]✓[/green] Agent初始化完成\n")
+
+            # 如果有文件 prompt，先执行
+            if file_prompt:
+                console.print("[cyan]执行文件 Prompt...[/cyan]\n")
+                with console.status("[yellow]正在思考...[/yellow]"):
+                    result = agent_instance.invoke(
+                        {"messages": [("user", file_prompt)]},
+                        config={"configurable": {"thread_id": session_id}},
+                    )
+
+                if "messages" in result and result["messages"]:
+                    last_message = result["messages"][-1]
+                    response = (
+                        last_message.content
+                        if hasattr(last_message, "content")
+                        else str(last_message)
+                    )
+
+                    # 显示置信度评分
+                    confidence = result.get("confidence", 0)
+                    confidence_color = (
+                        "green" if confidence >= 80 else "yellow" if confidence >= 60 else "red"
+                    )
+                    confidence_icon = (
+                        "🟢" if confidence >= 80 else "🟡" if confidence >= 60 else "🔴"
+                    )
+
+                    console.print(
+                        f"\n[bold green]Agent[/bold green] "
+                        f"[{confidence_color}]{confidence_icon} "
+                        f"置信度: {confidence}/100[/{confidence_color}]"
+                    )
+                    console.print(Markdown(response))
+                console.print()  # 空行
 
             _chat_loop(agent_instance, session_id)
 
