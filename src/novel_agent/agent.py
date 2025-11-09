@@ -13,7 +13,10 @@ from langgraph.checkpoint.base import BaseCheckpointSaver
 from langgraph.prebuilt import create_react_agent
 
 from .tools import (
+    edit_chapter_lines,
+    multi_edit,
     read_file,
+    replace_in_file,
     search_content,
     verify_strict_references,
     verify_strict_timeline,
@@ -50,9 +53,28 @@ AGENT_CONFIGS = {
 - verify_strict_timeline()：时间线精确验证（数字、日期）
 - verify_strict_references()：引用完整性验证（伏笔ID）
 
+### 3. 精准编辑（新能力）
+你现在具备精准修改文件的能力：
+- edit_chapter_lines()：修改章节的指定行（而非重写整章）
+- replace_in_file()：查找替换文本（支持全部或指定第N次）
+- multi_edit()：批量修改多个文件（原子性操作）
+
+**何时使用编辑工具：**
+- 用户要求"修改第X章的第Y行"
+- 用户要求"把所有'张三'改成'李四'"
+- 用户要求"修改多个章节中的某个内容"
+
+**注意：**
+- 编辑工具会直接修改文件，请谨慎使用
+- 优先询问用户确认后再执行修改操作
+- multi_edit 支持自动回滚（失败时恢复原文件）
+
 ## 约束
 
 - 创建章节时使用 write_chapter 工具
+- 修改章节特定行时使用 edit_chapter_lines 工具
+- 批量替换文本时使用 replace_in_file 工具
+- 批量修改多个文件时使用 multi_edit 工具
 - 搜索关键词时使用 search_content 工具
 - 读取文件时使用 read_file 工具
 - 始终提供具体、可操作的建议
@@ -64,6 +86,9 @@ AGENT_CONFIGS = {
             "search_content",
             "verify_timeline",
             "verify_references",
+            "edit_chapter_lines",
+            "replace_in_file",
+            "multi_edit",
         ],
     },
     "outline-architect": {
@@ -241,6 +266,9 @@ def create_specialized_agent(
         "search_content": search_content_tool,
         "verify_timeline": verify_timeline_tool,
         "verify_references": verify_references_tool,
+        "edit_chapter_lines": edit_chapter_lines_tool,
+        "replace_in_file": replace_in_file_tool,
+        "multi_edit": multi_edit_tool,
     }
 
     tools: list[BaseTool] = [tool_map[t] for t in config["tools"]]
@@ -344,48 +372,198 @@ def search_content_tool(keyword: str) -> str:
 
 @tool
 def verify_timeline_tool() -> str:
-    """时间线精确验证
+    """时间线精确验证（增强版：输出行号和修复建议）
 
     Returns:
-        验证结果（格式化字符串）
+        验证结果（格式化字符串，包含文件名、行号、错误类型、修复建议）
     """
     result = verify_strict_timeline()
-    if not result["errors"] and not result["warnings"]:
+
+    summary = result.get("summary", {})
+    if summary.get("total_errors", 0) == 0 and summary.get("total_warnings", 0) == 0:
         return "✅ 时间线检查通过，未发现问题"
 
     output = []
+
+    # 输出摘要
+    output.append("📊 时间线验证摘要：")
+    output.append(f"  - 错误: {summary.get('total_errors', 0)}")
+    output.append(f"  - 警告: {summary.get('total_warnings', 0)}")
+    output.append(f"  - 可自动修复: {'是' if summary.get('auto_fixable') else '否'}")
+    output.append("")
+
+    # 输出详细错误
     if result["errors"]:
         output.append("❌ 发现时间线错误：")
-        output.extend(f"  - {e}" for e in result["errors"])
+        for err in result["errors"]:
+            file = err.get("file", "未知")
+            line = err.get("line", 0)
+            msg = err.get("message", "")
+            suggestion = err.get("suggestion", "")
 
+            output.append(f"\n  📄 {file}:{line}")
+            output.append(f"     问题: {msg}")
+            output.append(f"     建议: {suggestion}")
+
+    # 输出警告
     if result["warnings"]:
-        output.append("⚠️  时间线警告：")
-        output.extend(f"  - {w}" for w in result["warnings"])
+        output.append("\n⚠️  时间线警告：")
+        for warn in result["warnings"]:
+            file = warn.get("file", "未知")
+            line = warn.get("line", 0)
+            msg = warn.get("message", "")
+            suggestion = warn.get("suggestion", "")
+
+            output.append(f"\n  📄 {file}:{line}")
+            output.append(f"     问题: {msg}")
+            output.append(f"     建议: {suggestion}")
 
     return "\n".join(output)
 
 
 @tool
 def verify_references_tool() -> str:
-    """引用完整性验证
+    """引用完整性验证（增强版：输出行号和修复建议）
 
     Returns:
-        验证结果（格式化字符串）
+        验证结果（格式化字符串，包含文件名、行号、错误类型、修复建议）
     """
     result = verify_strict_references()
-    if not result["errors"] and not result["warnings"]:
+
+    summary = result.get("summary", {})
+    if summary.get("total_errors", 0) == 0 and summary.get("total_warnings", 0) == 0:
         return "✅ 引用检查通过，未发现问题"
 
     output = []
+
+    # 输出摘要
+    output.append("📊 引用验证摘要：")
+    output.append(f"  - 错误: {summary.get('total_errors', 0)}")
+    output.append(f"  - 警告: {summary.get('total_warnings', 0)}")
+    output.append(f"  - 可自动修复: {'是' if summary.get('auto_fixable') else '否'}")
+    output.append("")
+
+    # 输出详细错误
     if result["errors"]:
         output.append("❌ 发现引用错误：")
-        output.extend(f"  - {e}" for e in result["errors"])
+        for err in result["errors"]:
+            file = err.get("file", "未知")
+            line = err.get("line", 0)
+            msg = err.get("message", "")
+            suggestion = err.get("suggestion", "")
 
+            output.append(f"\n  📄 {file}:{line}")
+            output.append(f"     问题: {msg}")
+            output.append(f"     建议: {suggestion}")
+
+    # 输出警告
     if result["warnings"]:
-        output.append("⚠️  引用警告：")
-        output.extend(f"  - {w}" for w in result["warnings"])
+        output.append("\n⚠️  引用警告：")
+        for warn in result["warnings"]:
+            file = warn.get("file", "未知")
+            line = warn.get("line", 0)
+            msg = warn.get("message", "")
+            suggestion = warn.get("suggestion", "")
+
+            output.append(f"\n  📄 {file}:{line}")
+            output.append(f"     问题: {msg}")
+            output.append(f"     建议: {suggestion}")
 
     return "\n".join(output)
+
+
+@tool
+def edit_chapter_lines_tool(
+    chapter_number: int, start_line: int, end_line: int, new_content: str
+) -> str:
+    """精准修改章节的指定行
+
+    用于修改章节的特定行，而不是重写整个章节。
+    适用场景：修改对话、调整描写、更正错误等。
+
+    Args:
+        chapter_number: 章节编号（1-999）
+        start_line: 起始行号（从1开始）
+        end_line: 结束行号（包含，从1开始）
+        new_content: 新内容（将替换指定行）
+
+    Returns:
+        操作结果描述
+
+    Example:
+        # 修改第1章的第10-12行
+        edit_chapter_lines_tool(1, 10, 12, "新的段落内容\\n可以是多行")
+    """
+    return edit_chapter_lines(chapter_number, start_line, end_line, new_content)
+
+
+@tool
+def replace_in_file_tool(
+    file_path: str, search_text: str, replacement: str, occurrence: int | None = None
+) -> str:
+    """在文件中查找并替换文本
+
+    用于批量替换文件中的文本，支持全部替换或指定第N次出现。
+    适用场景：角色改名、地名修改、术语统一等。
+
+    Args:
+        file_path: 文件路径（如 "chapters/ch001.md"）
+        search_text: 要查找的文本
+        replacement: 替换文本
+        occurrence: 替换第几次出现（None=全部替换，1=第一次，2=第二次...）
+
+    Returns:
+        操作结果描述
+
+    Example:
+        # 将所有"张三"替换为"李四"
+        replace_in_file_tool("chapters/ch001.md", "张三", "李四")
+
+        # 只替换第一次出现的"张三"
+        replace_in_file_tool("chapters/ch001.md", "张三", "李四", 1)
+    """
+    return replace_in_file(file_path, search_text, replacement, occurrence)
+
+
+@tool
+def multi_edit_tool(operations: str) -> str:
+    """批量编辑多个文件
+
+    用于一次性修改多个文件，支持原子性操作（全部成功或全部回滚）。
+    适用场景：批量角色改名、统一术语、多章节同步修改等。
+
+    Args:
+        operations: JSON格式的操作列表，例如：
+            ```json
+            [
+                {
+                    "type": "replace",
+                    "file": "chapters/ch001.md",
+                    "search": "张三",
+                    "replace": "李四"
+                },
+                {
+                    "type": "replace",
+                    "file": "chapters/ch002.md",
+                    "search": "张三",
+                    "replace": "李四"
+                }
+            ]
+            ```
+
+    Returns:
+        操作结果描述
+
+    Note:
+        如果任何一个操作失败，所有修改会自动回滚
+    """
+    import json
+
+    try:
+        ops_list = json.loads(operations)
+        return multi_edit(ops_list)
+    except json.JSONDecodeError as e:
+        return f"❌ JSON格式错误: {e}"
 
 
 def _estimate_confidence(messages: Any) -> int:

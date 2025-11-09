@@ -107,15 +107,47 @@ def build_chapter_workflow(
         timeline = verify_strict_timeline()
         references = verify_strict_references()
         issues = []
+
+        # 新格式：errors/warnings 是 dict 列表
         if timeline["errors"]:
-            issues.append("时间线错误:\n- " + "\n- ".join(timeline["errors"]))
+            issues.append("时间线错误:")
+            for err in timeline["errors"]:
+                file = err.get("file", "")
+                line = err.get("line", 0)
+                msg = err.get("message", "")
+                suggestion = err.get("suggestion", "")
+                issues.append(f"  - [{file}:{line}] {msg}")
+                if suggestion:
+                    issues.append(f"    建议: {suggestion}")
+
         if timeline["warnings"]:
-            issues.append("时间线警告:\n- " + "\n- ".join(timeline["warnings"]))
+            issues.append("时间线警告:")
+            for warn in timeline["warnings"]:
+                file = warn.get("file", "")
+                line = warn.get("line", 0)
+                msg = warn.get("message", "")
+                issues.append(f"  - [{file}:{line}] {msg}")
+
         if references["errors"]:
-            issues.append("引用错误:\n- " + "\n- ".join(references["errors"]))
+            issues.append("引用错误:")
+            for err in references["errors"]:
+                file = err.get("file", "")
+                line = err.get("line", 0)
+                msg = err.get("message", "")
+                suggestion = err.get("suggestion", "")
+                issues.append(f"  - [{file}:{line}] {msg}")
+                if suggestion:
+                    issues.append(f"    建议: {suggestion}")
+
         if references["warnings"]:
-            issues.append("引用警告:\n- " + "\n- ".join(references["warnings"]))
-        return {"issues": "\n\n".join(issues) or "未发现严重问题"}
+            issues.append("引用警告:")
+            for warn in references["warnings"]:
+                file = warn.get("file", "")
+                line = warn.get("line", 0)
+                msg = warn.get("message", "")
+                issues.append(f"  - [{file}:{line}] {msg}")
+
+        return {"issues": "\n".join(issues) or "未发现严重问题"}
 
     builder.add_node("verify", verify_node)
 

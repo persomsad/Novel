@@ -114,7 +114,13 @@ class TestConsistencyTools:
         monkeypatch.setenv("NERVUSDB_DB_PATH", "demo.nervusdb")
         mock_cypher.return_value = {"rows": []}
         result = verify_strict_timeline()
-        assert any("NervusDB" in err for err in result["errors"]), result
+
+        # 新格式：errors 是 dict 列表，检查 message 或 type 字段
+        has_nervus_error = any(
+            "NervusDB" in err.get("message", "") or err.get("type") == "missing_in_nervus"
+            for err in result["errors"]
+        )
+        assert has_nervus_error, result
         monkeypatch.delenv("NERVUSDB_DB_PATH")
 
     @mock.patch("novel_agent.tools.nervus_cli.cypher_query")
@@ -124,5 +130,11 @@ class TestConsistencyTools:
         monkeypatch.setenv("NERVUSDB_DB_PATH", "demo.nervusdb")
         mock_cypher.return_value = {"rows": []}
         result = verify_strict_references()
-        assert any("NervusDB" in err for err in result["errors"]), result
+
+        # 新格式：errors 是 dict 列表，检查 message 或 type 字段
+        has_nervus_error = any(
+            "NervusDB" in err.get("message", "") or err.get("type") == "missing_in_nervus"
+            for err in result["errors"]
+        )
+        assert has_nervus_error, result
         monkeypatch.delenv("NERVUSDB_DB_PATH")
