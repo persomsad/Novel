@@ -11,7 +11,7 @@ import os
 from pathlib import Path
 from typing import Any, Optional
 
-import diskcache
+import diskcache  # type: ignore[import-untyped]
 from langchain_core.caches import InMemoryCache
 from langchain_core.globals import set_llm_cache
 
