@@ -759,8 +759,10 @@ def _chat_loop(agent_instance: Any, session_id: str, input_offset: int = 5) -> N
             if "messages" in result and result["messages"]:
                 last_message = result["messages"][-1]
                 content = last_message.content if hasattr(last_message, "content") else last_message
-                # 确保 response 是字符串（LangChain 的 content 可能是列表）
-                response = str(content) if not isinstance(content, str) else content
+                # 提取纯文本（处理字符串、列表等类型）
+                from .agent import _extract_text_from_content
+
+                response = _extract_text_from_content(content)
 
                 # 显示置信度评分
                 confidence = result.get("confidence", 0)
@@ -1366,8 +1368,10 @@ def _run_print_mode(
 
             last_message = messages[-1]
             content = last_message.content if hasattr(last_message, "content") else last_message
-            # 确保 response 是字符串（LangChain 的 content 可能是列表）
-            response = str(content) if not isinstance(content, str) else content
+            # 提取纯文本（处理字符串、列表等类型）
+            from .agent import _extract_text_from_content
+
+            response = _extract_text_from_content(content)
 
             # 计算置信度
             from .agent import _estimate_confidence
@@ -1517,8 +1521,10 @@ def _check_file_task(file: Path, agent: Any, auto_fix: bool) -> dict[str, Any]:
 
         last_message = result["messages"][-1]
         content = last_message.content if hasattr(last_message, "content") else last_message
-        # 确保 response 是字符串（LangChain 的 content 可能是列表）
-        response = str(content) if not isinstance(content, str) else content
+        # 提取纯文本（处理字符串、列表等类型）
+        from .agent import _extract_text_from_content
+
+        response = _extract_text_from_content(content)
 
         # 解析响应
         if "通过" in response or "no issues" in response.lower():

@@ -42,6 +42,32 @@ from .tools_task import (
     start_task,
 )
 
+
+def _extract_text_from_content(content: Any) -> str:
+    """从 LangChain 消息内容中提取纯文本
+
+    LangChain 的 message.content 可能是：
+    - 字符串：直接返回
+    - 列表：提取每个元素的 text 字段
+    - 其他：转换为字符串
+
+    Args:
+        content: 消息内容
+
+    Returns:
+        提取的文本字符串
+    """
+    if isinstance(content, str):
+        return content
+    elif isinstance(content, list):
+        # 提取列表中的文本内容
+        return " ".join(
+            item.get("text", str(item)) if isinstance(item, dict) else str(item) for item in content
+        )
+    else:
+        return str(content)
+
+
 # Agent配置注册表
 AGENT_CONFIGS = {
     "default": {
@@ -375,8 +401,8 @@ def create_specialized_agent(
                 # 获取最后一条用户消息
                 last_message = messages[-1]
                 content = last_message.content if hasattr(last_message, "content") else last_message
-                # 确保 query 是字符串（LangChain 的 content 可能是列表）
-                query = str(content) if not isinstance(content, str) else content
+                # 提取纯文本（处理字符串、列表等类型）
+                query = _extract_text_from_content(content)
 
                 # 检索相关上下文
                 try:
@@ -799,9 +825,8 @@ def _estimate_confidence(messages: Any) -> int:
 
     last = messages[-1]
     content = getattr(last, "content", None) or str(last)
-    # 确保 content 是字符串（LangChain 的 content 可能是列表）
-    if not isinstance(content, str):
-        content = str(content)
+    # 提取纯文本（处理字符串、列表等类型）
+    content = _extract_text_from_content(content)
 
     # 基础分：根据输出长度
     words = len(content.split())

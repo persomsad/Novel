@@ -269,8 +269,16 @@ class LongTermMemory:
         Returns:
             相关记忆列表
         """
-        # 确保 context 是字符串
-        if not isinstance(context, str):
+        # 确保 context 是字符串（处理列表等类型）
+        if isinstance(context, str):
+            pass  # 已经是字符串
+        elif isinstance(context, list):
+            # 提取列表中的文本内容
+            context = " ".join(
+                item.get("text", str(item)) if isinstance(item, dict) else str(item)
+                for item in context
+            )
+        else:
             context = str(context)
 
         # 简单实现：提取关键词并搜索
