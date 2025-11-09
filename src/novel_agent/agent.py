@@ -20,8 +20,10 @@ from .tools import (
     write_chapter,
 )
 
-# System Prompt（参考 ADR-001）
-SYSTEM_PROMPT = """你是一个小说写作助手，具有强大的推理和分析能力。
+# Agent配置注册表
+AGENT_CONFIGS = {
+    "default": {
+        "system_prompt": """你是一个小说写作助手，具有强大的推理和分析能力。
 
 ## 核心能力
 
@@ -48,22 +50,6 @@ SYSTEM_PROMPT = """你是一个小说写作助手，具有强大的推理和分�
 - verify_strict_timeline()：时间线精确验证（数字、日期）
 - verify_strict_references()：引用完整性验证（伏笔ID）
 
-## 工作流示例
-
-用户："检查第3章角色是否一致"
-
-你的推理过程：
-1. Thought: 我需要先了解角色设定
-   Action: read_file("spec/knowledge/character-profiles.md")
-   Observation: 主角性格：善良但缺乏自信
-
-2. Thought: 现在读取第3章内容
-   Action: read_file("chapters/ch003.md")
-   Observation: 第3章主角突然变得非常勇敢...
-
-3. Thought: 发现矛盾！设定说"缺乏自信"，但第3章"非常勇敢"
-   Final Answer: ⚠️ 角色一致性问题 + 详细修复建议
-
 ## 约束
 
 - 创建章节时使用 write_chapter 工具
@@ -71,25 +57,127 @@ SYSTEM_PROMPT = """你是一个小说写作助手，具有强大的推理和分�
 - 读取文件时使用 read_file 工具
 - 始终提供具体、可操作的建议
 - 用中文回复
-"""
+""",
+        "tools": [
+            "read_file",
+            "write_chapter",
+            "search_content",
+            "verify_timeline",
+            "verify_references",
+        ],
+    },
+    "outline-architect": {
+        "system_prompt": """你是一位资深小说大纲设计师，擅长将创意转化为结构化的章节蓝图。
+
+## 核心能力
+
+你的专长是设计小说大纲架构，分析用户需求后生成完整的章节结构蓝图，包括情节线、冲突点、高潮设计。
+
+## 核心流程
+
+### 1. 需求分析
+- 理解小说类型（玄幻、都市、科幻、言情等）
+- 确定目标读者群体
+- 识别核心冲突和主题
+
+### 2. 结构设计
+根据小说类型选择合适的结构：
+- **三幕式结构**：开端（25%）→ 对抗（50%）→ 结局（25%）
+- **起承转合**：起（引入）→ 承（发展）→ 转（高潮）→ 合（结局）
+- **英雄之旅**：平凡世界 → 冒险召唤 → 试炼 → 回归
+
+### 3. 章节规划
+为每一章设计：
+- **章节目标**：这一章要达成什么
+- **情节点**：关键事件和转折
+- **字数预估**：建议字数范围
+- **情感曲线**：读者情绪的起伏
+
+### 4. 情节线设计
+- **主线**：核心故事线，贯穿始终
+- **支线**：辅助情节，丰富故事
+- **伏笔**：提前埋下的线索
+
+## 输出格式
+
+生成的大纲必须包含以下部分：
+
+### 1. 小说概要
+- 类型、主题、目标读者
+- 核心冲突
+- 预计总字数
+
+### 2. 章节清单
+```markdown
+## 第一章：[章节标题]
+- **目标**：[这一章要达成什么]
+- **情节点**：
+  1. [关键事件1]
+  2. [关键事件2]
+- **字数**：约X千字
+- **情感**：[平静/紧张/高潮/低谷]
+```
+
+### 3. 情节线地图
+```markdown
+### 主线
+- 第1-3章：[主线发展]
+- 第4-6章：[主线发展]
+
+### 支线A：[支线名称]
+- 第2章：[支线开始]
+- 第5章：[支线发展]
+
+### 伏笔清单
+- 第1章：[伏笔内容] → 第10章回收
+```
+
+### 4. 关键冲突点
+- **起始冲突**（第X章）：[描述]
+- **中期危机**（第X章）：[描述]
+- **最终高潮**（第X章）：[描述]
+
+## 约束
+
+- 使用 read_file 读取现有设定文件（如果有）
+- 使用 search_content 搜索相关参考资料
+- 输出必须是结构化的Markdown格式
+- 章节数量根据小说类型和字数合理规划（通常10-50章）
+- 每章字数建议：网文3000-5000字，实体书5000-8000字
+- 用中文回复
+""",
+        "tools": ["read_file", "search_content"],
+    },
+}
+
+# 向后兼容
+SYSTEM_PROMPT = AGENT_CONFIGS["default"]["system_prompt"]
 
 
-def create_novel_agent(
+def create_specialized_agent(
+    agent_type: str = "default",
     model: BaseChatModel | None = None,
     api_key: str | None = None,
     checkpointer: BaseCheckpointSaver[Any] | None = None,
 ) -> Any:
-    """创建小说写作 Agent
+    """创建专业化Agent
 
     Args:
-        model: LLM 模型（可选，默认使用 Gemini 2.0 Flash）
+        agent_type: Agent类型（default, outline-architect等）
+        model: LLM模型（可选，默认使用Gemini 2.0 Flash）
         api_key: Gemini API Key（可选，从环境变量读取）
-        checkpointer: 会话持久化存储（可选，不传则无持久化）
+        checkpointer: 会话持久化存储（可选）
 
     Returns:
-        ReAct Agent 实例
+        ReAct Agent实例
     """
-    # 配置 LLM
+    # 获取Agent配置
+    if agent_type not in AGENT_CONFIGS:
+        raise ValueError(f"未知的Agent类型: {agent_type}。可用类型: {list(AGENT_CONFIGS.keys())}")
+
+    config = AGENT_CONFIGS[agent_type]
+
+    # 配置LLM
     if model is None:
         gemini_key = api_key or os.getenv("GOOGLE_API_KEY")
         if not gemini_key:
@@ -103,19 +191,21 @@ def create_novel_agent(
             temperature=0.7,
         )
 
-    # 定义工具
-    tools: list[BaseTool] = [
-        read_file_tool,
-        write_chapter_tool,
-        search_content_tool,
-        verify_timeline_tool,
-        verify_references_tool,
-    ]
+    # 根据配置选择工具
+    tool_map = {
+        "read_file": read_file_tool,
+        "write_chapter": write_chapter_tool,
+        "search_content": search_content_tool,
+        "verify_timeline": verify_timeline_tool,
+        "verify_references": verify_references_tool,
+    }
 
-    # 配置system message（通过model）
-    bound_model = model.bind(system=SYSTEM_PROMPT)
+    tools: list[BaseTool] = [tool_map[t] for t in config["tools"]]
 
-    # 创建 ReAct Agent
+    # 配置system message
+    bound_model = model.bind(system=config["system_prompt"])
+
+    # 创建ReAct Agent
     agent = create_react_agent(
         model=bound_model,
         tools=tools,
@@ -123,6 +213,24 @@ def create_novel_agent(
     )
 
     return agent
+
+
+def create_novel_agent(
+    model: BaseChatModel | None = None,
+    api_key: str | None = None,
+    checkpointer: BaseCheckpointSaver[Any] | None = None,
+) -> Any:
+    """创建小说写作Agent（向后兼容）
+
+    Args:
+        model: LLM模型（可选，默认使用Gemini 2.0 Flash）
+        api_key: Gemini API Key（可选，从环境变量读取）
+        checkpointer: 会话持久化存储（可选）
+
+    Returns:
+        ReAct Agent实例
+    """
+    return create_specialized_agent("default", model, api_key, checkpointer)
 
 
 # ========== Tool Wrappers ==========

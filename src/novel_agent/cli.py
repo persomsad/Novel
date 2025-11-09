@@ -14,7 +14,7 @@ from rich.markdown import Markdown
 from rich.panel import Panel
 from rich.prompt import Prompt
 
-from .agent import create_novel_agent
+from .agent import AGENT_CONFIGS, create_novel_agent, create_specialized_agent
 from .logging_config import get_logger
 
 logger = get_logger(__name__)
@@ -35,17 +35,26 @@ def chat(
         "-k",
         help="Gemini API Key（可选，默认从环境变量GOOGLE_API_KEY读取）",
     ),
+    agent: str = typer.Option(
+        "default",
+        "--agent",
+        "-a",
+        help=f"Agent类型（可选值: {', '.join(AGENT_CONFIGS.keys())}）",
+    ),
 ) -> None:
     """启动对话模式
 
     示例:
         novel-agent chat
-        novel-agent chat --api-key YOUR_API_KEY
+        novel-agent chat --agent outline-architect
+        novel-agent chat --api-key YOUR_API_KEY --agent outline-architect
     """
+    # 显示Agent类型
+    agent_name = agent if agent != "default" else "通用写作助手"
     console.print(
         Panel.fit(
-            "[bold cyan]🤖 Novel Agent[/bold cyan]\n"
-            "AI写作助手已启动\n\n"
+            f"[bold cyan]🤖 Novel Agent[/bold cyan]\n"
+            f"AI写作助手已启动 - [yellow]{agent_name}[/yellow]\n\n"
             "[dim]输入 'exit' 或按 Ctrl+C 退出[/dim]",
             border_style="cyan",
         )
@@ -54,7 +63,7 @@ def chat(
     try:
         # 创建Agent
         with console.status("[yellow]正在初始化Agent...[/yellow]"):
-            agent = create_novel_agent(api_key=api_key)
+            agent_instance = create_specialized_agent(agent, api_key=api_key)
         console.print("[green]✓[/green] Agent初始化完成\n")
 
         # 对话循环
@@ -73,7 +82,7 @@ def chat(
                 # 调用Agent（使用会话ID保存状态）
                 with console.status("[yellow]正在思考...[/yellow]"):
                     session_id = str(uuid.uuid4())
-                    result = agent.invoke(
+                    result = agent_instance.invoke(
                         {"messages": [("user", user_input)]},
                         config={"configurable": {"thread_id": session_id}},
                     )
