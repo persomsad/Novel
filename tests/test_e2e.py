@@ -48,8 +48,8 @@ class TestE2ECheckCommand:
             # 验证命令成功
             assert result.exit_code == 0
 
-            # 验证输出包含检查结果
-            assert "章节内容正常" in result.stdout or "检查结果" in result.stdout
+            # 验证输出包含检查结果（新格式：显示 "通过"）
+            assert "检查通过" in result.stdout or "通过" in result.stdout
 
             # 验证agent被正确调用
             assert mock_create_agent.called
@@ -77,7 +77,7 @@ class TestE2ECheckCommand:
             # Mock agent发现问题
             mock_agent = MagicMock()
             mock_agent.invoke.return_value = {
-                "messages": [MagicMock(content="⚠️ 发现角色一致性问题：李明的性格前后矛盾")]
+                "messages": [MagicMock(content="- Line 3: 李明的性格前后矛盾（内向但主动开派对）")]
             }
             mock_create_agent.return_value = mock_agent
 
@@ -90,8 +90,8 @@ class TestE2ECheckCommand:
             # 验证命令成功
             assert result.exit_code == 0
 
-            # 验证输出包含问题报告
-            assert "角色一致性问题" in result.stdout or "检查结果" in result.stdout
+            # 验证输出包含问题报告（新格式：显示 "发现问题"）
+            assert "发现问题" in result.stdout or "Line 3" in result.stdout
 
 
 class TestE2ECreateChapter:

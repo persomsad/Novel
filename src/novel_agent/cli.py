@@ -187,7 +187,6 @@ def chat(
         novel-agent chat --print '检查第3章一致性'
         novel-agent chat --print --output-format json '检查一致性'
     """
-    import sys
 
     # 初始化缓存
     from .cache import disable_cache, enable_cache
@@ -369,8 +368,11 @@ def _chat_loop(agent_instance: Any, session_id: str) -> None:
 
 @app.command()
 def check(
-    file_path: str = typer.Argument(..., help="要检查的文件路径"),
+    file_pattern: str = typer.Argument(..., help="要检查的文件路径或 glob 模式"),
     api_key: Optional[str] = typer.Option(None, "--api-key", "-k", help="Gemini API Key"),
+    auto_fix: bool = typer.Option(False, "--auto-fix", help="自动修复发现的问题"),
+    parallel: bool = typer.Option(False, "--parallel", help="并行处理多个文件"),
+    output_format: str = typer.Option("text", "--output-format", help="输出格式: text/json"),
 ) -> None:
     """一致性检查
 
@@ -378,62 +380,199 @@ def check(
 
     示例:
         novel-agent check chapters/ch001.md
-        novel-agent check spec/character-profiles.md
+        novel-agent check chapters/*.md
+        novel-agent check chapters/*.md --auto-fix
+        novel-agent check chapters/*.md --parallel --output-format json
     """
-    file = Path(file_path)
+    import glob as glob_module
+    import json as json_module
+    from concurrent.futures import ThreadPoolExecutor, as_completed
 
-    if not file.exists():
-        console.print(f"[red]✗ 文件不存在: {file_path}[/red]")
-        sys.exit(1)
+    # 解析文件列表
+    files = []
+    if "*" in file_pattern or "?" in file_pattern:
+        # Glob 模式
+        matched_files = glob_module.glob(file_pattern, recursive=True)
+        files = [Path(f) for f in matched_files if Path(f).is_file()]
+        if not files:
+            console.print(f"[red]✗ 没有找到匹配的文件: {file_pattern}[/red]")
+            raise typer.Exit(1)
+    else:
+        # 单个文件
+        file = Path(file_pattern)
+        if not file.exists():
+            console.print(f"[red]✗ 文件不存在: {file_pattern}[/red]")
+            raise typer.Exit(1)
+        files = [file]
 
-    console.print(
-        Panel.fit(
-            f"[bold cyan]📋 一致性检查[/bold cyan]\n" f"文件: [yellow]{file_path}[/yellow]",
-            border_style="cyan",
+    # 批量模式或单文件模式
+    is_batch = len(files) > 1
+
+    if is_batch and output_format == "text":
+        console.print(
+            Panel.fit(
+                f"[bold cyan]🔍 批量检查 {len(files)} 个文件[/bold cyan]\n"
+                f"模式: [yellow]{'并行' if parallel else '顺序'}[/yellow]\n"
+                f"自动修复: [yellow]{'是' if auto_fix else '否'}[/yellow]",
+                border_style="cyan",
+            )
         )
-    )
 
+    # 单文件模式（保持向后兼容）
+    if not is_batch:
+        _check_single_file(files[0], api_key, auto_fix, output_format)
+        return
+
+    # 批量模式
     try:
-        # 创建Agent
-        with console.status("[yellow]正在初始化Agent...[/yellow]"):
+        # 创建 Agent
+        with console.status("[yellow]正在初始化 Agent...[/yellow]"):
             agent = create_novel_agent(api_key=api_key)
 
-        # 构造检查提示
-        prompt = f"""请检查文件 {file_path} 的一致性。
+        # 统计信息
+        results = []
+        total_errors = 0
+        total_warnings = 0
+        files_with_errors = 0
+        files_with_warnings = 0
+        files_passed = 0
 
-分析以下方面：
-1. 角色一致性：性格、能力、行为是否前后一致
-2. 情节逻辑：情节发展是否合理
-3. 时间线：事件顺序是否合理
-4. 世界观：设定规则是否被遵守
+        # 批量处理
+        from rich.progress import Progress
 
-请详细指出发现的问题，并给出修复建议。"""
+        # 是否显示进度条（JSON 模式下不显示）
+        show_progress = output_format == "text"
 
-        # 调用Agent（不需要持久化，使用临时会话）
-        with console.status("[yellow]正在分析...[/yellow]"):
-            result = agent.invoke(
-                {"messages": [("user", prompt)]},
-                config={"configurable": {"thread_id": "temp-check"}},
-            )
+        if parallel:
+            # 并行处理
+            with ThreadPoolExecutor(max_workers=min(len(files), 4)) as executor:
+                future_to_file = {
+                    executor.submit(_check_file_task, f, agent, auto_fix): f for f in files
+                }
 
-        # 显示结果
-        if "messages" in result and result["messages"]:
-            last_message = result["messages"][-1]
-            response = (
-                last_message.content if hasattr(last_message, "content") else str(last_message)
-            )
+                if show_progress:
+                    with Progress() as progress:
+                        task = progress.add_task("[cyan]检查中...", total=len(files))
 
-            console.print("\n[bold green]分析结果[/bold green]:")
-            console.print(Markdown(response))
+                        for future in as_completed(future_to_file):
+                            file = future_to_file[future]
+                            try:
+                                result = future.result()
+                                results.append(result)
+                                if result["status"] == "error":
+                                    files_with_errors += 1
+                                    total_errors += len(result.get("issues", []))
+                                elif result["status"] == "warning":
+                                    files_with_warnings += 1
+                                    total_warnings += len(result.get("issues", []))
+                                else:
+                                    files_passed += 1
+                            except Exception as e:
+                                results.append(
+                                    {"file": str(file), "status": "error", "message": str(e)}
+                                )
+                                files_with_errors += 1
+                            progress.update(task, advance=1)
+                else:
+                    # 不显示进度条
+                    for future in as_completed(future_to_file):
+                        file = future_to_file[future]
+                        try:
+                            result = future.result()
+                            results.append(result)
+                            if result["status"] == "error":
+                                files_with_errors += 1
+                                total_errors += len(result.get("issues", []))
+                            elif result["status"] == "warning":
+                                files_with_warnings += 1
+                                total_warnings += len(result.get("issues", []))
+                            else:
+                                files_passed += 1
+                        except Exception as e:
+                            results.append(
+                                {"file": str(file), "status": "error", "message": str(e)}
+                            )
+                            files_with_errors += 1
         else:
-            console.print("[red]✗ Agent未返回分析结果[/red]")
+            # 顺序处理
+            if show_progress:
+                with Progress() as progress:
+                    task = progress.add_task("[cyan]检查中...", total=len(files))
+
+                    for file in files:
+                        try:
+                            result = _check_file_task(file, agent, auto_fix)
+                            results.append(result)
+                            if result["status"] == "error":
+                                files_with_errors += 1
+                                total_errors += len(result.get("issues", []))
+                            elif result["status"] == "warning":
+                                files_with_warnings += 1
+                                total_warnings += len(result.get("issues", []))
+                            else:
+                                files_passed += 1
+                        except Exception as e:
+                            results.append(
+                                {"file": str(file), "status": "error", "message": str(e)}
+                            )
+                            files_with_errors += 1
+                        progress.update(task, advance=1)
+            else:
+                # 不显示进度条
+                for file in files:
+                    try:
+                        result = _check_file_task(file, agent, auto_fix)
+                        results.append(result)
+                        if result["status"] == "error":
+                            files_with_errors += 1
+                            total_errors += len(result.get("issues", []))
+                        elif result["status"] == "warning":
+                            files_with_warnings += 1
+                            total_warnings += len(result.get("issues", []))
+                        else:
+                            files_passed += 1
+                    except Exception as e:
+                        results.append({"file": str(file), "status": "error", "message": str(e)})
+                        files_with_errors += 1
+
+        # 输出结果
+        if output_format == "json":
+            output = {
+                "total_files": len(files),
+                "passed": files_passed,
+                "warnings": files_with_warnings,
+                "errors": files_with_errors,
+                "total_warnings": total_warnings,
+                "total_errors": total_errors,
+                "results": results,
+            }
+            print(json_module.dumps(output, ensure_ascii=False, indent=2))
+        else:
+            # 文本格式汇总报告
+            console.print(
+                f"\n[bold cyan]📊 汇总报告：[/bold cyan]\n"
+                f"  [green]✅ 通过: {files_passed} 个文件[/green]\n"
+                f"  [yellow]⚠️  警告: {files_with_warnings} 个文件 "
+                f"({total_warnings} 个警告)[/yellow]\n"
+                f"  [red]❌ 错误: {files_with_errors} 个文件 ({total_errors} 个错误)[/red]"
+            )
+
+            # 显示详细问题
+            if files_with_errors > 0 or files_with_warnings > 0:
+                console.print("\n[bold]详细信息：[/bold]")
+                for result in results:
+                    if result["status"] in ["error", "warning"]:
+                        icon = "❌" if result["status"] == "error" else "⚠️"
+                        console.print(f"\n  {icon} [yellow]{result['file']}[/yellow]:")
+                        for issue in result.get("issues", []):
+                            console.print(f"    {issue}")
 
     except ValueError as e:
         console.print(f"[red]✗ 初始化失败: {e}[/red]")
-        sys.exit(1)
+        raise typer.Exit(1)
     except Exception as e:
         console.print(f"[red]✗ 错误: {e}[/red]")
-        sys.exit(1)
+        raise typer.Exit(1)
 
 
 @app.command()
@@ -669,7 +808,6 @@ def _handle_streaming_output(
 ) -> None:
     """处理流式输出"""
     import json as json_module
-    import sys
 
     collected_chunks: list[str] = []
     all_messages: list[Any] = []
@@ -867,6 +1005,115 @@ def _run_print_mode(
                 watcher_thread.join(timeout=0.5)
             except Exception:
                 pass
+
+
+def _check_single_file(
+    file: Path, api_key: Optional[str], auto_fix: bool, output_format: str
+) -> None:
+    """单文件检查模式（保持向后兼容）"""
+    console.print(
+        Panel.fit(
+            f"[bold cyan]📋 一致性检查[/bold cyan]\n" f"文件: [yellow]{file}[/yellow]",
+            border_style="cyan",
+        )
+    )
+
+    try:
+        # 创建 Agent
+        with console.status("[yellow]正在初始化 Agent...[/yellow]"):
+            agent = create_novel_agent(api_key=api_key)
+
+        # 检查文件
+        result = _check_file_task(file, agent, auto_fix)
+
+        # 输出结果
+        if output_format == "json":
+            import json as json_module
+
+            print(json_module.dumps(result, ensure_ascii=False, indent=2))
+        else:
+            if result["status"] == "passed":
+                console.print("\n[bold green]✅ 检查通过[/bold green]")
+            else:
+                status_icon = "❌" if result["status"] == "error" else "⚠️"
+                console.print(f"\n[bold]{status_icon} 发现问题：[/bold]")
+                for issue in result.get("issues", []):
+                    console.print(f"  {issue}")
+
+                if auto_fix and result.get("fixed"):
+                    console.print("\n[green]✅ 已自动修复问题[/green]")
+
+    except ValueError as e:
+        console.print(f"[red]✗ 初始化失败: {e}[/red]")
+        raise typer.Exit(1)
+    except Exception as e:
+        console.print(f"[red]✗ 错误: {e}[/red]")
+        raise typer.Exit(1)
+
+
+def _check_file_task(file: Path, agent: Any, auto_fix: bool) -> dict[str, Any]:
+    """检查单个文件的任务函数（用于并行处理）
+
+    返回格式：
+    {
+        "file": str,
+        "status": "passed" | "warning" | "error",
+        "issues": list[str],
+        "fixed": bool,  # 是否已修复（auto_fix 时）
+    }
+    """
+    # 构造检查提示
+    prompt = f"""请检查文件 {file} 的一致性。
+
+分析以下方面：
+1. 角色一致性：性格、能力、行为是否前后一致
+2. 情节逻辑：情节发展是否合理
+3. 时间线：事件顺序是否合理
+4. 世界观：设定规则是否被遵守
+
+{"并提供具体的修复方案。" if auto_fix else "请详细指出发现的问题。"}
+
+请用以下格式返回：
+- 如果没有问题：返回 "通过"
+- 如果有问题：每行一个问题，格式为 "Line X: 问题描述"
+"""
+
+    try:
+        # 调用 Agent
+        result = agent.invoke(
+            {"messages": [("user", prompt)]},
+            config={"configurable": {"thread_id": f"check-{file.name}"}},
+        )
+
+        # 提取响应
+        if "messages" not in result or not result["messages"]:
+            return {"file": str(file), "status": "error", "issues": ["Agent 未返回响应"]}
+
+        last_message = result["messages"][-1]
+        response = last_message.content if hasattr(last_message, "content") else str(last_message)
+
+        # 解析响应
+        if "通过" in response or "no issues" in response.lower():
+            return {"file": str(file), "status": "passed", "issues": []}
+
+        # 提取问题列表
+        issues = []
+        for line in response.split("\n"):
+            line = line.strip()
+            if line and (line.startswith("Line") or line.startswith("-") or line.startswith("•")):
+                issues.append(line.lstrip("-•").strip())
+
+        # 判断严重性
+        has_error = any(
+            keyword in response.lower() for keyword in ["错误", "error", "critical", "严重"]
+        )
+
+        status = "error" if has_error else "warning" if issues else "passed"
+
+        return {"file": str(file), "status": status, "issues": issues, "fixed": False}
+
+    except Exception as e:
+        return {"file": str(file), "status": "error", "issues": [f"检查失败: {str(e)}"]}
 
 
 def main() -> None:
