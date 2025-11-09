@@ -22,7 +22,8 @@ class TestChatCommand:
                 result = runner.invoke(app, ["chat"], input="exit\n")
 
                 assert result.exit_code == 1
-                assert "初始化失败" in result.stdout
+                # 检查友好的错误提示
+                assert "未设置 Gemini API Key" in result.stdout or "API Key" in result.stdout
 
     def test_chat_with_api_key(self) -> None:
         """测试使用API key启动chat"""

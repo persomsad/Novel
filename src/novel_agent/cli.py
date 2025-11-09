@@ -35,6 +35,67 @@ app = typer.Typer(
 console = Console()
 
 
+def format_error(error: Exception) -> str:
+    """格式化错误消息为友好提示
+
+    Args:
+        error: 异常对象
+
+    Returns:
+        格式化的错误消息
+    """
+    from .error_handler import (
+        APIKeyError,
+        find_similar_files,
+    )
+
+    error_msg = str(error)
+
+    # API Key 错误
+    if "api" in error_msg.lower() and "key" in error_msg.lower():
+        err = APIKeyError()
+        return err.format_message()
+
+    # 文件不存在错误
+    if isinstance(error, FileNotFoundError) or "no such file" in error_msg.lower():
+        # 尝试从错误消息中提取文件路径
+        import re
+
+        match = re.search(r"['\"](.*?)['\"]", error_msg)
+        if match:
+            file_path = match.group(1)
+            similar = find_similar_files(file_path, ".", limit=3)
+
+            lines = [f"❌ 文件不存在: {file_path}\n"]
+            if similar:
+                lines.append("💡 建议：")
+                lines.append("  是否要查找相似文件？")
+                for file in similar:
+                    lines.append(f"    找到: {file}")
+                lines.append(f"  或创建新文件: novel-agent write {file_path}")
+            else:
+                lines.append("💡 建议：")
+                lines.append(f"  创建新文件: novel-agent write {file_path}")
+            return "\n".join(lines)
+
+    # 网络错误
+    if any(
+        keyword in error_msg.lower()
+        for keyword in ["network", "connection", "timeout", "unreachable"]
+    ):
+        lines = [
+            f"❌ 网络错误: {error_msg}\n",
+            "💡 建议：",
+            "  - 检查网络连接",
+            "  - 检查防火墙/代理设置",
+            "  - 稍后重试",
+        ]
+        return "\n".join(lines)
+
+    # 默认错误消息
+    return f"❌ 错误: {error_msg}"
+
+
 @app.command()
 def refresh_memory(
     output: Optional[str] = typer.Option(
@@ -327,13 +388,12 @@ def chat(
             _chat_loop(agent_instance, session_id)
 
     except ValueError as e:
-        console.print(f"[red]✗ 初始化失败: {e}[/red]")
-        console.print("[yellow]提示: 请设置环境变量 GOOGLE_API_KEY 或使用 --api-key 参数[/yellow]")
+        console.print(format_error(e))
         sys.exit(1)
     except KeyboardInterrupt:
         console.print("\n[yellow]👋 再见！[/yellow]")
     except Exception as e:
-        console.print(f"[red]✗ 未知错误: {e}[/red]")
+        console.print(format_error(e))
         sys.exit(1)
     finally:
         # 停止性能跟踪并显示统计
