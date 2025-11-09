@@ -21,6 +21,7 @@ from . import memory_ingest as memory_ingest_module
 from .agent import AGENT_CONFIGS, create_novel_agent, create_specialized_agent
 from .continuity import build_continuity_index
 from .logging_config import get_logger
+from .permissions import get_readonly_tools
 from .session_store import delete_session, open_checkpointer
 from .session_store import list_sessions as list_session_ids
 from .workflows import build_chapter_workflow
@@ -239,20 +240,29 @@ def chat(
         "--no-cache",
         help="禁用缓存（默认启用）",
     ),
+    read_only: bool = typer.Option(
+        False,
+        "--read-only",
+        help="只读模式（仅允许读取和分析，不允许编辑）",
+    ),
+    # 保留旧参数但标记为 deprecated
     allowed_tools: Optional[str] = typer.Option(
         None,
         "--allowed-tools",
-        help="允许使用的工具列表（逗号分隔，白名单）",
+        help="[已废弃] 请使用 --read-only。允许使用的工具列表（逗号分隔，白名单）",
     ),
     disallowed_tools: Optional[str] = typer.Option(
         None,
         "--disallowed-tools",
-        help="禁止使用的工具列表（逗号分隔，黑名单）",
+        help="[已废弃] 请使用 --read-only。禁止使用的工具列表（逗号分隔，黑名单）",
     ),
     tools_mode: str = typer.Option(
         "default",
         "--tools",
-        help="工具模式：default（所有工具）、minimal（只读工具）、custom（自定义）",
+        help=(
+            "[已废弃] 请使用 --read-only。"
+            "工具模式：default（所有工具）、minimal（只读工具）、custom（自定义）"
+        ),
     ),
 ) -> None:
     """启动对话模式
@@ -276,14 +286,29 @@ def chat(
         disable_cache()
         logger.debug("缓存已禁用")
 
-    # 解析工具权限参数（在两种模式之前）
-    allowed_tools_list = None
-    if allowed_tools:
-        allowed_tools_list = [t.strip() for t in allowed_tools.split(",")]
+    # 显示废弃警告
+    if allowed_tools or disallowed_tools or tools_mode != "default":
+        console.print(
+            "[yellow]⚠️  --tools、--allowed-tools 和 --disallowed-tools 参数已废弃[/yellow]\n"
+            "[yellow]   推荐使用更简单的权限系统：[/yellow]\n"
+            "[yellow]   • 默认模式（所有工具）：novel-agent chat[/yellow]\n"
+            "[yellow]   • 只读模式（仅分析）：novel-agent chat --read-only[/yellow]\n"
+        )
 
+    # 解析工具权限参数
+    allowed_tools_list = None
     disallowed_tools_list = None
-    if disallowed_tools:
+
+    if read_only:
+        # 只读模式：只允许读取和分析工具
+        allowed_tools_list = get_readonly_tools()
+    elif allowed_tools:
+        # 旧的白名单方式（兼容）
+        allowed_tools_list = [t.strip() for t in allowed_tools.split(",")]
+    elif disallowed_tools:
+        # 旧的黑名单方式（兼容）
         disallowed_tools_list = [t.strip() for t in disallowed_tools.split(",")]
+    # else: 默认模式，允许所有工具（allowed_tools_list = None）
 
     # 处理非交互模式
     if print_mode:

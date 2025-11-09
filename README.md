@@ -133,6 +133,36 @@ done
 \`\`\`
 ```
 
+#### 工具权限控制 ⭐ v0.4.0 新增
+
+简化的 2 级权限系统：
+
+```bash
+# 默认模式（所有工具）- 正常写作
+novel-agent chat
+
+# 只读模式（仅分析）- 审稿、学习
+novel-agent chat --read-only
+```
+
+**权限对比**：
+
+| 模式 | 可用工具 | 适用场景 |
+|------|---------|---------|
+| **默认模式** | 所有工具 | 小说创作、章节编辑、批量修改 |
+| **只读模式** | read_file, search_files, check_consistency, smart_context_search, build_character_network, trace_foreshadow | 审稿分析、学习结构、检查一致性 |
+
+**迁移指南（从 v0.3.0）**：
+
+```bash
+# 旧方式（仍然支持，但显示废弃警告）
+novel-agent chat --tools minimal
+novel-agent chat --allowed-tools read_file,search_files
+
+# 新方式（推荐）
+novel-agent chat --read-only
+```
+
 ### 3. 示例对话（带自动上下文和置信度）⭐ 新特性
 
 ```
