@@ -145,6 +145,16 @@ def chat(
         "-s",
         help="会话ID（如果需要继续之前的对话）",
     ),
+    enable_watcher: bool = typer.Option(
+        True,
+        "--enable-watcher/--disable-watcher",
+        help="启用/禁用文件监控（默认启用）",
+    ),
+    enable_context: bool = typer.Option(
+        True,
+        "--enable-context/--disable-context",
+        help="启用/禁用自动上下文检索（默认启用）",
+    ),
 ) -> None:
     """启动对话模式
 
@@ -167,13 +177,37 @@ def chat(
     session_id = session or str(uuid.uuid4())
     console.print(f"[cyan]Session ID[/cyan]: [bold]{session_id}[/bold]")
 
+    # 获取项目根目录
+    project_root = Path.cwd()
+
+    # 启动文件监控（如果启用）
+    watcher_thread = None
+    if enable_watcher:
+        try:
+            from .file_watcher import start_background_watcher
+
+            index_path = project_root / "data" / "continuity" / "index.json"
+            watcher_thread = start_background_watcher(project_root, index_path)
+            console.print("[green]✓[/green] 文件监控已启动（后台模式）\n")
+        except Exception as e:
+            console.print(f"[yellow]⚠️  文件监控启动失败: {e}[/yellow]")
+
     try:
         with open_checkpointer() as checkpointer:
             with console.status("[yellow]正在初始化Agent...[/yellow]"):
                 agent_instance = create_specialized_agent(
-                    agent, api_key=api_key, checkpointer=checkpointer
+                    agent,
+                    api_key=api_key,
+                    checkpointer=checkpointer,
+                    enable_context_retrieval=enable_context,
+                    project_root=str(project_root) if enable_context else None,
                 )
-            console.print("[green]✓[/green] Agent初始化完成\n")
+
+            if enable_context:
+                console.print("[green]✓[/green] Agent初始化完成（自动上下文检索已启用）\n")
+            else:
+                console.print("[green]✓[/green] Agent初始化完成\n")
+
             _chat_loop(agent_instance, session_id)
 
     except ValueError as e:
@@ -185,6 +219,16 @@ def chat(
     except Exception as e:
         console.print(f"[red]✗ 未知错误: {e}[/red]")
         sys.exit(1)
+    finally:
+        # 停止文件监控
+        if enable_watcher and watcher_thread:
+            try:
+                from .file_watcher import stop_background_watcher
+
+                stop_background_watcher()
+                console.print("[dim]✓ 文件监控已停止[/dim]")
+            except Exception:
+                pass  # 忽略停止失败
 
 
 def _chat_loop(agent_instance: Any, session_id: str) -> None:

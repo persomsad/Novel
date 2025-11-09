@@ -12,6 +12,7 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langgraph.checkpoint.base import BaseCheckpointSaver
 from langgraph.prebuilt import create_react_agent
 
+from .context_retriever import ContextRetriever
 from .tools import (
     build_character_network_tool,
     edit_chapter_lines,
@@ -261,6 +262,8 @@ def create_specialized_agent(
     model: BaseChatModel | None = None,
     api_key: str | None = None,
     checkpointer: BaseCheckpointSaver[Any] | None = None,
+    enable_context_retrieval: bool = True,
+    project_root: str | None = None,
 ) -> Any:
     """创建专业化Agent
 
@@ -269,6 +272,8 @@ def create_specialized_agent(
         model: LLM模型（可选，默认使用Gemini 2.0 Flash）
         api_key: Gemini API Key（可选，从环境变量读取）
         checkpointer: 会话持久化存储（可选）
+        enable_context_retrieval: 是否启用自动上下文检索（默认True）
+        project_root: 项目根目录（用于上下文检索）
 
     Returns:
         ReAct Agent实例
@@ -310,6 +315,17 @@ def create_specialized_agent(
 
     tools: list[BaseTool] = [tool_map[t] for t in config["tools"]]
 
+    # 初始化上下文检索器
+    context_retriever: ContextRetriever | None = None
+    if enable_context_retrieval and project_root:
+        try:
+            context_retriever = ContextRetriever(project_root=project_root)
+        except Exception as e:
+            from .logging_config import get_logger
+
+            logger = get_logger(__name__)
+            logger.warning(f"上下文检索器初始化失败: {e}")
+
     # 配置system message
     bound_model = model.bind(system=config["system_prompt"])
 
@@ -322,15 +338,61 @@ def create_specialized_agent(
 
     original_invoke = agent.invoke
 
-    def invoke_with_confidence(input_data: dict[str, Any], *_, **kwargs) -> Any:
-        result = original_invoke(input_data, *_, **kwargs)
+    def invoke_with_context_and_confidence(input_data: dict[str, Any], *args, **kwargs) -> Any:
+        """包装 invoke：自动注入上下文 + 置信度评估"""
+
+        # 1. 自动注入上下文
+        if context_retriever and "messages" in input_data:
+            messages = input_data["messages"]
+            if messages:
+                # 获取最后一条用户消息
+                last_message = messages[-1]
+                query = (
+                    last_message.content if hasattr(last_message, "content") else str(last_message)
+                )
+
+                # 检索相关上下文
+                try:
+                    context_docs = context_retriever.retrieve_context(
+                        query=query, max_tokens=8000, max_docs=3
+                    )
+
+                    if context_docs:
+                        # 格式化上下文
+                        context_text = context_retriever.format_context(context_docs)
+
+                        # 将上下文添加到第一条消息（system message）
+                        # 或者作为新的 system message
+                        from langchain_core.messages import SystemMessage
+
+                        context_msg = SystemMessage(content=context_text)
+
+                        # 在用户消息前插入上下文
+                        input_data["messages"] = [context_msg] + messages
+
+                        from .logging_config import get_logger
+
+                        logger = get_logger(__name__)
+                        logger.info(f"✓ 自动注入上下文: {len(context_docs)} 个文档")
+
+                except Exception as e:
+                    from .logging_config import get_logger
+
+                    logger = get_logger(__name__)
+                    logger.warning(f"上下文检索失败: {e}")
+
+        # 2. 调用原始 invoke
+        result = original_invoke(input_data, *args, **kwargs)
+
+        # 3. 添加置信度
         messages = result.get("messages") if isinstance(result, dict) else None
         confidence = _estimate_confidence(messages)
         if isinstance(result, dict):
             result["confidence"] = confidence
+
         return result
 
-    agent.invoke = invoke_with_confidence  # type: ignore[assignment]
+    agent.invoke = invoke_with_context_and_confidence  # type: ignore[assignment]
     return agent
 
 
